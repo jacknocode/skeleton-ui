@@ -1,0 +1,109 @@
+.mz-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* 入力欄：フォーカスでびよーんと伸びる */
+.mz-search-input {
+  height: 44px;
+  width: 140px;
+  padding: 0 16px;
+  border: none;
+  outline: none;
+  border-radius: 12px;
+  background: #dcdcdc;
+  color: #555;
+  font-size: 14px;
+  font-family: inherit;
+  transition:
+    width 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.3s;
+}
+.mz-search-input::placeholder {
+  color: #a3a3a3;
+}
+.mz-search.is-active .mz-search-input {
+  width: 208px;
+  background: #d5d5d5;
+}
+
+/* ボタン：右端からむにっと生えてくる */
+.mz-search-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 48px;
+  height: 44px;
+  border-radius: 12px;
+  background: #8b8b8b;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: scaleX(0.2) translateX(14px);
+  transform-origin: right center;
+  transition:
+    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s;
+}
+.mz-search.is-active .mz-search-btn {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.08s;
+}
+
+/* 虫めがね：ときどき小首をかしげ、レンズがまばたき */
+.mz-search-glass {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+.mz-search.is-active .mz-search-glass {
+  animation: mz-glass-tilt 2.6s ease-in-out 0.6s infinite;
+}
+@keyframes mz-glass-tilt {
+  0%,
+  30%,
+  100% {
+    transform: rotate(0);
+  }
+  8% {
+    transform: rotate(-16deg) translateY(-1px);
+  }
+  18% {
+    transform: rotate(10deg);
+  }
+}
+.mz-search-lens {
+  position: absolute;
+  left: 1px;
+  top: 1px;
+  width: 12px;
+  height: 12px;
+  border: 2.5px solid #f3f3f3;
+  border-radius: 50%;
+}
+.mz-search.is-active .mz-search-lens {
+  animation: mz-lens-blink 2.6s ease-in-out 0.6s infinite;
+}
+@keyframes mz-lens-blink {
+  0%,
+  84%,
+  100% {
+    transform: scaleY(1);
+  }
+  90% {
+    transform: scaleY(0.14);
+  }
+}
+.mz-search-grip {
+  position: absolute;
+  width: 8px;
+  height: 2.5px;
+  background: #f3f3f3;
+  border-radius: 2px;
+  transform: rotate(45deg);
+  right: 0;
+  bottom: 3px;
+}

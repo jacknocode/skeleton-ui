@@ -1,0 +1,39 @@
+.mz-jelly {
+  padding: 16px 34px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  font-size: 15px;
+  font-weight: 700;
+  color: #5c5c5c;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: transform 0.12s ease-out;
+}
+
+/* 押している間：ぐにゃっと潰れる（予備動作） */
+.mz-jelly.is-pressed {
+  transform: scale(1.1, 0.78) translateY(5px);
+}
+
+/* 離した瞬間：ぷるんぷるんと減衰しながら復元 */
+.mz-jelly.is-releasing {
+  animation: mz-jelly-boing 0.6s cubic-bezier(0.28, 0.84, 0.42, 1);
+}
+@keyframes mz-jelly-boing {
+  0% {
+    transform: scale(1.1, 0.78) translateY(5px);
+  }
+  30% {
+    transform: scale(0.9, 1.14) translateY(-4px);
+  }
+  55% {
+    transform: scale(1.06, 0.94) translateY(1px);
+  }
+  75% {
+    transform: scale(0.98, 1.03);
+  }
+  100% {
+    transform: none;
+  }
+}

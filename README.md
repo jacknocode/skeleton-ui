@@ -1,25 +1,69 @@
-# Skeleton UI
+# モーション図鑑 — Motion Zukan
 
-A simple playground for testing and experimenting with design systems, built with [Next.js](https://nextjs.org).
+UIが生き物のように動く、感覚のカタログ。
 
-## Purpose
+メニュー・検索ボックス・トグルといった定番コンポーネントに宿る「気持ちいい動き」
+（スカッシュ&ストレッチ、オーバーシュート、モーフィング…）を採集して、
+触って観察できる標本として収録した図鑑です。
 
-This project provides a minimal UI with basic list layouts to:
-- Test design system components
-- Visualize UI patterns
-- Experiment with different styling approaches
-- Serve as a sandbox
-
-## Getting Started
-
-First, run the development server:
+## 起動
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
+
+`http://localhost:5173` で図鑑が開きます。
+
+```bash
+pnpm build    # 型チェック + 本番ビルド
+pnpm preview  # ビルド結果の確認
+```
+
+## 収録標本（全12種）
+
+| No. | 標本 | 動きの見どころ |
+| --- | --- | --- |
+| 01 | メニュー | ● ボタン自身がメニューへモーフィング |
+| 02 | 検索ボックス | びよーんと伸び、虫めがねがまばたき |
+| 03 | セレクトボックス | 選択肢が時間差でぽこぽこ湧き出す |
+| 04 | アクションシート | 行き過ぎてからふわっと着地 |
+| 05 | 音声入力 | マイクがくねくねと聞き耳を立てる |
+| 06 | ボタン | ゼリーのように潰れて跳ね返る |
+| 07 | トグルスイッチ | ノブがキャラメルのように伸びて滑る |
+| 08 | チェックボックス | 箱がぷるんと喜び、チェックがひと筆書き |
+| 09 | いいねボタン | ぎゅっと溜めて、ぼんっとはじける |
+| 10 | タブ | インジケーターがガムのように追いかける |
+| 11 | ローディング | 落ちて潰れて跳ねる、重さのある行進 |
+| 12 | 通知ベル | 揺れ幅が減衰していく、視覚の擬音語 |
+
+## 標本を連れて帰る（他プロジェクトでの活用）
+
+アニメーションはすべて **依存ライブラリなしの CSS** です。
+各標本は `src/specimens/<id>/` に自己完結しています：
+
+```
+src/specimens/toggle/
+├── index.tsx   # 最小限の React 状態管理のみ
+└── style.css   # 動きの本体。クラスは mz- プレフィックスで衝突しない
+```
+
+フォルダごとコピーして `import Toggle from './specimens/toggle'` するだけで動きます。
+React 以外のプロジェクトでも、`style.css` のクラスとキーフレームはそのまま流用できます。
+
+図鑑の詳細ビュー（カード右上の ⓘ）から各標本のソースコードを直接コピーすることもできます。
+
+## 動きの設計メモ
+
+- **緩急がキャラクターになる** — `cubic-bezier(0.34, 1.56, 0.64, 1)`（オーバーシュート）を基本のイージングとして共有し、ブランドとしての一貫した「ぷるん」を作る
+- **予備動作 → 本動作** — 押すと一度潰れ、離すと跳ねる。溜めがあるから気持ちいい
+- **変形は連続で** — ボタンがメニューに「なる」ことで、視線の迷子を防ぐ
+- **二次アクションで生命感** — まばたき・呼吸・波紋など、主動作に添える小さな動き
+- `prefers-reduced-motion` に配慮済み
+
+## 新しい標本の追加
+
+1. `src/specimens/<id>/index.tsx` と `style.css` を作る（クラスは `mz-<id>-*`）
+2. `src/registry.ts` の `specimens` 配列にメタデータ（名前・生態・動きの原理）を追記
+
+これだけで図鑑に自動掲載され、ソースコード表示も効きます。

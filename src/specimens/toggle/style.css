@@ -1,0 +1,75 @@
+.mz-toggle {
+  position: relative;
+  width: 68px;
+  height: 38px;
+  border-radius: 19px;
+  background: #d6d6d6;
+  cursor: pointer;
+  transition: background-color 0.4s;
+}
+.mz-toggle.is-on {
+  background: #787878;
+}
+
+/* トラックも一緒にむにっと縮む */
+.mz-toggle.is-anim.is-on {
+  animation: mz-track-squish-a 0.45s ease-out;
+}
+.mz-toggle.is-anim:not(.is-on) {
+  animation: mz-track-squish-b 0.45s ease-out;
+}
+@keyframes mz-track-squish-a {
+  35% {
+    transform: scale(1.04, 0.9);
+  }
+}
+@keyframes mz-track-squish-b {
+  35% {
+    transform: scale(1.04, 0.9);
+  }
+}
+
+.mz-toggle-knob {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 30px;
+  height: 30px;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+  transform-origin: center;
+}
+.mz-toggle.is-on .mz-toggle-knob {
+  transform: translateX(30px);
+}
+
+/* 移動中はキャラメルみたいに伸びる */
+.mz-toggle.is-anim.is-on .mz-toggle-knob {
+  animation: mz-knob-go 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+}
+.mz-toggle.is-anim:not(.is-on) .mz-toggle-knob {
+  animation: mz-knob-back 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+}
+@keyframes mz-knob-go {
+  0% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(11px) scale(1.5, 0.82);
+  }
+  100% {
+    transform: translateX(30px);
+  }
+}
+@keyframes mz-knob-back {
+  0% {
+    transform: translateX(30px);
+  }
+  45% {
+    transform: translateX(19px) scale(1.5, 0.82);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}

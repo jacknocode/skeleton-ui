@@ -1,0 +1,83 @@
+/* ミニ画面のステージ */
+.mz-sheet-stage {
+  position: relative;
+  width: 210px;
+  height: 158px;
+  background: #dedede;
+  border-radius: 20px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.mz-sheet-open {
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b6b6b;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-sheet-open:active {
+  transform: scale(1.06, 0.88);
+}
+
+.mz-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(40, 40, 40, 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s;
+}
+.mz-sheet-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* シート本体：勢いよく上がって、ふわっと着地 */
+.mz-sheet {
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  bottom: 7px;
+  background: #7c7c7c;
+  border-radius: 16px;
+  padding: 8px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  transform: translateY(130%);
+  transition: transform 0.55s cubic-bezier(0.32, 1.35, 0.45, 1);
+}
+.mz-sheet.is-open {
+  transform: translateY(0);
+}
+
+.mz-sheet-handle {
+  width: 34px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.65);
+  margin: 2px auto 8px;
+}
+
+.mz-sheet-item {
+  padding: 7px 10px;
+  border-radius: 9px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f4f4f4;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.mz-sheet-item:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+.mz-sheet-item.is-cancel {
+  color: rgba(255, 255, 255, 0.6);
+}

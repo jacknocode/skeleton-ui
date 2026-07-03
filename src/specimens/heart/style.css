@@ -1,0 +1,86 @@
+.mz-like {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.15s ease-out;
+}
+.mz-like:active {
+  transform: scale(0.88);
+}
+
+.mz-like-heart {
+  display: grid;
+  place-items: center;
+}
+.mz-like-heart svg {
+  width: 34px;
+  height: 34px;
+  fill: transparent;
+  stroke: #8a8a8a;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  transition:
+    fill 0.25s,
+    stroke 0.25s;
+}
+.mz-like.is-liked .mz-like-heart svg {
+  fill: #6e6e6e;
+  stroke: #6e6e6e;
+}
+
+/* ぎゅっ→ぼんっ の緩急 */
+.mz-like.is-liked .mz-like-heart {
+  animation: mz-like-pop 0.6s cubic-bezier(0.28, 0.84, 0.42, 1);
+}
+@keyframes mz-like-pop {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(0.6, 0.68);
+  }
+  55% {
+    transform: scale(1.35, 1.4);
+  }
+  75% {
+    transform: scale(0.92);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* 8方向に飛び散るしずく */
+.mz-like-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.mz-like-burst i {
+  position: absolute;
+  left: calc(50% - 3px);
+  top: calc(50% - 3px);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #b3b3b3;
+  transform: rotate(var(--a)) translateX(8px) scale(0.4);
+  opacity: 0;
+  animation: mz-like-spark 0.65s cubic-bezier(0.16, 0.8, 0.4, 1) 0.16s forwards;
+}
+@keyframes mz-like-spark {
+  0% {
+    transform: rotate(var(--a)) translateX(10px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--a)) translateX(42px) scale(0.15);
+    opacity: 0;
+  }
+}
