@@ -1,0 +1,51 @@
+.mz-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.mz-loader-dots {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 44px;
+}
+
+/* 落ちて潰れて跳ねる。潰れがキモ */
+.mz-loader-dots i {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #8b8b8b;
+  transform-origin: center bottom;
+  animation: mz-loader-bounce 1.05s ease-in-out infinite;
+}
+.mz-loader-dots i:nth-child(2) {
+  animation-delay: 0.14s;
+}
+.mz-loader-dots i:nth-child(3) {
+  animation-delay: 0.28s;
+}
+@keyframes mz-loader-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1.3, 0.7);
+  }
+  20% {
+    transform: translateY(-4px) scale(0.95, 1.05);
+  }
+  45% {
+    transform: translateY(-26px) scale(0.88, 1.12);
+  }
+  70% {
+    transform: translateY(-6px) scale(1, 1);
+  }
+}
+
+.mz-loader-text {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  color: #a5a5a5;
+}
