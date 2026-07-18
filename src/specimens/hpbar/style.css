@@ -1,0 +1,125 @@
+.mz-hp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+/* 被弾のたびに key が変わり、フレーム全体がガタッと揺れる */
+.mz-hp-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.mz-hp-frame.is-hit {
+  animation: mz-hp-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+@keyframes mz-hp-shake {
+  10% {
+    transform: translateX(-5px) rotate(-1deg);
+  }
+  30% {
+    transform: translateX(4px) rotate(0.8deg);
+  }
+  50% {
+    transform: translateX(-3px);
+  }
+  70% {
+    transform: translateX(2px);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+.mz-hp-track {
+  position: relative;
+  width: 208px;
+  height: 18px;
+  border-radius: 999px;
+  background: #d8d8d6;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+/* 本体：即座にスナップして減る（ダメージの鋭さ） */
+.mz-hp-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: #6e6e6e;
+  transition: width 0.12s ease-out;
+  z-index: 2;
+}
+/* 残り3割を切ると心拍のように明滅する */
+.mz-hp-fill.is-low {
+  animation: mz-hp-pulse 0.9s ease-in-out infinite;
+}
+@keyframes mz-hp-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* ゴースト：ワンテンポ遅れて、じわーっと溶けて追いつく */
+.mz-hp-ghost {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: #b3b3b3;
+  transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 1;
+}
+
+/* 被弾の瞬間、バー全体が白く点滅する */
+.mz-hp-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  z-index: 3;
+  animation: mz-hp-blink 0.32s ease-out forwards;
+}
+@keyframes mz-hp-blink {
+  0% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.mz-hp-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-hp-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-hp-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-hp-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-hp-actions button:active {
+  transform: scale(1.06, 0.88);
+}
+.mz-hp-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}

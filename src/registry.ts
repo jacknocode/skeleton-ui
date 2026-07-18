@@ -11,8 +11,16 @@ import Like from './specimens/heart'
 import Tabs from './specimens/tabs'
 import Loader from './specimens/loader'
 import Bell from './specimens/bell'
+import HpBar from './specimens/hpbar'
+import CoinCounter from './specimens/counter'
+import PopNumbers from './specimens/popnum'
+import LevelUp from './specimens/levelup'
+import Combo from './specimens/combo'
+import Chest from './specimens/chest'
+import Cooldown from './specimens/cooldown'
+import Gacha from './specimens/gacha'
 
-export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック'] as const
+export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム'] as const
 export type Category = (typeof CATEGORIES)[number]
 
 export interface Specimen {
@@ -175,6 +183,102 @@ export const specimens: Specimen[] = [
     ecology:
       'クリックするとベルが身をよじって鳴り、揺れ幅が物理法則どおりに減衰していく。バッジはぽんっと弾んで登場し、数を重ねるたびに跳ね直す。音が出せない画面で「鳴っている」ことを伝えるための、視覚の擬音語。',
     Component: Bell,
+  },
+  {
+    id: 'hpbar',
+    no: 13,
+    nameJa: 'HPバー',
+    nameEn: 'Ghost HP Bar',
+    category: 'ゲーム',
+    trigger: '「ダメージ」「回復」をクリック',
+    principles: ['遅延フォロー', 'シェイク', 'フラッシュ'],
+    ecology:
+      '被弾すると本体のバーは即座にスパッと減り、薄いゴーストがワンテンポ遅れてじわーっと溶けて追いつく。この時間差が「いまどれだけ削られたか」の幅を目に残す、格闘ゲーム由来の古典的な生態。残り3割を切ると心拍のように明滅して危険を知らせる。',
+    Component: HpBar,
+  },
+  {
+    id: 'counter',
+    no: 14,
+    nameJa: 'コインカウンター',
+    nameEn: 'Rolling Counter',
+    category: 'ゲーム',
+    trigger: '「+80」「+777」をクリック',
+    principles: ['ドラムロール', '慣性', 'ポップ'],
+    ecology:
+      '数値が一瞬で書き換わるのではなく、各桁がスロットのドラムのように回って目的の数字で止まる。桁上がりで生まれた新しい桁はぽこっと湧いて登場し、加算額は「+777」と浮かんで消える。増えた実感を量として体に伝える、報酬表示の基本形。',
+    Component: CoinCounter,
+  },
+  {
+    id: 'popnum',
+    no: 15,
+    nameJa: 'ダメージ数字',
+    nameEn: 'Pop Damage',
+    category: 'ゲーム',
+    trigger: 'スライムを連打する',
+    principles: ['ポップ', '散らばり', 'ヒットの誇張'],
+    ecology:
+      '叩くたびにスライムがぐにゃっと潰れ、ダメージ数字が跳ね上がってふわっと消える。出現位置を少しずつ散らすことで連打しても読める。4回に1度の会心の一撃は、ひと呼吸ためてから3倍のサイズで弾ける——強さの差は数字ではなく緩急で語る。',
+    Component: PopNumbers,
+  },
+  {
+    id: 'levelup',
+    no: 16,
+    nameJa: '経験値バー',
+    nameEn: 'Level Up',
+    category: 'ゲーム',
+    trigger: '「+35 XP」を押して満タンに',
+    principles: ['オーバーシュート', '波の走査', 'パンチスケール'],
+    ecology:
+      '経験値はぷるんと伸びて溜まり、満タンの瞬間に光の波がバーを走り抜け、レベルバッジがぼんっと弾んで数字が上がる。あふれた分は満タン状態からすーっと縮んで持ち越される。「積み上げ→臨界→祝福」という成長のリズムを1本のバーで演じる。',
+    Component: LevelUp,
+  },
+  {
+    id: 'combo',
+    no: 17,
+    nameJa: 'コンボカウンター',
+    nameEn: 'Combo Counter',
+    category: 'ゲーム',
+    trigger: '「たたく！」を1秒以内に連打',
+    principles: ['パンチスケール', '成長', '崩れ落ち'],
+    ecology:
+      '連打するたびに数字がパンチのように打ち込まれ、コンボが伸びるほど文字そのものが育っていく。1秒手を止めると、数字は力尽きてぱたっと崩れ落ちる。「続けたい」という緊張感を、大きさと落下だけで作る生態。',
+    Component: Combo,
+  },
+  {
+    id: 'chest',
+    no: 18,
+    nameJa: '宝箱',
+    nameEn: 'Teasing Chest',
+    category: 'ゲーム',
+    trigger: '宝箱をタップ',
+    principles: ['予備動作', 'じらし', 'パーティクル'],
+    ecology:
+      'タップするとすぐには開かず、まずガタガタと震えてタメをつくる。それからフタがぱかっと跳ね開き、光が立ちのぼって戦利品が飛び出す。報酬の嬉しさは中身より「開くまでの0.5秒」が作る——ガチャ演出にも通じる、じらしの生態。',
+    Component: Chest,
+  },
+  {
+    id: 'cooldown',
+    no: 19,
+    nameJa: 'スキルクールダウン',
+    nameEn: 'Cooldown Skill',
+    category: 'ゲーム',
+    trigger: '稲妻ボタンをタップ',
+    principles: ['ラジアルワイプ', 'フラッシュ', 'ポップ'],
+    ecology:
+      '発動の瞬間にボタンがバチンと弾け、影が時計の針のように盤面を覆う。影は時計回りに晴れていき、残り時間がひと目で分かる。晴れきった瞬間はぷるんと跳ねて輪っかを放ち、「もう使えるよ」を音なしで告げる。待ち時間を情報に変える生態。',
+    Component: Cooldown,
+  },
+  {
+    id: 'gacha',
+    no: 20,
+    nameJa: 'カードめくり',
+    nameEn: 'Card Reveal',
+    category: 'ゲーム',
+    trigger: 'カードをタップ',
+    principles: ['3D回転', 'オーバーシュート', '光の走査'],
+    ecology:
+      '待機中はそわそわと浮遊し、タップすると勢い余って行き過ぎながらひるがえる。表になった瞬間、背後で光の輪が弾け、星がぼんっと現れ、光が斜めに走り抜ける。めくる前の浮遊が「中身への期待」を、返りの勢いが「引きの快感」を演じる。',
+    Component: Gacha,
   },
 ]
 
