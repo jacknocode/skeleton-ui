@@ -1,0 +1,141 @@
+.mz-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.mz-banner-stage {
+  position: relative;
+  width: 236px;
+  height: 96px;
+  border-radius: 16px;
+  background: #e0e0de;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.mz-banner-idle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #b3b3b3;
+  animation: mz-banner-breathe 3s ease-in-out infinite;
+}
+@keyframes mz-banner-breathe {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* 演出全体。ひと仕事終えたらふっと消える */
+.mz-banner-scene {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  animation: mz-banner-fade 0.4s ease-out 1.9s forwards;
+}
+@keyframes mz-banner-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+/* 2本の帯が左右からシャキーンと交差する */
+.mz-banner-band {
+  position: absolute;
+  left: -12px;
+  right: -12px;
+  height: 26px;
+  background: #3d3d3b;
+}
+.mz-banner-band.is-top {
+  top: 22px;
+  transform: rotate(-4deg);
+  animation: mz-banner-slide-l 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.mz-banner-band.is-bottom {
+  bottom: 22px;
+  transform: rotate(-4deg);
+  animation: mz-banner-slide-r 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.08s backwards;
+}
+@keyframes mz-banner-slide-l {
+  from {
+    transform: translateX(-105%) rotate(-4deg);
+  }
+}
+@keyframes mz-banner-slide-r {
+  from {
+    transform: translateX(105%) rotate(-4deg);
+  }
+}
+
+/* 名前は一拍遅れて、ドンと据わって小さく震える */
+.mz-banner-name {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #f5f5f3;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  animation:
+    mz-banner-don 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) 0.34s backwards,
+    mz-banner-rumble 0.3s linear 0.8s;
+}
+.mz-banner-name small {
+  font-size: 8px;
+  letter-spacing: 0.5em;
+  color: #b3b3b3;
+}
+@keyframes mz-banner-don {
+  0% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.94);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes mz-banner-rumble {
+  20% {
+    transform: translate(-1.5px, 1px);
+  }
+  40% {
+    transform: translate(1.5px, -1px);
+  }
+  60% {
+    transform: translate(-1px, -1px);
+  }
+  80% {
+    transform: translate(1px, 1px);
+  }
+}
+
+.mz-banner-btn {
+  padding: 9px 20px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-banner-btn:hover {
+  transform: translateY(-2px);
+}
+.mz-banner-btn:active {
+  transform: scale(1.06, 0.88);
+}

@@ -19,6 +19,12 @@ import Combo from './specimens/combo'
 import Chest from './specimens/chest'
 import Cooldown from './specimens/cooldown'
 import Gacha from './specimens/gacha'
+import Energy from './specimens/energy'
+import Shield from './specimens/shield'
+import Toast from './specimens/toast'
+import Banner from './specimens/banner'
+import Countdown from './specimens/countdown'
+import Wallet from './specimens/wallet'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -279,6 +285,78 @@ export const specimens: Specimen[] = [
     ecology:
       '待機中はそわそわと浮遊し、タップすると勢い余って行き過ぎながらひるがえる。表になった瞬間、背後で光の輪が弾け、星がぼんっと現れ、光が斜めに走り抜ける。めくる前の浮遊が「中身への期待」を、返りの勢いが「引きの快感」を演じる。',
     Component: Gacha,
+  },
+  {
+    id: 'energy',
+    no: 21,
+    nameJa: 'スタミナ',
+    nameEn: 'Energy Drops',
+    category: 'ゲーム',
+    trigger: '「行動する」「休む」をクリック',
+    principles: ['蒸発', 'ぽたっと着地', 'リソースの可視化'],
+    ecology:
+      '行動するとしずくがひとつ、ぷちんと潰れてから膨らんで蒸発し、小さな煙の輪が残る。休むと上からぽたっと落ちてきて、ぷるんと着地して満ちる。「使った」「戻った」を同じ場所で逆向きの重力として演じる、リソース表示の生態。',
+    Component: Energy,
+  },
+  {
+    id: 'shield',
+    no: 22,
+    nameJa: 'シールド割れ',
+    nameEn: 'Cracking Shield',
+    category: 'ゲーム',
+    trigger: '盾を3回たたく',
+    principles: ['線画アニメーション', 'フラッシュ', 'パーティクル'],
+    ecology:
+      '被弾のたびにガキンと揺れて白く光り、ヒビが一筆でピシッと走って増えていく。3発目で耐えきれず、白閃光とともに破片が回転しながら飛び散る。「あと何発で割れるか」をヒビの量で語る、耐久値の視覚言語。',
+    Component: Shield,
+  },
+  {
+    id: 'toast',
+    no: 23,
+    nameJa: '実績トースト',
+    nameEn: 'Achievement Toast',
+    category: 'ゲーム',
+    trigger: '「実績を解除する」をクリック',
+    principles: ['オーバーシュート', '時間差の登場', '3D回転'],
+    ecology:
+      '画面下の縁から勢いよくせり上がり、メダルが一拍おいてくるんと一回転、テキストがさらに遅れて滑り込む。しばらく誇らしげに留まってから、来た道を静かに帰っていく。主役の邪魔をせず、でも確かに祝う——通知の礼儀作法。',
+    Component: Toast,
+  },
+  {
+    id: 'banner',
+    no: 24,
+    nameJa: 'ボス登場の帯',
+    nameEn: 'Boss Banner',
+    category: 'ゲーム',
+    trigger: '「ボス出現」をクリック',
+    principles: ['交差ワイプ', 'ドンと据わる', '震え'],
+    ecology:
+      '2本の黒い帯が左右からシャキーンと走り込んで交差し、名前が一拍遅れて奥からドンと据わって小さく震える。帯のスピードと名前のタメの対比が「ただごとではない」空気を作る。ひと仕事終えると、ふっと消えて平原に戻る。',
+    Component: Banner,
+  },
+  {
+    id: 'countdown',
+    no: 25,
+    nameJa: 'カウントダウン',
+    nameEn: 'Heartbeat Countdown',
+    category: 'ゲーム',
+    trigger: '「スタート」をクリック',
+    principles: ['鼓動', '加速', '解放'],
+    ecology:
+      '3、2、1——数字がドンと据わり、心臓のように鼓動する。残りが減るほど拍が速まっていき、体の緊張とシンクロする。そしてGO!の瞬間、ためこんだ緊張を捨てて一気に弾け、画面の外へ走り去る。緊張と解放の教科書。',
+    Component: Countdown,
+  },
+  {
+    id: 'wallet',
+    no: 26,
+    nameJa: 'おかね不足',
+    nameEn: 'Broke Wallet',
+    category: 'ゲーム',
+    trigger: '買えないものを買おうとする',
+    principles: ['首振り', '減衰振動', 'へたり込み'],
+    ecology:
+      '高すぎる買い物をしようとすると、ボタンが「ううん」と減衰しながら首を横に振り、財布のコインがへたり込む。吹き出しがそっと理由を告げて消える。エラーを赤い警告ではなく、キャラクターの仕草として伝える生態。',
+    Component: Wallet,
   },
 ]
 

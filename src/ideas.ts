@@ -34,7 +34,7 @@ export const IDEA_STATUS_LABEL: Record<IdeaStatus, string> = {
 }
 
 export const ideas: Idea[] = [
-  /* ---------- 標本化済み（図鑑 No.13〜20 の出どころ） ---------- */
+  /* ---------- 標本化済み（図鑑と繋がった種たち） ---------- */
   {
     id: 'hpbar',
     title: 'HPバーの遅延ゴースト',
@@ -100,30 +100,32 @@ export const ideas: Idea[] = [
     specimenId: 'gacha',
   },
 
-  /* ---------- 育成中 ---------- */
   {
     id: 'energy-drops',
     title: 'スタミナのしずく',
     motion: '行動するとエネルギー玉がひとつ、ぷちんと潰れて蒸発する。回復はぽたっと満ちる',
     tags: ['ゲーム', 'ゲージ', 'リソース'],
-    status: 'sprout',
+    status: 'captured',
+    specimenId: 'energy',
   },
   {
     id: 'shield-crack',
     title: 'シールド割れ',
     motion: 'ガードにヒビが走り、パリンと破片が飛び散る。割れる直前に一瞬白く光る',
     tags: ['ゲーム', 'ヒット', 'パーティクル'],
-    status: 'sprout',
+    status: 'captured',
+    specimenId: 'shield',
   },
   {
     id: 'achievement-toast',
     title: '実績トースト',
     motion: '下からせり上がり、メダルがくるんと一回転してから静止。少し待って引っ込む',
     tags: ['ゲーム', '通知', '祝福'],
-    status: 'sprout',
+    status: 'captured',
+    specimenId: 'toast',
   },
 
-  /* ---------- 種 ---------- */
+  /* ---------- 種・育成中 ---------- */
   {
     id: 'quest-stamp',
     title: 'クエスト受注スタンプ',
@@ -185,7 +187,8 @@ export const ideas: Idea[] = [
     title: '残り3秒の鼓動',
     motion: 'カウントダウンの数字が心臓のように鼓動し、残りが減るほど拍が速まる',
     tags: ['ゲーム', '緊張感', '数値'],
-    status: 'seed',
+    status: 'captured',
+    specimenId: 'countdown',
   },
   {
     id: 'daily-calendar',
@@ -206,7 +209,8 @@ export const ideas: Idea[] = [
     title: 'お金が足りない首振り',
     motion: '購入ボタンが「ううん」と首を横に振る。財布アイコンが逆さになって空っぽを見せる',
     tags: ['ゲーム', 'エラー', '汎用'],
-    status: 'seed',
+    status: 'captured',
+    specimenId: 'wallet',
   },
   {
     id: 'unlock-door',
@@ -234,7 +238,8 @@ export const ideas: Idea[] = [
     title: 'ボス登場の帯',
     motion: '黒い帯が左右からシャキーンと交差し、名前が一拍遅れてドンと据わる',
     tags: ['ゲーム', '演出', '緊張感'],
-    status: 'seed',
+    status: 'captured',
+    specimenId: 'banner',
   },
   {
     id: 'hit-stop',
@@ -255,6 +260,48 @@ export const ideas: Idea[] = [
     title: 'セーブ中の本めくり',
     motion: '小さな本のページがぱらぱらとめくれ続ける。保存完了でぱたんと閉じる',
     tags: ['ゲーム', 'ローディング'],
+    status: 'seed',
+  },
+  {
+    id: 'quest-tracker-slide',
+    title: 'クエスト目標の差し替え',
+    motion: '達成した目標がチェック付きで上へ抜け、次の目標が下からせり上がって入れ替わる',
+    tags: ['ゲーム', 'タスク', 'リスト'],
+    status: 'seed',
+  },
+  {
+    id: 'radar-ping',
+    title: 'レーダーのピン',
+    motion: '走査線がくるりと回り、獲物を見つけると輝点がぽんっと膨らんで鼓動する',
+    tags: ['ゲーム', 'ナビゲーション'],
+    status: 'seed',
+  },
+  {
+    id: 'stack-collect',
+    title: '戦利品の吸い込み',
+    motion: 'ドロップ品が弧を描いてカバンへ吸い込まれ、着弾のたびにカバンがぷるんと膨れる',
+    tags: ['ゲーム', '報酬', 'インベントリ'],
+    status: 'seed',
+  },
+  {
+    id: 'turn-flip',
+    title: 'ターン交代の札',
+    motion: '「YOUR TURN」の札がくるっと裏返って相手の色になる。交代の瞬間だけ少し浮く',
+    tags: ['ゲーム', 'ターン制'],
+    status: 'seed',
+  },
+  {
+    id: 'weakpoint-blink',
+    title: '弱点のまたたき',
+    motion: '弱点マーカーがゆっくり呼吸し、攻撃チャンスの間だけ拍が速まって誘う',
+    tags: ['ゲーム', '誘導', '緊張感'],
+    status: 'seed',
+  },
+  {
+    id: 'streak-flame',
+    title: '連勝の火が育つ',
+    motion: '勝つたびに炎アイコンがひと回り育ってゆらめく。途切れると煙だけ残して消える',
+    tags: ['ゲーム', '継続', '成長'],
     status: 'seed',
   },
 ]
