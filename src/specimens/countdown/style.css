@@ -1,0 +1,115 @@
+.mz-count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.mz-count-stage {
+  display: grid;
+  place-items: center;
+  width: 130px;
+  height: 96px;
+}
+
+.mz-count-idle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #b3b3b3;
+  animation: mz-count-breathe 2.6s ease-in-out infinite;
+}
+@keyframes mz-count-breathe {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* 数字：ドンと据わってから、心臓のように鼓動する。
+   拍の速さは inline の animation-duration（残数依存）で決まる */
+.mz-count-num {
+  font-size: 58px;
+  font-weight: 800;
+  color: #4c4c4c;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  animation:
+    mz-count-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+    mz-count-beat 0.6s ease-in-out 0.45s infinite;
+}
+@keyframes mz-count-in {
+  0% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.92);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes mz-count-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.14);
+  }
+  45% {
+    transform: scale(0.98);
+  }
+  60% {
+    transform: scale(1.06);
+  }
+}
+
+/* 解放の瞬間：ためを捨てて一気に弾け、走り去る */
+.mz-count-go {
+  font-size: 46px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #3d3d3d;
+  animation: mz-count-go 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes mz-count-go {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  25% {
+    transform: scale(1.35) rotate(-3deg);
+    opacity: 1;
+  }
+  45% {
+    transform: scale(1) rotate(0deg);
+  }
+  70% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(70px) skewX(-12deg);
+    opacity: 0;
+  }
+}
+
+.mz-count-btn {
+  padding: 9px 20px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-count-btn:hover {
+  transform: translateY(-2px);
+}
+.mz-count-btn:active {
+  transform: scale(1.06, 0.88);
+}

@@ -238,6 +238,124 @@ body {
   text-transform: uppercase;
 }
 
+/* ---------- アイデアの苗床 ---------- */
+
+.zk-nursery {
+  margin-top: 72px;
+  padding-top: 48px;
+  border-top: 2px dashed #dcdcda;
+}
+
+.zk-nursery-head {
+  text-align: center;
+  margin-bottom: 30px;
+}
+.zk-nursery-head h2 {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--zk-ink);
+}
+.zk-nursery-lede {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 2;
+  color: var(--zk-ink-soft);
+}
+.zk-nursery-lede code {
+  padding: 2px 7px;
+  border-radius: 7px;
+  background: #e6e6e4;
+  font-family: 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+  font-size: 11.5px;
+}
+.zk-nursery-head .zk-filters {
+  margin-top: 20px;
+}
+
+.zk-nursery-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.zk-idea {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: var(--zk-card);
+  transition:
+    transform 0.4s var(--zk-ease-boing),
+    box-shadow 0.4s;
+}
+.zk-idea:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.07);
+}
+/* 種はまだ薄く、標本化済みはくっきり——育ち具合を濃度で示す */
+.zk-idea.is-seed {
+  background: #efefed;
+}
+.zk-idea.is-captured {
+  background: #e2e2e0;
+}
+
+.zk-idea-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+.zk-idea-status {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #4c4c4c;
+  color: #f5f5f3;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.zk-idea.is-seed .zk-idea-status {
+  background: #b3b3b3;
+}
+.zk-idea.is-sprout .zk-idea-status {
+  background: #8c8c8c;
+}
+.zk-idea-tag {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--zk-ink-soft);
+}
+
+.zk-idea h3 {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #5c5c5c;
+}
+.zk-idea p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #8c8c8c;
+}
+
+.zk-idea-link {
+  align-self: flex-start;
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s var(--zk-ease-boing);
+}
+.zk-idea-link:hover {
+  transform: translateX(3px);
+}
+
 /* ---------- フッター ---------- */
 
 .zk-footer {

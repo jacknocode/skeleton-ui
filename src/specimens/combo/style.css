@@ -1,0 +1,104 @@
+.mz-cb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.mz-cb-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 160px;
+  height: 96px;
+}
+
+/* カウント本体。叩くたびに key が変わり、パンチのように打ち込まれる */
+.mz-cb-count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-weight: 800;
+  color: #4c4c4c;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  animation: mz-cb-punch 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: font-size 0.2s ease-out;
+}
+.mz-cb-count small {
+  margin-top: 4px;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: #b3b3b3;
+}
+@keyframes mz-cb-punch {
+  0% {
+    transform: scale(1.6) rotate(4deg);
+  }
+  50% {
+    transform: scale(0.9) rotate(-2deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* 途切れたコンボは力尽きて、ぱたっと崩れ落ちる */
+.mz-cb-dead {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 34px;
+  font-weight: 800;
+  color: #b3b3b3;
+  line-height: 1;
+  pointer-events: none;
+  animation: mz-cb-fall 0.6s cubic-bezier(0.5, 0, 0.75, 0.4) forwards;
+}
+.mz-cb-dead small {
+  margin-top: 4px;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+}
+@keyframes mz-cb-fall {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+  25% {
+    transform: rotate(-7deg);
+  }
+  100% {
+    transform: translateY(52px) rotate(14deg);
+    opacity: 0;
+  }
+}
+
+.mz-cb-idle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #b3b3b3;
+  animation: mz-cb-breathe 2.4s ease-in-out infinite;
+}
+@keyframes mz-cb-breathe {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.mz-cb-btn {
+  padding: 11px 26px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  font-weight: 800;
+  color: #5c5c5c;
+  cursor: pointer;
+  transition: transform 0.12s ease-out;
+}
+.mz-cb-btn:active {
+  transform: scale(1.12, 0.82);
+}

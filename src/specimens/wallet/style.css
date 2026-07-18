@@ -1,0 +1,136 @@
+.mz-wallet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.mz-wallet-purse {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #e0e0de;
+}
+.mz-wallet-coin {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #8c8c8c;
+  color: #f5f5f3;
+  font-size: 12px;
+  font-weight: 800;
+}
+/* 拒否のたびに、コインが「空っぽだよ」とへたり込む */
+.mz-wallet-coin.is-flat {
+  animation: mz-wallet-flat 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-wallet-flat {
+  0% {
+    transform: none;
+  }
+  35% {
+    transform: translateY(4px) scale(1.2, 0.55);
+  }
+  70% {
+    transform: translateY(0) scale(0.92, 1.06);
+  }
+  100% {
+    transform: none;
+  }
+}
+.mz-wallet-owned {
+  font-size: 11px;
+  font-weight: 800;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-wallet-row {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.mz-wallet-buy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  font-weight: 800;
+  color: #5c5c5c;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-wallet-buy:hover {
+  transform: translateY(-2px);
+}
+.mz-wallet-buy b {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #e6e6e4;
+  font-size: 11px;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+/* 「ううん」と首を横に振る。減衰しながら左右に揺れる */
+.mz-wallet-buy.is-deny {
+  animation: mz-wallet-no 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+@keyframes mz-wallet-no {
+  12% {
+    transform: translateX(-9px);
+  }
+  32% {
+    transform: translateX(8px);
+  }
+  52% {
+    transform: translateX(-5px);
+  }
+  72% {
+    transform: translateX(3px);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* 理由をそっと告げる吹き出し */
+.mz-wallet-tip {
+  position: absolute;
+  top: -30px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #4c4c4c;
+  color: #f5f5f3;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: mz-wallet-tip 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes mz-wallet-tip {
+  0% {
+    transform: translateY(8px) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    transform: none;
+    opacity: 1;
+  }
+  75% {
+    transform: none;
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+}

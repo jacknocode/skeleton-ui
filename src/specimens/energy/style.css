@@ -1,0 +1,130 @@
+.mz-energy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.mz-energy-row {
+  display: flex;
+  gap: 10px;
+}
+
+/* 受け皿。空のときはうっすら窪みだけが残る */
+.mz-energy-slot {
+  position: relative;
+  width: 26px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+}
+.mz-energy-slot::before {
+  content: '';
+  position: absolute;
+  inset: 2px 0;
+  border-radius: 46% 46% 50% 50% / 40% 40% 58% 58%;
+  border: 2px dashed #cfcfcd;
+}
+
+/* しずく本体。満タンのスロットだけに宿る */
+.mz-energy-drop {
+  position: relative;
+  z-index: 1;
+  width: 20px;
+  height: 24px;
+  border-radius: 50% 50% 50% 50% / 38% 38% 62% 62%;
+  background: #8c8c8c;
+  opacity: 0;
+  transform: scale(0.5);
+}
+.mz-energy-slot.is-full .mz-energy-drop {
+  opacity: 1;
+  transform: none;
+}
+
+/* 消費：ぷちんと潰れてから、ふくらんで蒸発する */
+.mz-energy-drop.did-use {
+  animation: mz-energy-evaporate 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes mz-energy-evaporate {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.25, 0.55);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.7) translateY(-10px);
+  }
+}
+
+/* 回復：上からぽたっと落ちて、ぷるんと着地する */
+.mz-energy-slot.is-full .mz-energy-drop.did-gain {
+  animation: mz-energy-refill 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-energy-refill {
+  0% {
+    opacity: 0;
+    transform: translateY(-22px) scale(0.6, 1.3);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(0) scale(1.3, 0.65);
+  }
+  80% {
+    transform: scale(0.9, 1.12);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* 消えた場所に残る、小さな煙の輪 */
+.mz-energy-poof {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid #b3b3b3;
+  pointer-events: none;
+  animation: mz-energy-poof 0.5s ease-out 0.1s backwards forwards;
+}
+@keyframes mz-energy-poof {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+.mz-energy-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-energy-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-energy-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-energy-actions button:active {
+  transform: scale(1.06, 0.88);
+}
+.mz-energy-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}

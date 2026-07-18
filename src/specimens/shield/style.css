@@ -1,0 +1,120 @@
+.mz-shield {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.mz-shield-stage {
+  position: relative;
+  width: 110px;
+  height: 100px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+/* 被弾のたびに key が変わり、ガキンと揺れて白く光る */
+.mz-shield-plate {
+  display: grid;
+  place-items: center;
+}
+.mz-shield-plate.is-hit {
+  animation: mz-shield-clang 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+@keyframes mz-shield-clang {
+  0% {
+    transform: scale(0.92) rotate(-3deg);
+    filter: brightness(1.6);
+  }
+  40% {
+    transform: scale(1.04) rotate(2deg);
+  }
+  100% {
+    transform: none;
+    filter: none;
+  }
+}
+
+.mz-shield-plate svg {
+  width: 74px;
+  height: 84px;
+}
+.mz-shield-body {
+  fill: #a5a5a3;
+  stroke: #6e6e6e;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+/* ヒビ：一筆書きでピシッと走る */
+.mz-shield-crack {
+  fill: none;
+  stroke: #4c4c4c;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+}
+.mz-shield-crack.is-on {
+  animation: mz-shield-run 0.25s ease-out forwards;
+}
+@keyframes mz-shield-run {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* 砕けた瞬間：白閃光と、放射状に飛ぶ破片 */
+.mz-shield-wreck {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.mz-shield-flash {
+  position: absolute;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0) 70%);
+  animation: mz-shield-flash 0.4s ease-out forwards;
+}
+@keyframes mz-shield-flash {
+  0% {
+    transform: scale(0.4);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+.mz-shield-shard {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #a5a5a3;
+  clip-path: polygon(50% 0, 100% 82%, 0 100%);
+  animation: mz-shield-fly 0.7s cubic-bezier(0.16, 0.85, 0.35, 1) forwards;
+}
+@keyframes mz-shield-fly {
+  0% {
+    transform: rotate(var(--a)) translateY(-6px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--a)) translateY(calc(var(--d) * -1)) rotate(200deg) scale(0.4);
+    opacity: 0;
+  }
+}
+
+.mz-shield-hint {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}

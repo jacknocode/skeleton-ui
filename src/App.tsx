@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CATEGORIES, specimens, sourceOf, type Category, type Specimen } from './registry'
+import { IDEA_STATUS_LABEL, ideas, type IdeaStatus } from './ideas'
 
 type Filter = Category | 'すべて'
 
@@ -45,6 +46,11 @@ export default function App() {
         ))}
       </main>
 
+      <IdeaNursery onOpenSpecimen={(id) => {
+        const s = specimens.find((x) => x.id === id)
+        if (s) setSelected(s)
+      }} />
+
       <footer className="zk-footer">
         <p>
           全{specimens.length}種を収録 — アニメーションはすべて依存ライブラリなしのCSSです。
@@ -54,6 +60,65 @@ export default function App() {
 
       {selected && <DetailOverlay specimen={selected} onClose={() => setSelected(null)} />}
     </div>
+  )
+}
+
+const STATUS_ORDER: IdeaStatus[] = ['sprout', 'seed', 'captured']
+
+function IdeaNursery({ onOpenSpecimen }: { onOpenSpecimen: (specimenId: string) => void }) {
+  const [statusFilter, setStatusFilter] = useState<IdeaStatus | 'すべて'>('すべて')
+
+  const counts = ideas.reduce(
+    (acc, i) => ({ ...acc, [i.status]: acc[i.status] + 1 }),
+    { seed: 0, sprout: 0, captured: 0 } as Record<IdeaStatus, number>,
+  )
+  const visible = (statusFilter === 'すべて' ? ideas : ideas.filter((i) => i.status === statusFilter))
+    .slice()
+    .sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status))
+
+  return (
+    <section className="zk-nursery" aria-label="アイデアの苗床">
+      <header className="zk-nursery-head">
+        <p className="zk-eyebrow">IDEA NURSERY</p>
+        <h2>アイデアの苗床</h2>
+        <p className="zk-nursery-lede">
+          次に標本化したい動きの候補地。思いついたら <code>src/ideas.ts</code> に1行追記するだけで、ここに種が増えます。
+          育ったら <code>pnpm new &lt;id&gt;</code> で雛形を作って標本化（詳しくは IDEAS.md）。
+        </p>
+        <div className="zk-filters">
+          {(['すべて', ...STATUS_ORDER] as const).map((s) => (
+            <button
+              key={s}
+              className={`zk-chip${statusFilter === s ? ' is-active' : ''}`}
+              onClick={() => setStatusFilter(s)}
+            >
+              {s === 'すべて' ? `すべて ${ideas.length}` : `${IDEA_STATUS_LABEL[s]} ${counts[s]}`}
+            </button>
+          ))}
+        </div>
+      </header>
+      <ul className="zk-nursery-list">
+        {visible.map((idea) => (
+          <li key={idea.id} className={`zk-idea is-${idea.status}`}>
+            <div className="zk-idea-top">
+              <span className="zk-idea-status">{IDEA_STATUS_LABEL[idea.status]}</span>
+              {idea.tags.map((t) => (
+                <span key={t} className="zk-idea-tag">
+                  {t}
+                </span>
+              ))}
+            </div>
+            <h3>{idea.title}</h3>
+            <p>{idea.motion}</p>
+            {idea.status === 'captured' && idea.specimenId && (
+              <button className="zk-idea-link" onClick={() => onOpenSpecimen(idea.specimenId!)}>
+                図鑑で見る →
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
