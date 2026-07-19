@@ -1,0 +1,166 @@
+.mz-snap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.mz-snap-stage {
+  position: relative;
+  width: 224px;
+  height: 108px;
+}
+
+/* ジェムの定位置。留守のあいだは窪みだけが残る */
+.mz-snap-home {
+  position: absolute;
+  left: 26px;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  border-radius: 14px;
+  border: 2px dashed #c6c6c4;
+}
+
+/* 装備スロット */
+.mz-snap-slot {
+  position: absolute;
+  right: 26px;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  margin-top: -28px;
+  border-radius: 16px;
+  border: 2.5px dashed #b3b3b3;
+  background: #dfdfdd;
+  display: grid;
+  place-items: center;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 0.2s,
+    background-color 0.2s;
+}
+/* 磁力圏内。口を開けて待ちかまえる */
+.mz-snap-slot.is-near {
+  border-style: solid;
+  border-color: #5c5c5c;
+  transform: scale(1.12);
+  animation: mz-snap-hungry 0.4s ease-in-out infinite;
+}
+@keyframes mz-snap-hungry {
+  50% {
+    transform: scale(1.18);
+  }
+}
+/* 装備完了。ぷるんと閉じて満足げ */
+.mz-snap-slot.is-filled {
+  border-style: solid;
+  border-color: #5c5c5c;
+  background: #d2d2d0;
+  animation: mz-snap-gulp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-snap-gulp {
+  0% {
+    transform: scale(1.25, 0.75);
+  }
+  50% {
+    transform: scale(0.9, 1.12);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+.mz-snap-slot-label {
+  position: absolute;
+  bottom: -20px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #b3b3b3;
+}
+
+/* 装備の瞬間に放たれる輪 */
+.mz-snap-burst {
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2.5px solid #8c8c8c;
+  pointer-events: none;
+  animation: mz-snap-burst 0.55s ease-out forwards;
+}
+@keyframes mz-snap-burst {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+/* ジェム本体。ひし形に光沢のひとすじ（ひし形は::beforeで描き、
+   本体のtransformはドラッグの平行移動専用にする） */
+.mz-snap-gem {
+  position: absolute;
+  left: 33px;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  margin-top: -15px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.mz-snap-gem::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #9a9a98, #5c5c5c);
+  transform: rotate(45deg);
+  transition: box-shadow 0.2s;
+}
+.mz-snap-gem::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+}
+.mz-snap-gem.is-dragging {
+  cursor: grabbing;
+}
+.mz-snap-gem.is-dragging::before {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.28);
+}
+/* 磁力で吸われている手応え。小刻みにそわそわする */
+.mz-snap-gem.is-near {
+  animation: mz-snap-quiver 0.14s linear infinite;
+}
+@keyframes mz-snap-quiver {
+  0%,
+  100% {
+    margin-top: -16px;
+  }
+  50% {
+    margin-top: -14px;
+  }
+}
+/* 離すと、定位置かスロットへばねで収まる */
+.mz-snap-gem.is-settle {
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mz-snap-hint {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #b3b3b3;
+}

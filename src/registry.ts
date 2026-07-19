@@ -25,6 +25,12 @@ import Toast from './specimens/toast'
 import Banner from './specimens/banner'
 import Countdown from './specimens/countdown'
 import Wallet from './specimens/wallet'
+import Charge from './specimens/charge'
+import Joystick from './specimens/joystick'
+import Sling from './specimens/sling'
+import Flick from './specimens/flick'
+import Snap from './specimens/snap'
+import Wheel from './specimens/wheel'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -357,6 +363,78 @@ export const specimens: Specimen[] = [
     ecology:
       '高すぎる買い物をしようとすると、ボタンが「ううん」と減衰しながら首を横に振り、財布のコインがへたり込む。吹き出しがそっと理由を告げて消える。エラーを赤い警告ではなく、キャラクターの仕草として伝える生態。',
     Component: Wallet,
+  },
+  {
+    id: 'charge',
+    no: 27,
+    nameJa: '長押しチャージ',
+    nameEn: 'Charge Shot',
+    category: 'ゲーム',
+    trigger: '長押しでためて、離す',
+    principles: ['タメと解放', 'スカッシュ&ストレッチ', '力の可視化'],
+    ecology:
+      '押している間、撃ち手はぐぐっと潰れて力をため、ゲージが満ちる。満タンになると武者震いして「今だ」と教えてくれる。離した瞬間、ためた時間のぶんだけ星が大きく遠くへ飛ぶ。指を置いている長さがそのまま強さになる、長押しというモバイル特有の入力の教科書。',
+    Component: Charge,
+  },
+  {
+    id: 'joystick',
+    no: 28,
+    nameJa: 'バーチャルパッド',
+    nameEn: 'Virtual Joystick',
+    category: 'ゲーム',
+    trigger: 'スティックをドラッグ',
+    principles: ['入力の可視化', 'ばね戻り', '二次アクション'],
+    ecology:
+      'ノブは指に吸い付いて可動域の縁まで倒れ、倒した向きと深さでひよこが歩く。浅く倒せばそろそろと、深く倒せばぴょこぴょこ急ぐ。指を離すとノブはばねで中央へ跳ね戻り、ひよこはその場で立ち止まって呼吸に戻る。物理ボタンのない画面に「レバーの手応え」を宿す生態。',
+    Component: Joystick,
+  },
+  {
+    id: 'sling',
+    no: 29,
+    nameJa: '引っぱり発射',
+    nameEn: 'Slingshot',
+    category: 'ゲーム',
+    trigger: '玉を引っぱって、離す',
+    principles: ['予備動作', '軌道の予告', 'ぽんっと帰還'],
+    ecology:
+      '玉をつまんで引くと、飛んでいく向きに予告のドットが並び、強く引くほど遠く濃く伸びる。離すと玉は引いた逆へ勢いよく飛び、的に当たればスライムがぐしゃっと潰れる。引く＝ためる＝狙うがひと動作に重なった、モンストやアングリーバード直系の指の文法。ちょい引きは不発でそっと戻る。',
+    Component: Sling,
+  },
+  {
+    id: 'flick',
+    no: 30,
+    nameJa: 'フリック仕分け',
+    nameEn: 'Swipe Judge',
+    category: 'ゲーム',
+    trigger: 'カードを左右にスワイプ',
+    principles: ['慣性', 'しきい値の可視化', 'ばね戻り'],
+    ecology:
+      'カードは指に付いて傾き、傾けた量に応じてGET/PASSのスタンプがにじみ出る——いま離したらどうなるかを常に予告する。しきい値を越えるか勢いよくフリックすれば回転しながら飛んでいき、控えのカードがぷるんと繰り上がる。迷って戻せばばねで定位置へ。「仕分ける」判断を1スワイプに圧縮した生態。',
+    Component: Flick,
+  },
+  {
+    id: 'snap',
+    no: 31,
+    nameJa: '装備スロットの磁力',
+    nameEn: 'Magnetic Slot',
+    category: 'ゲーム',
+    trigger: 'ジェムをスロットへドラッグ',
+    principles: ['磁力スナップ', '吸い付き', 'ポップ'],
+    ecology:
+      'ジェムをつまんでスロットに近づけると、磁石の圏内に入った瞬間ふっと吸い寄せられ、ジェムはそわそわと震え、スロットは口を開けて待ちかまえる。離せばかちっと収まって輪が弾け、スロットがごくんと満足げに揺れる。ドロップ先の当たり判定を「感触」として指に伝える、ドラッグ&ドロップの礼儀作法。',
+    Component: Snap,
+  },
+  {
+    id: 'wheel',
+    no: 32,
+    nameJa: 'フリックルーレット',
+    nameEn: 'Flick Roulette',
+    category: 'ゲーム',
+    trigger: '盤面をフリックで回す',
+    principles: ['慣性', '摩擦の減速', 'じらし'],
+    ecology:
+      '盤面は指の速さをそのまま受け取って回り、離すと摩擦でじわじわと減速していく。針はセクターの境界を越えるたびにかちっとはじかれ、遅くなるほど鼓動のような間隔になる。止まり際はいちばん近いマスへぷるんと吸い付いて確定し、結果が跳ねて登場する。減速の時間そのものが「どこで止まる？」のじらしになる生態。',
+    Component: Wheel,
   },
 ]
 

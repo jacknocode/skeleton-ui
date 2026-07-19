@@ -1,0 +1,165 @@
+.mz-flick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.mz-flick-stack {
+  position: relative;
+  width: 112px;
+  height: 148px;
+}
+
+.mz-flick-card {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 控えのカードは奥で小さく待ち、順番が来るとぷるんと前へ */
+.mz-flick-card.is-under {
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-flick-card.depth-1 {
+  transform: translateY(9px) scale(0.94);
+}
+.mz-flick-card.depth-2 {
+  transform: translateY(18px) scale(0.88);
+}
+
+.mz-flick-card.is-top {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  /* 控えの位置からぷるんと繰り上がってくる */
+  animation: mz-flick-promote 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-flick-promote {
+  from {
+    transform: translateY(9px) scale(0.94);
+  }
+}
+.mz-flick-card.is-top:active {
+  cursor: grabbing;
+}
+/* しきい値に届かなかったら、ばねで定位置へ戻る */
+.mz-flick-card.is-top.is-settle {
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 仕分け成立。回転しながら画面外へ飛んでいく */
+.mz-flick-card.is-leaving {
+  pointer-events: none;
+}
+.mz-flick-card.is-leaving.to-right {
+  animation: mz-flick-out-r 0.45s cubic-bezier(0.3, 0.7, 0.4, 1) forwards;
+}
+.mz-flick-card.is-leaving.to-left {
+  animation: mz-flick-out-l 0.45s cubic-bezier(0.3, 0.7, 0.4, 1) forwards;
+}
+@keyframes mz-flick-out-r {
+  0% {
+    transform: translateX(60px) rotate(7deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(300px) rotate(28deg);
+    opacity: 0;
+  }
+}
+@keyframes mz-flick-out-l {
+  0% {
+    transform: translateX(-60px) rotate(-7deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-300px) rotate(-28deg);
+    opacity: 0;
+  }
+}
+
+/* モンスターの顔。shapeごとに輪郭が変わる */
+.mz-flick-mon {
+  width: 54px;
+  height: 46px;
+  background: #cfcfcd;
+  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.07);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  pointer-events: none;
+}
+.mz-flick-mon i {
+  width: 5px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6e6e6e;
+}
+.mz-flick-mon.is-blob {
+  border-radius: 48% 48% 44% 44% / 60% 60% 38% 38%;
+}
+.mz-flick-mon.is-bat {
+  border-radius: 50% 50% 20% 20% / 70% 70% 30% 30%;
+  clip-path: polygon(0 30%, 20% 0, 50% 22%, 80% 0, 100% 30%, 100% 100%, 0 100%);
+}
+.mz-flick-mon.is-ghost {
+  border-radius: 50% 50% 0 0 / 62% 62% 0 0;
+  clip-path: polygon(0 0, 100% 0, 100% 92%, 83% 100%, 66% 92%, 50% 100%, 33% 92%, 16% 100%, 0 92%);
+}
+.mz-flick-mon.is-shroom {
+  border-radius: 50% 50% 30% 30% / 78% 78% 22% 22%;
+}
+
+.mz-flick-name {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #8c8c8c;
+  pointer-events: none;
+}
+
+/* 判定スタンプ。傾けた量に応じてにじみ出る */
+.mz-flick-stamp {
+  position: absolute;
+  top: 10px;
+  padding: 3px 8px;
+  border: 2.5px solid #5c5c5c;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: #5c5c5c;
+  background: rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+}
+.mz-flick-stamp.is-get {
+  left: 8px;
+  transform: rotate(-14deg);
+}
+.mz-flick-stamp.is-pass {
+  right: 8px;
+  transform: rotate(14deg);
+  border-style: dashed;
+  color: #9a9a9a;
+  border-color: #9a9a9a;
+}
+
+.mz-flick-tally {
+  display: flex;
+  gap: 22px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
