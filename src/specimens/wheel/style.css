@@ -1,0 +1,153 @@
+.mz-wheel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.mz-wheel-stage {
+  position: relative;
+  padding-top: 10px;
+}
+
+/* 盤面。6分割で、★のセクターだけ濃い */
+.mz-wheel-disc {
+  width: 148px;
+  height: 148px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from -30deg,
+    #b9b9b7 0 60deg,
+    #fff 0 120deg,
+    #e7e7e5 0 180deg,
+    #fff 0 240deg,
+    #e7e7e5 0 300deg,
+    #fff 0 360deg
+  );
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.14),
+    inset 0 0 0 5px #fff,
+    inset 0 0 0 7px #d9d9d7;
+  position: relative;
+  display: grid;
+  place-items: center;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.mz-wheel-disc:active {
+  cursor: grabbing;
+}
+/* 止まり際だけ、ぷるんと行き過ぎて吸い付く */
+.mz-wheel-disc.is-settle {
+  transition: transform 0.62s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* 中心のハブ */
+.mz-wheel-disc::after {
+  content: '';
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.16),
+    inset 0 0 0 3px #d9d9d7;
+}
+
+.mz-wheel-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -8px 0 0 -18px;
+  width: 36px;
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #6e6e6e;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 針。セクターの境界を越えるたびに、かちっとはじかれる */
+.mz-wheel-pin {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 1;
+  margin-left: -9px;
+  border: 9px solid transparent;
+  border-top: 14px solid #5c5c5c;
+  transform-origin: 50% 20%;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+}
+.mz-wheel-pin.is-tick {
+  animation: mz-wheel-tick 0.16s ease-out;
+}
+@keyframes mz-wheel-tick {
+  30% {
+    transform: rotate(16deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* 結果の吹き出し */
+.mz-wheel-result {
+  position: absolute;
+  left: 50%;
+  top: -16px;
+  z-index: 2;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #4c4c4c;
+  color: #f5f5f3;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: mz-wheel-resultpop 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.mz-wheel-result.is-jackpot {
+  background: #3d3d3d;
+  animation:
+    mz-wheel-resultpop 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+    mz-wheel-jackpot 0.4s linear 2;
+}
+@keyframes mz-wheel-resultpop {
+  0% {
+    transform: translate(-50%, 10px) scale(0.2);
+    opacity: 0;
+  }
+  12% {
+    transform: translate(-50%, 0) scale(1.15);
+    opacity: 1;
+  }
+  22% {
+    transform: translate(-50%, 0) scale(1);
+  }
+  80% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -10px) scale(0.9);
+    opacity: 0;
+  }
+}
+@keyframes mz-wheel-jackpot {
+  50% {
+    filter: brightness(1.6);
+  }
+}
+
+.mz-wheel-hint {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #b3b3b3;
+}

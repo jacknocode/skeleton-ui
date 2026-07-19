@@ -124,6 +124,38 @@ export const ideas: Idea[] = [
     status: 'captured',
     specimenId: 'toast',
   },
+  {
+    id: 'hold-charge',
+    title: '長押しチャージショット',
+    motion: '押すほどぐぐっと潰れて力がたまり、満タンで武者震い。離すとためた分だけ星が飛ぶ',
+    tags: ['ゲーム', 'モバイル', '長押し'],
+    status: 'captured',
+    specimenId: 'charge',
+  },
+  {
+    id: 'virtual-joystick',
+    title: 'バーチャルパッド',
+    motion: 'ノブが指に吸い付いて倒れ、倒した分だけキャラが歩く。離すとばねで中央へ跳ね戻る',
+    tags: ['ゲーム', 'モバイル', 'ドラッグ'],
+    status: 'captured',
+    specimenId: 'joystick',
+  },
+  {
+    id: 'slingshot',
+    title: '引っぱり発射',
+    motion: '引くほど発射方向のドットが濃く伸び、離すと逆向きへ勢いよく飛ぶ。命中でぐしゃっ',
+    tags: ['ゲーム', 'モバイル', 'ドラッグ'],
+    status: 'captured',
+    specimenId: 'sling',
+  },
+  {
+    id: 'swipe-judge',
+    title: 'フリック仕分けカード',
+    motion: '指に付いて傾き、スタンプがにじみ出て判定を予告。しきい値を越えると回転して飛んでいく',
+    tags: ['ゲーム', 'モバイル', 'スワイプ'],
+    status: 'captured',
+    specimenId: 'flick',
+  },
 
   /* ---------- 種・育成中 ---------- */
   {
@@ -144,8 +176,9 @@ export const ideas: Idea[] = [
     id: 'roulette',
     title: '惜しがるルーレット',
     motion: '減速していき、境界で一度戻りそうになってから止まる。物理の重さで期待を作る',
-    tags: ['ゲーム', '報酬', 'じらし'],
-    status: 'seed',
+    tags: ['ゲーム', '報酬', 'じらし', 'モバイル'],
+    status: 'captured',
+    specimenId: 'wheel',
   },
   {
     id: 'slot-reel',
@@ -201,8 +234,9 @@ export const ideas: Idea[] = [
     id: 'slot-snap',
     title: '装備スロットの磁力',
     motion: 'ドラッグ中のアイテムがスロットに近づくと磁石のように吸い付き、ぷるんと収まる',
-    tags: ['ゲーム', 'ドラッグ', 'インベントリ'],
-    status: 'seed',
+    tags: ['ゲーム', 'ドラッグ', 'インベントリ', 'モバイル'],
+    status: 'captured',
+    specimenId: 'snap',
   },
   {
     id: 'wallet-shake',
@@ -302,6 +336,50 @@ export const ideas: Idea[] = [
     title: '連勝の火が育つ',
     motion: '勝つたびに炎アイコンがひと回り育ってゆらめく。途切れると煙だけ残して消える',
     tags: ['ゲーム', '継続', '成長'],
+    status: 'seed',
+  },
+
+  /* ---------- モバイル操作（指のジェスチャー）の種 ---------- */
+  {
+    id: 'pinch-map',
+    title: 'ピンチでマップ拡縮',
+    motion: '2本指で地図がゴムのように伸び縮みし、指を離すとグリッドへぱちんと吸い付く',
+    tags: ['ゲーム', 'モバイル', 'ピンチ'],
+    status: 'seed',
+  },
+  {
+    id: 'pull-reload',
+    title: '引っぱりリロード',
+    motion: '弾倉を下へ引いて離すと、ばねが戻ってじゃきんと装填。引きの深さで戻りの勢いが変わる',
+    tags: ['ゲーム', 'モバイル', 'スワイプ'],
+    status: 'seed',
+  },
+  {
+    id: 'rhythm-ring',
+    title: 'リズムタップの判定リング',
+    motion: '縮んでくる輪に合わせてタップ。ぴったりならPERFECTが弾け、ズレると輪がくしゃっと歪む',
+    tags: ['ゲーム', 'モバイル', 'タップ'],
+    status: 'seed',
+  },
+  {
+    id: 'aim-cone',
+    title: 'スキルのドラッグ照準',
+    motion: '押した指から扇形の照準がにゅっと伸び、離すと範囲が一瞬光って発動する',
+    tags: ['ゲーム', 'モバイル', 'ドラッグ'],
+    status: 'seed',
+  },
+  {
+    id: 'edge-dodge',
+    title: 'フリック回避の残像',
+    motion: '左右フリックでキャラが残像を残してステップ。連続で決めるほど残像が濃く尾を引く',
+    tags: ['ゲーム', 'モバイル', 'フリック'],
+    status: 'seed',
+  },
+  {
+    id: 'gyro-parallax',
+    title: '傾き視差のレアカード',
+    motion: 'ドラッグや端末の傾きで絵柄と箔が別速度で滑り、奥行きがきらりと覗く',
+    tags: ['ゲーム', 'モバイル', '3D'],
     status: 'seed',
   },
 ]
