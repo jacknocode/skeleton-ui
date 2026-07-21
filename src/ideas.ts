@@ -382,4 +382,43 @@ export const ideas: Idea[] = [
     tags: ['ゲーム', 'モバイル', '3D'],
     status: 'seed',
   },
+
+  /* ---------- カードスタック（Amicro採取）の種 ----------
+     数値の設計図は skills リポジトリの creative/card-micro-interactions を参照。
+     基本バネは stiffness180/damping20/mass0.8 ≒ transform 0.55s cubic-bezier(0.34, 1.3, 0.64, 1) */
+  {
+    id: 'card-fan-arc',
+    title: '扇に開くカード束',
+    motion: '重なった5枚がホバーで底辺を支点にしゃらっと扇状に開く（端±30°/±70px）。端は+10px沈み中央は-10px浮いて弧を描き、中央だけ1.05倍で主役になる',
+    tags: ['汎用', 'カード', 'ホバー'],
+    status: 'sprout',
+  },
+  {
+    id: 'card-scatter-deal',
+    title: '手札ディールの散らばり',
+    motion: 'ホバーで5枚がぱらっと不揃いに散らばる。均等計算でなく1枚ずつ手置きのオフセット（中央も+2°だけ崩す）が「人が並べた感」を伝える',
+    tags: ['汎用', 'カード', 'ホバー'],
+    status: 'sprout',
+  },
+  {
+    id: 'card-cascade-rise',
+    title: '階段にせり上がるカード',
+    motion: '待機中も2pxずつズレて束感を仕込み、ホバーで1枚ごとに-28pxずつ階段状にすっとせり上がる（+6°ずつ傾く）。少し重めのバネで紙の質量を伝える',
+    tags: ['汎用', 'カード', 'ホバー'],
+    status: 'sprout',
+  },
+  {
+    id: 'card-cover-flow',
+    title: 'CSSカバーフロー',
+    motion: '選択カードが正面を向き、左右はrotateY±38°で奥へ畳まれる。送ると跳ねずにすっと入れ替わり、タイトルだけ一拍遅れてふわり',
+    tags: ['汎用', 'カード', '3D'],
+    status: 'sprout',
+  },
+  {
+    id: 'card-time-machine',
+    title: 'タイムマシンの奥行きスクラブ',
+    motion: '目盛りを撫でるとカードが奥からせり出し、通過した1枚は手前へ1.3倍に飛び抜けて消える。目盛り自体もscaleXでにゅっと伸びて応える',
+    tags: ['汎用', 'カード', '3D', 'スクラブ'],
+    status: 'sprout',
+  },
 ]
