@@ -1,0 +1,77 @@
+.mz-casc {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.mz-casc-stack {
+  position: relative;
+  width: 150px;
+  height: 132px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+/* 紙の束なので、標準よりわずかに重いバネ（200/22/0.9 換算） */
+.mz-casc-card {
+  position: absolute;
+  width: 48px;
+  height: 66px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.15);
+  transition: transform 0.5s cubic-bezier(0.34, 1.25, 0.64, 1);
+}
+.mz-casc-card::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 6px;
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+}
+
+.mz-casc-c0 { z-index: 3; }
+.mz-casc-c1 { z-index: 4; }
+.mz-casc-c2 { z-index: 5; }
+.mz-casc-c3 { z-index: 4; }
+.mz-casc-c4 { z-index: 3; }
+
+/* 待機中も2pxずつズラして「束」であることを予告しておく */
+.mz-casc-c0 { transform: translateY(-4px); }
+.mz-casc-c1 { transform: translateY(-2px); }
+.mz-casc-c3 { transform: translateY(2px); }
+.mz-casc-c4 { transform: translateY(4px); }
+
+/* 1枚ごとに y-20px・x10px・6°ずつ積んで階段にする */
+.mz-casc-stack:hover .mz-casc-c0,
+.mz-casc-stack.is-open .mz-casc-c0 {
+  transform: translate(-20px, 30px) rotate(-12deg) scale(0.98);
+}
+.mz-casc-stack:hover .mz-casc-c1,
+.mz-casc-stack.is-open .mz-casc-c1 {
+  transform: translate(-10px, 10px) rotate(-6deg) scale(0.98);
+}
+.mz-casc-stack:hover .mz-casc-c2,
+.mz-casc-stack.is-open .mz-casc-c2 {
+  transform: translate(0, -10px) scale(1.05);
+}
+.mz-casc-stack:hover .mz-casc-c3,
+.mz-casc-stack.is-open .mz-casc-c3 {
+  transform: translate(10px, -30px) rotate(6deg) scale(0.98);
+}
+.mz-casc-stack:hover .mz-casc-c4,
+.mz-casc-stack.is-open .mz-casc-c4 {
+  transform: translate(20px, -50px) rotate(12deg) scale(0.98);
+}
+
+.mz-casc-hint {
+  font-size: 11px;
+  font-weight: 700;
+  color: #b5b5b5;
+}

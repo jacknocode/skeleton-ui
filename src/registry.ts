@@ -31,6 +31,11 @@ import Sling from './specimens/sling'
 import Flick from './specimens/flick'
 import Snap from './specimens/snap'
 import Wheel from './specimens/wheel'
+import CardFanArc from './specimens/card-fan-arc'
+import CardScatterDeal from './specimens/card-scatter-deal'
+import CardCascadeRise from './specimens/card-cascade-rise'
+import CardCoverFlow from './specimens/card-cover-flow'
+import CardTimeMachine from './specimens/card-time-machine'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -435,6 +440,66 @@ export const specimens: Specimen[] = [
     ecology:
       '盤面は指の速さをそのまま受け取って回り、離すと摩擦でじわじわと減速していく。針はセクターの境界を越えるたびにかちっとはじかれ、遅くなるほど鼓動のような間隔になる。止まり際はいちばん近いマスへぷるんと吸い付いて確定し、結果が跳ねて登場する。減速の時間そのものが「どこで止まる？」のじらしになる生態。',
     Component: Wheel,
+  },
+  {
+    id: 'card-fan-arc',
+    no: 33,
+    nameJa: '扇に開くカード束',
+    nameEn: 'Card Fan Arc',
+    category: 'ナビゲーション',
+    trigger: '束にホバー / タップ',
+    principles: ['扇形展開', 'アーク', 'オーバーシュート'],
+    ecology:
+      '重なった5枚が底辺を支点に、しゃらっと扇状に開く。回転だけでなく端が+6px沈み中央が-6px浮く放物線のyが乗ることで、「扇」が「弧」に見える。中央の1枚だけ1.05倍にそっと持ち上がり、どれが主役かを言葉なしで伝える。2〜3%だけ行き過ぎて止まるバネが、紙のしなりを演じる生態。Amicroのカードスタックから採取。',
+    Component: CardFanArc,
+  },
+  {
+    id: 'card-scatter-deal',
+    no: 34,
+    nameJa: '手札ディールの散らばり',
+    nameEn: 'Scatter Deal',
+    category: 'ナビゲーション',
+    trigger: '束にホバー / タップ',
+    principles: ['不均等配置', '崩し', 'オーバーシュート'],
+    ecology:
+      'ホバーで5枚がぱらっと場に散らばる。位置と角度は数式の等分ではなく1枚ずつの手置きで、中央のカードさえ+2°だけ傾いている。この「わずかな崩し」が機械の整列ではなく人がテーブルに並べた感触を作る。戻るときは同じバネで束にすっと吸い込まれる。均等こそが嘘くさい、を教えてくれる標本。',
+    Component: CardScatterDeal,
+  },
+  {
+    id: 'card-cascade-rise',
+    no: 35,
+    nameJa: '階段にせり上がるカード',
+    nameEn: 'Cascade Rise',
+    category: 'ナビゲーション',
+    trigger: '束にホバー / タップ',
+    principles: ['カスケード', '予告', '質量感'],
+    ecology:
+      '待機中から2pxずつズレて「これは束だ」と予告しておき、ホバーで1枚ごとに20pxずつ階段状にすっとせり上がる。傾きも6°ずつ積まれ、全体がひとつの螺旋階段のように立ち上がる。バネは標準よりわずかに重く、紙束の質量を体に伝える。展開前の仕込みが展開後の驚きを滑らかにする、段取りの生態。',
+    Component: CardCascadeRise,
+  },
+  {
+    id: 'card-cover-flow',
+    no: 36,
+    nameJa: 'CSSカバーフロー',
+    nameEn: 'Cover Flow',
+    category: 'ナビゲーション',
+    trigger: '脇のカードかドットをクリック',
+    principles: ['3D回転', '奥行き', 'ほぼ臨界減衰'],
+    ecology:
+      '選ばれた1枚が正面を向いて手前へ出て、左右はrotateY±38°で奥へ畳まれる。距離に応じて縮み・薄れながら列をなすので、5枚が一つの奥行きに収まる。3Dは跳ねさせず、ほぼ臨界減衰のease-outですっと入れ替えるのが上品さの秘訣。ドットは選択中だけ棒に伸びて現在地を示す。iPod時代の名作を、CSSの3D変形だけで飼い慣らした標本。',
+    Component: CardCoverFlow,
+  },
+  {
+    id: 'card-time-machine',
+    no: 37,
+    nameJa: 'タイムマシンの奥行きスクラブ',
+    nameEn: 'Time Machine Scrub',
+    category: 'ナビゲーション',
+    trigger: '右の目盛りを撫でる',
+    principles: ['奥行きの時間軸', '飛び抜け退場', 'ピント合わせ'],
+    ecology:
+      '目盛りを撫でると過去のカードが奥からせり出し、現在より手前になった1枚は1.25倍に膨らみながら画面の外へ飛び抜けて消える。時間を「奥＝過去、手前＝未来」の空間に翻訳した生態。目盛りはscaleXだけでにゅっと伸びて応え、日付ラベルはぼけた状態から0.15秒でピントが合う。macOSのTime Machineへのオマージュ。',
+    Component: CardTimeMachine,
   },
 ]
 
