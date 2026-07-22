@@ -1,0 +1,106 @@
+/* 暗室の中で奥行きを見せる標本。パネルごと1つの舞台にする */
+.mz-tmac {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 14px;
+  border-radius: 16px;
+  background: #262624;
+  overflow: hidden;
+}
+
+.mz-tmac-scene {
+  position: relative;
+  width: 132px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  perspective: 800px;
+  transform-style: preserve-3d;
+}
+
+/* 追従が主目的なので速く硬いバネ（250/25/0.8 換算）。
+   過去のカードは手前へ1.25倍に飛び抜けながら溶けて消える */
+.mz-tmac-card {
+  position: absolute;
+  width: 104px;
+  height: 64px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.45);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  transition:
+    transform 0.4s cubic-bezier(0.32, 1, 0.6, 1),
+    opacity 0.4s cubic-bezier(0.32, 1, 0.6, 1);
+}
+
+.mz-tmac-scrub {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-end;
+}
+
+.mz-tmac-tick {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  width: 64px;
+  background: none;
+  border: 0;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+/* 目盛りはscaleXだけで応える。極小要素なので硬く速いバネ（400/25 換算） */
+.mz-tmac-bar {
+  width: 22px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+  transform-origin: 100% 50%;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1),
+    background 0.25s;
+}
+.mz-tmac-tick:hover .mz-tmac-bar {
+  background: rgba(255, 255, 255, 0.8);
+}
+.mz-tmac-tick.is-selected .mz-tmac-bar {
+  background: #6ba1ff;
+}
+.mz-tmac-tick.is-hovered .mz-tmac-bar {
+  transform: scaleX(1.25);
+}
+.mz-tmac-tick.is-selected.is-hovered .mz-tmac-bar {
+  transform: scaleX(1.4);
+}
+
+/* 日付ラベルはぼけながら現れて、0.15秒でピントが合う */
+.mz-tmac-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  opacity: 0;
+  filter: blur(2px);
+  transform: scale(0.8);
+  transition:
+    opacity 0.15s,
+    filter 0.15s,
+    transform 0.15s;
+}
+.mz-tmac-tick.is-selected .mz-tmac-label {
+  color: #6ba1ff;
+}
+.mz-tmac-tick.is-hovered .mz-tmac-label {
+  opacity: 1;
+  filter: blur(0);
+  transform: scale(1);
+}
