@@ -1,0 +1,300 @@
+.mz-mc {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.mz-mc-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 22px;
+  padding: 20px 18px 20px;
+  background: linear-gradient(165deg, #232322 0%, #131312 60%, #060605 100%);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.mz-mc-hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+.mz-mc-hud-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.5);
+}
+.mz-mc-hud-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.mz-mc-hud-value small {
+  margin-left: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.mz-mc-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.mz-mc-grid {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+}
+.mz-mc-gridtext {
+  fill: rgba(255, 255, 255, 0.32);
+  font-size: 9px;
+  font-weight: 600;
+}
+.mz-mc-baseline {
+  stroke: rgba(255, 255, 255, 0.25);
+  stroke-width: 1.5;
+}
+
+.mz-mc-area {
+  opacity: 0.9;
+}
+.mz-mc-line {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.45));
+}
+
+.mz-mc-dot {
+  fill: #171715;
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 1.5;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0.3);
+  transition:
+    opacity 0.3s ease-out,
+    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+    fill 0.3s,
+    stroke 0.3s;
+}
+.mz-mc-milestone.is-lit .mz-mc-dot {
+  opacity: 1;
+  transform: scale(1);
+  fill: #fff;
+  stroke: rgba(0, 0, 0, 0.35);
+}
+
+.mz-mc-mname,
+.mz-mc-myear {
+  font-weight: 700;
+  opacity: 0;
+  transition:
+    opacity 0.35s ease-out,
+    fill 0.3s;
+}
+.mz-mc-mname {
+  font-size: 10.5px;
+  fill: rgba(255, 255, 255, 0.4);
+}
+.mz-mc-myear {
+  font-size: 8.5px;
+  fill: rgba(255, 255, 255, 0.3);
+}
+.mz-mc-milestone.is-lit .mz-mc-mname,
+.mz-mc-milestone.is-lit .mz-mc-myear {
+  opacity: 1;
+}
+.mz-mc-milestone.is-lit .mz-mc-mname {
+  fill: rgba(255, 255, 255, 0.88);
+}
+.mz-mc-milestone.is-lit .mz-mc-myear {
+  fill: rgba(255, 255, 255, 0.55);
+}
+
+/* 先端の光点。呼吸するように明滅し続ける */
+.mz-mc-lead {
+  fill: #fff;
+  animation: mz-mc-lead-breathe 1.6s ease-in-out infinite;
+}
+@keyframes mz-mc-lead-breathe {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.6));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
+    transform: scale(1.3);
+  }
+}
+
+/* クライマックスの光の粒 */
+.mz-mc-spark {
+  fill: #fff;
+  transform-box: fill-box;
+  transform-origin: center;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8));
+  animation: mz-mc-spark-fly 0.8s cubic-bezier(0.16, 0.8, 0.4, 1) forwards;
+}
+@keyframes mz-mc-spark-fly {
+  0% {
+    transform: rotate(var(--a)) translateX(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--a)) translateX(38px) scale(0.15);
+    opacity: 0;
+  }
+}
+
+.mz-mc-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  border-radius: inherit;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: mz-mc-flash-out 0.6s ease-out forwards;
+}
+@keyframes mz-mc-flash-out {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* 倍率バッジ。序盤の空いた左上へ、ドンと据わって光る（HUDや曲線の頂点と重ならない位置） */
+.mz-mc-badge {
+  position: absolute;
+  top: 48px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  animation: mz-mc-badge-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-mc-badge-x {
+  font-size: 30px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  text-shadow: 0 0 18px rgba(255, 255, 255, 0.55);
+}
+.mz-mc-badge-note {
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.6);
+}
+@keyframes mz-mc-badge-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) translateY(-10px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.18) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* スクラブトラック */
+.mz-mc-track {
+  position: relative;
+  height: 26px;
+  margin-top: 10px;
+  cursor: pointer;
+  touch-action: none;
+}
+.mz-mc-track:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+.mz-mc-track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+.mz-mc-track-fill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: #fff;
+  border-radius: 2px;
+}
+.mz-mc-tick {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  transition:
+    background-color 0.25s,
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-mc-tick.is-lit {
+  background: #fff;
+  transform: scale(1.2);
+}
+.mz-mc-knob {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.4),
+    0 0 0 4px rgba(255, 255, 255, 0.15);
+}
+
+.mz-mc-replay {
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-mc-replay:hover {
+  transform: translateY(-2px);
+}
+.mz-mc-replay:active {
+  transform: scale(1.08, 0.86);
+}

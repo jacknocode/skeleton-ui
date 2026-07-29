@@ -1,0 +1,145 @@
+.mz-kpi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.mz-kpi-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px 26px 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  min-width: 220px;
+}
+
+.mz-kpi-caption {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #b3b3b3;
+}
+
+.mz-kpi-numwrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.mz-kpi-num {
+  position: relative;
+  font-size: 32px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.mz-kpi-num small {
+  margin-left: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+
+/* 直前の値がふっと後ろへ抜けていく残像 */
+.mz-kpi-ghost {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 32px;
+  font-weight: 800;
+  color: #c9c9c7;
+  pointer-events: none;
+  animation: mz-kpi-ghost-fade 0.55s ease-out forwards;
+}
+@keyframes mz-kpi-ghost-fade {
+  0% {
+    opacity: 0.65;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+
+.mz-kpi-delta {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 999px;
+  animation: mz-kpi-delta-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-kpi-delta-in {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+.mz-kpi-delta.is-up {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-kpi-delta.is-down {
+  background: transparent;
+  color: #6e6e6e;
+  box-shadow: inset 0 0 0 1.5px #b3b3b3;
+}
+
+.mz-kpi-spark {
+  width: 130px;
+  height: auto;
+  margin-top: 2px;
+  overflow: visible;
+}
+.mz-kpi-spark-line {
+  fill: none;
+  stroke: #b3b3b3;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 100;
+  transition: stroke-dashoffset 0.5s ease-out;
+}
+.mz-kpi-spark-dot {
+  fill: #3d3d3d;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mz-kpi-actions {
+  display: flex;
+  gap: 6px;
+}
+.mz-kpi-actions button {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-kpi-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-kpi-actions button:active {
+  transform: scale(1.08, 0.86);
+}
+.mz-kpi-actions button.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}

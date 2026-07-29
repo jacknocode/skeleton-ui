@@ -36,8 +36,15 @@ import CardScatterDeal from './specimens/card-scatter-deal'
 import CardCascadeRise from './specimens/card-cascade-rise'
 import CardCoverFlow from './specimens/card-cover-flow'
 import CardTimeMachine from './specimens/card-time-machine'
+import ChartLine from './specimens/chart-line'
+import ChartBars from './specimens/chart-bars'
+import KpiCount from './specimens/kpi-count'
+import Waterfall from './specimens/waterfall'
+import DonutRatio from './specimens/donut-ratio'
+import MarketCap from './specimens/market-cap'
+import ChartReflow from './specimens/chart-reflow'
 
-export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム'] as const
+export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'データ可視化'] as const
 export type Category = (typeof CATEGORIES)[number]
 
 export interface Specimen {
@@ -500,6 +507,90 @@ export const specimens: Specimen[] = [
     ecology:
       '目盛りを撫でると過去のカードが奥からせり出し、現在より手前になった1枚は1.25倍に膨らみながら画面の外へ飛び抜けて消える。時間を「奥＝過去、手前＝未来」の空間に翻訳した生態。目盛りはscaleXだけでにゅっと伸びて応え、日付ラベルはぼけた状態から0.15秒でピントが合う。macOSのTime Machineへのオマージュ。',
     Component: CardTimeMachine,
+  },
+  {
+    id: 'chart-line',
+    no: 38,
+    nameJa: '折れ線チャート',
+    nameEn: 'Living Line',
+    category: 'データ可視化',
+    trigger: '「今週」「先週」を切り替える／↺で描き直す',
+    principles: ['線画アニメーション', 'モーションパス', '呼吸する先端'],
+    ecology:
+      '折れ線がpathLengthの力を借りてひと筆に描かれ、面がじわっと色づく。先端には光る点がぴたりと張り付いて旅をし、線が描き終わると同じ場所でゆっくり呼吸を始める——「いまのライブな値」であることを息づかいで語る。データを切り替えると全体が描き直され、増減の勢いが線の傾きとして体に残る。',
+    Component: ChartLine,
+  },
+  {
+    id: 'chart-bars',
+    no: 39,
+    nameJa: '棒グラフ',
+    nameEn: 'Rising Bars',
+    category: 'データ可視化',
+    trigger: '棒をタップして選ぶ／シャッフルで並べ替え',
+    principles: ['ステガー登場', 'オーバーシュート', '選択のハイライト'],
+    ecology:
+      '棒が時間差で立ち上がり、目標値をわずかに追い越してからすとんと着地する——CSSカスタムプロパティに乗せた目標値ぶんだけ、キーフレームが行き過ぎて戻る。タップした棒だけ数値が拡大し、他はそっと引っ込んで主役を譲る。シャッフルのたびに全員が並び直す、素朴だが効く報酬の文法。',
+    Component: ChartBars,
+  },
+  {
+    id: 'kpi-count',
+    no: 40,
+    nameJa: 'KPIカウンター',
+    nameEn: 'Surging KPI',
+    category: 'データ可視化',
+    trigger: '「Q1」〜「Q4」を切り替える',
+    principles: ['イーズアウト数値補間', '残像ブラー', 'トレンドスパークライン'],
+    ecology:
+      '数字はドラムで回るのではなく、変化の速さのぶんだけ一瞬にじんでから、着地とともにピントが合う。直前の値は薄い残像となって上へ抜けていき、下では小さな折れ線が同じ歩幅で伸びる。上下の増減は色でなく「太い印」と「輪郭だけの印」で語る、この図鑑らしい語法。',
+    Component: KpiCount,
+  },
+  {
+    id: 'waterfall',
+    no: 41,
+    nameJa: 'ウォーターフォール',
+    nameEn: 'Waterfall Build',
+    category: 'データ可視化',
+    trigger: 'バーをタップして内訳を読む／「もう一度落とす」',
+    principles: ['連鎖着地', '因果の可視化', '点線の水準継承'],
+    ecology:
+      '期首のバーが最初に落ち、増減の内訳が時間差でひとつずつ着地し、最後に期末が受け止める。バーとバーの間には水準が引き継がれたことを示す点線がすっと架かるので、途中を見なくても「なぜこの数字になったか」が目で追える。増加はベタ塗り、減少はハッチ柄——色でなく模様で正負を語る。',
+    Component: Waterfall,
+  },
+  {
+    id: 'donut-ratio',
+    no: 42,
+    nameJa: 'ドーナツチャート',
+    nameEn: 'Sweeping Donut',
+    category: 'データ可視化',
+    trigger: '区分をタップして選ぶ／「比率を変える」',
+    principles: ['弧のスイープ', 'stroke-dasharrayの継走', '中心カウントアップ'],
+    ecology:
+      '4つの弧が一本の線のようにバトンを渡しながら一周を描き切る——前の区分が描き終わる瞬間に次が描き始めるので、全体としては絶え間なくひと続きのスイープに見える。区分を選ぶと中心の数字がその割合までカウントアップし、他の弧はそっと薄くなって主役を譲る。',
+    Component: DonutRatio,
+  },
+  {
+    id: 'market-cap',
+    no: 43,
+    nameJa: '時価総額の伸び',
+    nameEn: 'Valuation Climax',
+    category: 'データ可視化',
+    trigger: '目盛りをドラッグしてスクラブ／「成長をもう一度たどる」',
+    principles: ['ドラッグスクラブ', 'ホッケースティック', 'クライマックス演出'],
+    ecology:
+      '暗転したカードの中で、創業からの成長曲線を目盛りをなぞって手繰り寄せる。節目を通過するたびに光の点が灯り、名前が浮かび上がる。「現在」まで届いた瞬間、倍率がドンと据わって光の粒が弾け、白い光が一瞬だけ画面を撫でる——読み上げるのではなく、祝う。この図鑑いちばんの大仕事。',
+    Component: MarketCap,
+  },
+  {
+    id: 'chart-reflow',
+    no: 44,
+    nameJa: 'BIパネルのリフロー',
+    nameEn: 'Reflowing Panel',
+    category: 'データ可視化',
+    trigger: 'つまみを指でドラッグして幅を変える',
+    principles: ['コンテナクエリ', '要素の並べ替え', '間引きと代替表現'],
+    ecology:
+      '右端のつまみでパネルの幅を変えると、中身は縮んで潰れるのではなく並べ替わって逃げる。広いと棒グラフと凡例が横に並び、少し狭まると凡例が下へ移って数値ラベルが姿を消し、さらに狭まると棒グラフそのものが簡易な折れ線サマリーに乗り換わる。スマホでBI画面が潰れる問題への、CSSコンテナクエリだけの回答。',
+    Component: ChartReflow,
   },
 ]
 
