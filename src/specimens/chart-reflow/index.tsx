@@ -66,77 +66,79 @@ export default function ChartReflow() {
     <div className="mz-rf">
       <div className="mz-rf-sandbox" ref={trackRef}>
         <div className="mz-rf-panel" style={{ width: `${width}px` }}>
+          {/* パディングはこのinner側に持たせ、panel自身の内寸(=コンテナクエリの基準)を素直にする */}
           <div className="mz-rf-inner">
-          <header className="mz-rf-head">
-            <h3>週次ビジネスレポート</h3>
-          </header>
+            <header className="mz-rf-head">
+              <h3>週次ビジネスレポート</h3>
+            </header>
 
-          <div className="mz-rf-kpis">
-            <div className="mz-rf-kpi">
-              <span className="mz-rf-kpi-label">月間売上</span>
-              <span className="mz-rf-kpi-value">
-                128<small>万円</small>
-              </span>
-              <span className="mz-rf-kpi-delta is-up">▲12.0%</span>
+            <div className="mz-rf-kpis">
+              <div className="mz-rf-kpi">
+                <span className="mz-rf-kpi-label">月間売上</span>
+                <span className="mz-rf-kpi-value">
+                  128<small>万円</small>
+                </span>
+                <span className="mz-rf-kpi-delta is-up">▲12.0%</span>
+              </div>
+              <div className="mz-rf-kpi">
+                <span className="mz-rf-kpi-label">解約率</span>
+                <span className="mz-rf-kpi-value">
+                  3.2<small>%</small>
+                </span>
+                <span className="mz-rf-kpi-delta is-down">▼0.4pt</span>
+              </div>
             </div>
-            <div className="mz-rf-kpi">
-              <span className="mz-rf-kpi-label">解約率</span>
-              <span className="mz-rf-kpi-value">
-                3.2<small>%</small>
-              </span>
-              <span className="mz-rf-kpi-delta is-down">▼0.4pt</span>
-            </div>
-          </div>
 
-          <div className="mz-rf-chart">
-            <div
-              className="mz-rf-bars"
-              role="img"
-              aria-label={`地域別の今期・前期比較。${CATS.map((c) => `${c.label} 今期${c.now}、前期${c.prev}`).join('、')}`}
-            >
-              {CATS.map((c, i) => (
-                <div className="mz-rf-group" key={c.label}>
-                  <div className="mz-rf-pair">
-                    <span
-                      className="mz-rf-bar is-now"
-                      style={{ '--t': c.now / MAXV, animationDelay: `${i * 0.08}s` } as CSSProperties}
-                    >
-                      <em className="mz-rf-value-label">{c.now}</em>
-                    </span>
-                    <span
-                      className="mz-rf-bar is-prev"
-                      style={{ '--t': c.prev / MAXV, animationDelay: `${i * 0.08 + 0.05}s` } as CSSProperties}
-                    >
-                      <em className="mz-rf-value-label">{c.prev}</em>
-                    </span>
+            <div className="mz-rf-chart">
+              <div
+                className="mz-rf-bars"
+                role="img"
+                aria-label={`地域別の今期・前期比較。${CATS.map((c) => `${c.label} 今期${c.now}、前期${c.prev}`).join('、')}`}
+              >
+                {CATS.map((c, i) => (
+                  <div className="mz-rf-group" key={c.label}>
+                    <div className="mz-rf-pair">
+                      <span
+                        className="mz-rf-bar is-now"
+                        style={{ '--t': c.now / MAXV, animationDelay: `${i * 0.08}s` } as CSSProperties}
+                      >
+                        <em className="mz-rf-value-label">{c.now}</em>
+                      </span>
+                      <span
+                        className="mz-rf-bar is-prev"
+                        style={{ '--t': c.prev / MAXV, animationDelay: `${i * 0.08 + 0.05}s` } as CSSProperties}
+                      >
+                        <em className="mz-rf-value-label">{c.prev}</em>
+                      </span>
+                    </div>
+                    <span className="mz-rf-cat-label">{c.label}</span>
                   </div>
-                  <span className="mz-rf-cat-label">{c.label}</span>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              <svg
+                className="mz-rf-mini"
+                viewBox="0 0 100 34"
+                role="img"
+                aria-label={`直近5週の推移。${TREND.join('→')}`}
+              >
+                <path d={trendPath} />
+              </svg>
+
+              <ul className="mz-rf-legend">
+                <li>
+                  <i className="is-now" />
+                  今期
+                </li>
+                <li>
+                  <i className="is-prev" />
+                  前期
+                </li>
+              </ul>
             </div>
 
-            <svg
-              className="mz-rf-mini"
-              viewBox="0 0 100 34"
-              role="img"
-              aria-label={`直近5週の推移。${TREND.join('→')}`}
-            >
-              <path d={trendPath} />
-            </svg>
-
-            <ul className="mz-rf-legend">
-              <li>
-                <i className="is-now" />
-                今期
-              </li>
-              <li>
-                <i className="is-prev" />
-                前期
-              </li>
-            </ul>
+            <p className="mz-rf-hint">狭いと詳細を間引き、必要なら開いて確認する設計に</p>
           </div>
-
-          <p className="mz-rf-hint">狭いと詳細を間引き、必要なら開いて確認する設計に</p>
 
           <div
             className="mz-rf-grip"

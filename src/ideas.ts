@@ -426,4 +426,93 @@ export const ideas: Idea[] = [
     status: 'captured',
     specimenId: 'card-time-machine',
   },
+
+  /* ---------- データ可視化（BI/週報告向け）の種 ----------
+     起業ゲームの週次レポートがモバイルで潰れる問題への回答として採集。
+     軸D：チャートの種類 × 動きの性格 の掛け算で増やせる
+     （例）ヒートマップ × じわっと濃淡が滲む、散布図 × ドラッグで相関の帯が締まる、等 */
+  {
+    id: 'chart-line',
+    title: '折れ線チャートの一筆描き',
+    motion: 'pathLengthを使って折れ線がひと筆で描かれ、先端の光点が着いたあとゆっくり呼吸する',
+    tags: ['データ可視化', '折れ線', 'SVG'],
+    status: 'captured',
+    specimenId: 'chart-line',
+  },
+  {
+    id: 'chart-bars',
+    title: '棒グラフの追い越し着地',
+    motion: '棒が時間差で立ち上がり、CSS変数に乗せた目標値をわずかに追い越してからすとんと着地する',
+    tags: ['データ可視化', '棒グラフ'],
+    status: 'captured',
+    specimenId: 'chart-bars',
+  },
+  {
+    id: 'kpi-count',
+    title: 'KPIのにじみカウントアップ',
+    motion: '数字はドラムで回らず、変化の速さぶんだけ一瞬にじんでピントが合う。直前の値は残像で上へ抜ける',
+    tags: ['データ可視化', '数値', 'KPI'],
+    status: 'captured',
+    specimenId: 'kpi-count',
+  },
+  {
+    id: 'waterfall',
+    title: 'ウォーターフォールの連鎖着地',
+    motion: '期首→内訳→期末のバーが時間差で落ち、水準の引き継ぎを点線でつなぎながら着地する',
+    tags: ['データ可視化', '増減', '経営'],
+    status: 'captured',
+    specimenId: 'waterfall',
+  },
+  {
+    id: 'donut-ratio',
+    title: 'ドーナツの継走スイープ',
+    motion: '4つの弧がバトンを渡すように途切れず一周を描き切る。選ぶと中心の数字がカウントアップ',
+    tags: ['データ可視化', '比率', 'ドーナツ'],
+    status: 'captured',
+    specimenId: 'donut-ratio',
+  },
+  {
+    id: 'market-cap-climax',
+    title: '時価総額の伸びのクライマックス',
+    motion: '暗転したカードで成長曲線を目盛りごしに手繰り寄せ、節目が灯り、最後に倍率がドンと祝って光の粒が弾ける',
+    tags: ['データ可視化', '経営', '演出', 'ドラッグ'],
+    status: 'captured',
+    specimenId: 'market-cap',
+  },
+  {
+    id: 'chart-reflow',
+    title: 'BIパネルのコンテナクエリ・リフロー',
+    motion: '幅を狭めると縮むのでなく、凡例が下へ回り数値ラベルが消え、最後は棒グラフごと折れ線サマリーに乗り換わる',
+    tags: ['データ可視化', 'レスポンシブ', 'モバイル'],
+    status: 'captured',
+    specimenId: 'chart-reflow',
+  },
+  {
+    id: 'heatmap-cells',
+    title: 'ヒートマップの濃淡じわり',
+    motion: 'マス目が数値の大きさぶんだけ、時間差でじわっと濃淡に染まっていく。0のマスは呼吸だけ残る',
+    tags: ['データ可視化', 'ヒートマップ'],
+    status: 'seed',
+  },
+  {
+    id: 'scatter-correlate',
+    title: '散布図の相関ドラッグ',
+    motion: '点群をドラッグで選び囲うと、回帰直線がしゅっと現れて相関係数がカウントアップする',
+    tags: ['データ可視化', '散布図', 'ドラッグ'],
+    status: 'seed',
+  },
+  {
+    id: 'ranking-race',
+    title: 'ランキングボードのレース',
+    motion: '棒が横向きに競い合いながら伸び、追い抜きの瞬間に順位番号がくるっと入れ替わる',
+    tags: ['データ可視化', 'ランキング', '経営'],
+    status: 'seed',
+  },
+  {
+    id: 'gauge-needle',
+    title: '達成率メーターの針振れ',
+    motion: '半円ゲージの針が目標値を一度行き過ぎてから震えて収まる。針の裏に薄い残像が一瞬残る',
+    tags: ['データ可視化', 'ゲージ', 'KPI'],
+    status: 'seed',
+  },
 ]
