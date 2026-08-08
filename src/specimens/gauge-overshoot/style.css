@@ -1,0 +1,127 @@
+.mz-gauge-overshoot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.mz-gauge-overshoot-meter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.mz-gauge-overshoot-ticks text {
+  font-size: 9px;
+  font-weight: 700;
+  fill: #b3b3b3;
+  text-anchor: middle;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 外側アーム: 目標角へぶんっと加速して回る（減速の丸めは wobble に任せる） */
+.mz-gauge-overshoot-arm {
+  transform: rotate(var(--mz-go-angle, 0deg));
+  transform-origin: 100px 112px;
+  transition: transform 0.42s cubic-bezier(0.5, 0, 0.4, 1);
+}
+
+/* 内側 wobble: 相対角の減衰振動。到着(≒0.42s)ちょうどに +7° のピークが重なり、
+   「通り過ぎてから、ゆらゆら戻る」に見える。--mz-go-dir で移動方向へ振る */
+.mz-gauge-overshoot-wobble {
+  transform-origin: 100px 112px;
+}
+.mz-gauge-overshoot-wobble.is-live {
+  animation: mz-go-wobble 1.1s both;
+}
+@keyframes mz-go-wobble {
+  0% {
+    transform: rotate(0deg);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.9, 1);
+  }
+  38% {
+    /* 0.42s: 目標を +7° 通り過ぎる */
+    transform: rotate(calc(var(--mz-go-dir, 1) * 7deg));
+    animation-timing-function: ease-in-out;
+  }
+  60% {
+    /* 反対側へ -3° */
+    transform: rotate(calc(var(--mz-go-dir, 1) * -3deg));
+    animation-timing-function: ease-in-out;
+  }
+  80% {
+    /* もう一往復 +1.5° */
+    transform: rotate(calc(var(--mz-go-dir, 1) * 1.5deg));
+    animation-timing-function: ease-in-out;
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* 危険域(80以上)に着地したときだけ、ハブと数値がどくんどくんと鼓動 */
+.mz-gauge-overshoot-hub {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.mz-gauge-overshoot-hub.is-danger {
+  animation: mz-go-beat 0.9s ease-in-out infinite;
+}
+
+.mz-gauge-overshoot-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.mz-gauge-overshoot-value.is-danger {
+  animation: mz-go-beat 0.9s ease-in-out infinite;
+}
+
+@keyframes mz-go-beat {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.08);
+  }
+  55% {
+    transform: scale(1.02);
+  }
+  70% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.mz-gauge-overshoot-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-gauge-overshoot-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-gauge-overshoot-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-gauge-overshoot-actions button:active {
+  transform: scale(1.06, 0.88);
+}
+.mz-gauge-overshoot-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
