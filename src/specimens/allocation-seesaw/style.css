@@ -1,0 +1,179 @@
+.mz-allocation-seesaw {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 260px;
+}
+
+/* ---- 総量 ----
+   決して伸びない。配分が動いたことだけを、光がひとつ横切って伝える。
+   「増やしたのに全体は増えていない」を毎回同じ絵で念押しする役。 */
+.mz-allocation-seesaw-total-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+.mz-allocation-seesaw-total-head span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #b3b3b3;
+}
+.mz-allocation-seesaw-total-head strong {
+  font-size: 15px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+.mz-allocation-seesaw-total-track {
+  position: relative;
+  overflow: hidden;
+  height: 6px;
+  border-radius: 999px;
+  background: #5c5c5c;
+}
+.mz-allocation-seesaw-sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 42%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  animation: mz-allocation-seesaw-sweep 0.62s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes mz-allocation-seesaw-sweep {
+  from {
+    transform: translateX(-110%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+
+/* ---- レーン ---- */
+.mz-allocation-seesaw-lanes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mz-allocation-seesaw-lane {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mz-allocation-seesaw-name {
+  width: 34px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #6e6e6e;
+}
+.mz-allocation-seesaw-track {
+  position: relative;
+  overflow: hidden;
+  flex: 1;
+  height: 14px;
+  border-radius: 999px;
+  background: #ececea;
+}
+
+/* 既定の伸縮。受け取る側は素直に伸びる */
+.mz-allocation-seesaw-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #8c8c8c;
+  transition:
+    width 0.44s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.3s ease-out;
+}
+.mz-allocation-seesaw-fill.is-gain {
+  background: #3d3d3d;
+}
+
+/* 譲る側だけ、戻り成分のあるイージングで「たわんでから譲る」。
+   縮む向きに行き過ぎてから、わずかに押し返して落ち着く */
+.mz-allocation-seesaw-fill.is-give {
+  background: #b3b3b3;
+  transition:
+    width 0.6s cubic-bezier(0.36, 1.42, 0.62, 1),
+    background-color 0.3s ease-out;
+}
+
+.mz-allocation-seesaw-value {
+  width: 16px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #3d3d3d;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-allocation-seesaw-plus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  font-size: 11px;
+  font-weight: 800;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-allocation-seesaw-plus:hover {
+  transform: translateY(-2px);
+}
+.mz-allocation-seesaw-plus:active {
+  transform: scale(1.14, 0.86);
+}
+
+/* ---- 断り ----
+   どこからも取れないときは、レーンごと首を横に振る。
+   ボタンを無効化して黙るのではなく、押せて・断られる。 */
+.mz-allocation-seesaw-lane.is-deny {
+  animation: mz-allocation-seesaw-deny 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+@keyframes mz-allocation-seesaw-deny {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  45% {
+    transform: translateX(3px);
+  }
+  70% {
+    transform: translateX(-2px);
+  }
+  88% {
+    transform: translateX(1px);
+  }
+}
+
+.mz-allocation-seesaw-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+.mz-allocation-seesaw-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-allocation-seesaw-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-allocation-seesaw-actions button:active {
+  transform: scale(1.06, 0.88);
+}

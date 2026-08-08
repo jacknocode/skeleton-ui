@@ -1,0 +1,166 @@
+.mz-share-dilute {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.mz-share-dilute-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 260px;
+}
+
+/* 自分の持ち分。帯より一瞬早く着地して結論から先に伝える */
+.mz-share-dilute-readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.mz-share-dilute-readout span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #b3b3b3;
+}
+.mz-share-dilute-readout strong {
+  font-size: 20px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-share-dilute-band {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+  height: 46px;
+  border-radius: 6px;
+  background: #f0f0ee;
+}
+
+/* ---- 層 ----
+   押される側は cubic-bezier の戻り成分で「行き過ぎて縮んでから、わずかに押し返す」。
+   総量は固定なので、誰かが太れば必ず誰かがこの動きをする。 */
+.mz-share-dilute-slice {
+  position: relative;
+  flex-grow: 0;
+  flex-shrink: 0;
+  min-width: 0;
+  background: #d9d9d7;
+  transition: flex-basis 0.62s cubic-bezier(0.34, 1.28, 0.64, 1);
+}
+/* 層の境界。押し合いの接点なので、動く週だけ一瞬太らせる */
+.mz-share-dilute-slice + .mz-share-dilute-slice::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: #fff;
+}
+.mz-share-dilute-slice.is-moving + .mz-share-dilute-slice::before {
+  animation: mz-share-dilute-seam 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes mz-share-dilute-seam {
+  0% {
+    width: 2px;
+    background: #fff;
+  }
+  35% {
+    width: 3px;
+    background: #a3a3a3;
+  }
+  100% {
+    width: 2px;
+    background: #fff;
+  }
+}
+
+/* 自分の層だけ濃く据える(どれが自分かを色ではなく明度差で示す) */
+.mz-share-dilute-slice.is-own {
+  background: #5c5c5c;
+}
+
+/* 新入りの層: 幅0の楔から割り込む。to を書かないので終点はインラインの実幅になる */
+.mz-share-dilute-slice.is-new {
+  animation: mz-share-dilute-wedge 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mz-share-dilute-wedge {
+  from {
+    flex-basis: 0%;
+    background: #8c8c8c;
+  }
+}
+
+.mz-share-dilute-name {
+  position: absolute;
+  top: 50%;
+  left: 6px;
+  right: 4px;
+  overflow: hidden;
+  font-size: 9px;
+  font-weight: 700;
+  color: #6e6e6e;
+  white-space: nowrap;
+  text-overflow: clip;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.mz-share-dilute-slice.is-own .mz-share-dilute-name {
+  color: #f5f5f3;
+}
+
+/* ---- 失う前の境界(ゴースト) ----
+   HPバーの遅延ゴースト(No.13)と同じ考え方を横方向に。
+   「ここまでは自分のものだった」を一拍だけ残して薄れる。 */
+.mz-share-dilute-ghost {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1px dashed #3d3d3d;
+  pointer-events: none;
+  animation: mz-share-dilute-ghost-fade 1.4s cubic-bezier(0.4, 0, 0.6, 1) both;
+}
+@keyframes mz-share-dilute-ghost-fade {
+  0% {
+    opacity: 0.9;
+  }
+  55% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.mz-share-dilute-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-share-dilute-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-share-dilute-actions button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.mz-share-dilute-actions button:active:not(:disabled) {
+  transform: scale(1.06, 0.88);
+}
+.mz-share-dilute-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
