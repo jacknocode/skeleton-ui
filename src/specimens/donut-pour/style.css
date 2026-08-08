@@ -1,0 +1,153 @@
+.mz-donut-pour {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 200px;
+}
+
+/* ---- ドーナツ本体 ---- */
+.mz-donut-pour-ring {
+  position: relative;
+  width: 130px;
+  height: 130px;
+}
+/* 閉じ切った瞬間、一度だけぷるんと脈打つ */
+.mz-donut-pour-ring.is-done {
+  animation: mz-donut-pour-pulse 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-donut-pour-pulse {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.mz-donut-pour-track {
+  fill: none;
+  stroke: #e7e7e5;
+  stroke-width: 14;
+}
+
+.mz-donut-pour-seg {
+  fill: none;
+  stroke-width: 14;
+  stroke-linecap: butt;
+}
+/* 1つ目: 12時からしゅるっ（0〜0.5s, ease-out） */
+.mz-donut-pour-seg1 {
+  transition: stroke-dasharray 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+}
+/* 2つ目: 時間差で継ぎ足し（0.5〜0.95s） */
+.mz-donut-pour-seg2 {
+  transition: stroke-dasharray 0.45s cubic-bezier(0.33, 1, 0.68, 1) 0.5s;
+}
+/* 3つ目: 長め+強いease-outで、閉じ切る手前をゆっくり（0.95〜1.85s） */
+.mz-donut-pour-seg3 {
+  transition: stroke-dasharray 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.95s;
+}
+
+/* セグメント境界を切り抜くギャップ（2px）。図鑑のステージ色に合わせて背景に溶かす */
+.mz-donut-pour-gap {
+  fill: none;
+  stroke: #eaeae8;
+  stroke-width: 16;
+  stroke-linecap: butt;
+}
+
+/* ---- 中央の合計カウンター ---- */
+.mz-donut-pour-total {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 凡例 ---- */
+.mz-donut-pour-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 148px;
+}
+.mz-donut-pour-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #6e6e6e;
+  opacity: 0;
+  transform: translateY(4px);
+  /* リセット時はディレイなしでさっと消える */
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+/* 各行は対応セグメントの描画完了に合わせてふわっと */
+.is-on .mz-donut-pour-row {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.is-on .mz-donut-pour-row1 {
+  transition-delay: 0.5s;
+}
+.is-on .mz-donut-pour-row2 {
+  transition-delay: 0.95s;
+}
+.is-on .mz-donut-pour-row3 {
+  transition-delay: 1.85s;
+}
+
+.mz-donut-pour-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+.mz-donut-pour-name {
+  flex: 1;
+}
+.mz-donut-pour-pct {
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 操作ボタン（共通の白ピル） ---- */
+.mz-donut-pour-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-donut-pour-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-donut-pour-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-donut-pour-actions button:active {
+  transform: scale(1.06, 0.88);
+}
+.mz-donut-pour-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}

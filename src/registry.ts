@@ -36,8 +36,14 @@ import CardScatterDeal from './specimens/card-scatter-deal'
 import CardCascadeRise from './specimens/card-cascade-rise'
 import CardCoverFlow from './specimens/card-cover-flow'
 import CardTimeMachine from './specimens/card-time-machine'
+import BarSprout from './specimens/bar-sprout'
+import LineInkDraw from './specimens/line-ink-draw'
+import DonutPour from './specimens/donut-pour'
+import GaugeOvershoot from './specimens/gauge-overshoot'
+import KpiLanding from './specimens/kpi-landing'
+import GoalRingBurst from './specimens/goal-ring-burst'
 
-export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム'] as const
+export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
 
 export interface Specimen {
@@ -500,6 +506,78 @@ export const specimens: Specimen[] = [
     ecology:
       '目盛りを撫でると過去のカードが奥からせり出し、現在より手前になった1枚は1.25倍に膨らみながら画面の外へ飛び抜けて消える。時間を「奥＝過去、手前＝未来」の空間に翻訳した生態。目盛りはscaleXだけでにゅっと伸びて応え、日付ラベルはぼけた状態から0.15秒でピントが合う。macOSのTime Machineへのオマージュ。',
     Component: CardTimeMachine,
+  },
+  {
+    id: 'bar-sprout',
+    no: 38,
+    nameJa: '棒グラフの発芽',
+    nameEn: 'Sprouting Bars',
+    category: 'アナリティクス',
+    trigger: '「再生」をクリック / 棒にホバー',
+    principles: ['時間差の登場', 'オーバーシュート', '主役のタメ'],
+    ecology:
+      '7本の棒が左から60msずつの時間差でにょきにょきと発芽し、行き過ぎてからぷるんと戻る。最大値の棒だけは全員が生えそろったあと一拍おいて登場し、てっぺんで数字がぽんと咲く——いちばん大事な値は最後に出てくるほうが目立つ、という発表の作法をグラフ自身が知っている。ラベルは主役だけ、脇役はホバーで答える。',
+    Component: BarSprout,
+  },
+  {
+    id: 'line-ink-draw',
+    no: 39,
+    nameJa: '折れ線のひと筆書き',
+    nameEn: 'Ink Draw Line',
+    category: 'アナリティクス',
+    trigger: '「もう一度描く」をクリック',
+    principles: ['線画アニメーション', 'ペン先の追従', '時間差の点灯'],
+    ecology:
+      '折れ線が左から1.2秒かけてするすると一筆書きされ、光るペン先が線の先頭を走っていく。通過したデータ点はあとから順にぽつぽつと灯り、描き終わるとエリアの薄塗りがじわっと満ちて、最後に最新値だけがふわっと名乗る。「データは左から右へ流れる時間である」ことを、描画の順序そのもので語る標本。',
+    Component: LineInkDraw,
+  },
+  {
+    id: 'donut-pour',
+    no: 40,
+    nameJa: 'ドーナツの注ぎ込み',
+    nameEn: 'Pouring Donut',
+    category: 'アナリティクス',
+    trigger: '「注ぎ直す」をクリック',
+    principles: ['時間差の継ぎ足し', 'じらし', '数字の追従'],
+    ecology:
+      '12時の位置から円弧がしゅるっと注がれ、セグメントが時間差で継ぎ足されていく。中央の%数字は弧の進みを追いかけてカウントアップし、閉じ切る瞬間まで99%で踏みとどまる。最後のひと欠けだけ長めのease-outでじわ〜っと閉じるのがこの標本のじらしで、100%の瞬間にドーナツ全体がぷるんと脈打ち、凡例も揃って着席する。',
+    Component: DonutPour,
+  },
+  {
+    id: 'gauge-overshoot',
+    no: 41,
+    nameJa: 'メーター針の勢い余り',
+    nameEn: 'Overshooting Gauge',
+    category: 'アナリティクス',
+    trigger: '「今週」「今月」「今日」をクリック',
+    principles: ['オーバーシュート', '減衰振動', '鼓動'],
+    ecology:
+      '値ボタンを押すと針がぶんっと加速して目標を7°通り過ぎ、ゆらゆらと減衰しながら戻って止まる。振れ幅そのものが「勢いよく届いた」ことの誇張になる、物理針メーターへのオマージュ。数値は針よりひと足先に着地して答えを先出しする。危険域（80以上）に止まったときだけ、中心ハブと数字がどくんどくんと鼓動を打ち続ける。',
+    Component: GaugeOvershoot,
+  },
+  {
+    id: 'kpi-landing',
+    no: 42,
+    nameJa: 'KPI数字の着地',
+    nameEn: 'Landing KPI',
+    category: 'アナリティクス',
+    trigger: '「別の週を見る」をクリック',
+    principles: ['減速の緩急', 'スカッシュ&ストレッチ', '二次アクション'],
+    ecology:
+      '数字がはじめは桁の読めない速さで回り、後半ぐっと減速して1ずつ刻みながら着地、ぷるんとひと揺れする。コインカウンター（No.14）のドラムロールが「量の実感」なら、こちらは「結果の発表」の緩急。着地の余韻で前週比バッジが登場するが、上昇はぴょこんと跳ね、下降はぽとりと沈む——同じ情報でも感情の向きで登場の仕方が変わる。',
+    Component: KpiLanding,
+  },
+  {
+    id: 'goal-ring-burst',
+    no: 43,
+    nameJa: '目標達成リングの臨界',
+    nameEn: 'Goal Ring Burst',
+    category: 'アナリティクス',
+    trigger: '「+2,600歩」を4回押して達成',
+    principles: ['じらし', 'パーティクル', '線画アニメーション'],
+    ecology:
+      '加算のたびにリングがぷるんと伸びて進み、最後のひと押しでは90%まで威勢よく駆けてから、残り数%をじわ〜っと閉じてタメを作る。閉じ切った瞬間、リングは一度ぎゅっと縮んでからぼんっと弾み、光の輪を2連発で外へ放ち、%数字はチェックマークのひと筆書きに席を譲る。経験値バー（No.16）の臨界を、ダッシュボードの言葉に翻訳した標本。',
+    Component: GoalRingBurst,
   },
 ]
 
