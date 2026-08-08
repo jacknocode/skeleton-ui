@@ -1,0 +1,126 @@
+.mz-radar-morph {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.mz-radar-morph-chart {
+  display: block;
+  overflow: visible;
+}
+
+/* 背景のグリッドと軸: データより前に出ない細線 */
+.mz-radar-morph-grid {
+  fill: none;
+  stroke: #e7e7e5;
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+.mz-radar-morph-axis {
+  stroke: #e7e7e5;
+  stroke-width: 1;
+}
+.mz-radar-morph-label {
+  font-size: 9px;
+  font-weight: 700;
+  fill: #8c8c8c;
+}
+
+/* 本体ポリゴン。形の補間は rAF が d 属性を書き換えて行う（CSSでは持てない） */
+.mz-radar-morph-area {
+  fill: #6e6e6e;
+  opacity: 0.14;
+}
+.mz-radar-morph-outline {
+  fill: none;
+  stroke: #5c5c5c;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+/* 各頂点の点。伸びた頂点は到着の瞬間に 1.4倍 → 1 のぷるん（key の付け替えで再生） */
+.mz-radar-morph-dot {
+  fill: #5c5c5c;
+  stroke: #fff;
+  stroke-width: 1.5;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.mz-radar-morph-dot.is-pop {
+  animation: mz-radar-morph-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-radar-morph-pop {
+  from {
+    transform: scale(1.4);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* 伸びた頂点のきらり: r3 → r10 相当（scale 3.33）に広がりながら消える白い輪 */
+.mz-radar-morph-spark {
+  fill: none;
+  stroke: #fff;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mz-radar-morph-spark 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes mz-radar-morph-spark {
+  from {
+    transform: scale(1);
+    stroke-width: 3;
+    opacity: 0.95;
+  }
+  to {
+    transform: scale(3.33);
+    stroke-width: 0.9;
+    opacity: 0;
+  }
+}
+
+/* 縮んだときの名残: モーフ開始時の旧ポリゴンが 0.6s かけて薄く溶ける */
+.mz-radar-morph-ghost {
+  fill: none;
+  stroke: #b3b3b3;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  opacity: 0;
+  animation: mz-radar-morph-ghost 0.6s ease-out forwards;
+}
+@keyframes mz-radar-morph-ghost {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.mz-radar-morph-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-radar-morph-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-radar-morph-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-radar-morph-actions button:active {
+  transform: scale(1.06, 0.88);
+}
+.mz-radar-morph-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
