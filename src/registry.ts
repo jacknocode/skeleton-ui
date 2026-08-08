@@ -48,6 +48,11 @@ import AreaTide from './specimens/area-tide'
 import RadarMorph from './specimens/radar-morph'
 import FunnelDrip from './specimens/funnel-drip'
 import SparklineEcg from './specimens/sparkline-ecg'
+import CashBridge from './specimens/cash-bridge'
+import ShareDilute from './specimens/share-dilute'
+import ThresholdAlarm from './specimens/threshold-alarm'
+import PendingCommit from './specimens/pending-commit'
+import AllocationSeesaw from './specimens/allocation-seesaw'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -656,6 +661,66 @@ export const specimens: Specimen[] = [
     ecology:
       '値が流れ込むたび波形は1点分だけ左へずれ、正常なあいだはごく浅い呼吸をするだけで何も主張しない。だからこそ、しきい値を超えた値が来た瞬間の変化が効く——波形の先端がピクッと跳ね、白い光が線上を走り抜け、数字が太く濃くなり、カードの縁が一瞬締まる。過ぎ去った異常値は濃い点として画面外へ流れ去るまで居残る。監視画面の作法は、9割の静けさが1割の警告を際立たせること。',
     Component: SparklineEcg,
+  },
+  {
+    id: 'cash-bridge',
+    no: 50,
+    nameJa: '収支の橋',
+    nameEn: 'Cash Bridge',
+    category: 'アナリティクス',
+    trigger: '「再生」「別の週」をクリック',
+    principles: ['因果のリレー', '符号を向きで語る', '結論の着地'],
+    ecology:
+      '期首の柱が立つと、その肩から次の柱へ細い線が架かり、渡った先で内訳が生える。増えた分は肩の上へ伸び、減った分は肩からぶら下がって斜線になる——符号を色ではなく伸びる向きで語るので、単色でも「どちらに効いたか」が読める。内訳が終わると、期末だけは積み上げの続きではなく床から立て直され、着地でとんと沈んで据わる。差がどこで生まれたのかを、積み木が肩を貸していく連鎖として辿らせる標本。',
+    Component: CashBridge,
+  },
+  {
+    id: 'share-dilute',
+    no: 51,
+    nameJa: '持ち分の希薄化',
+    nameEn: 'Diluting Share',
+    category: 'アナリティクス',
+    trigger: '「次のラウンド」をクリック',
+    principles: ['ゼロサムの押し合い', '抵抗と余韻', '失った幅のゴースト'],
+    ecology:
+      '総量の変わらない帯に、新しい層が幅ゼロの楔として割り込む。押される側は行き過ぎて縮んでから、わずかに押し返して落ち着く——譲ったのであって、消えたのではない。自分の層は、痩せる前の右端が破線のゴーストとして一拍だけ残り、失った幅そのものが目に焼き付く。パーセントの数字は帯より一瞬早く着地して先に結論を言い、面積があとから余韻を担当する。「増資した」ではなく「薄まった」を体で分からせる標本。',
+    Component: ShareDilute,
+  },
+  {
+    id: 'threshold-alarm',
+    no: 52,
+    nameJa: 'しきい値越えのドキッ',
+    nameEn: 'Threshold Alarm',
+    category: 'アナリティクス',
+    trigger: '「静か」「越える」「戻る」をクリック',
+    principles: ['状態ではなく変化を鳴らす', '静けさとの対比', '注釈の刺し込み'],
+    ecology:
+      '平常時は薄く細い線が引かれているだけで、グラフは何も主張しない。しきい値を跨いだ瞬間だけ、越えた区間が太く濃い線に持ち上がり、しきい値線自身がびりっと1px震え、跨いだ点に輪がひとつ広がって「ここで起きた」を刺す。越えているあいだは区間が静かに明滅し続け、戻ると震えではなく一度だけ息をついて細さに収まる。鳴らすのは「越えている状態」ではなく「越えた・戻った変化」だけ、という監視画面の作法をそのまま動きにした標本。',
+    Component: ThresholdAlarm,
+  },
+  {
+    id: 'pending-commit',
+    no: 53,
+    nameJa: '予約と一斉確定',
+    nameEn: 'Pending & Commit',
+    category: '入力',
+    trigger: '札を選んで「確定する」',
+    principles: ['予備動作', '時間差の押印', '締め'],
+    ecology:
+      '選んだ札は破線のまま浮いて浅く呼吸する——まだ効いていないし、まだ戻せる。確定すると、選んだ順に押印が大きく落ちてきて実寸に締まり、インクが一度だけにじみ、札は実線になって1px沈む。最後の押印が終わった直後、束全体がひとつに締まって「今週ぶんが閉じた」を1拍で言う。確定済みをもう一度押すと首を横に振って断る。「選んだ」と「効いた」のあいだにある予約という状態を、呼吸→押印→締めの3拍で見せる標本。',
+    Component: PendingCommit,
+  },
+  {
+    id: 'allocation-seesaw',
+    no: 54,
+    nameJa: '総量固定の配分',
+    nameEn: 'Allocation Seesaw',
+    category: '入力',
+    trigger: 'レーンの ＋ をクリック',
+    principles: ['ゼロサム', 'たわみと譲り', '断り'],
+    ecology:
+      'どれかを増やすと、必ずどれかが減る。受け取る側は素直に伸び、譲る側だけ戻り成分のあるイージングでたわんでから引き下がるので、奪われたことが動きの質感で分かる。上の総量バーは決して伸びず、配分が動いた合図として光がひとつ横切るだけ——「増やしたのに全体は増えていない」を毎回同じ絵で念押しする。どこからも取れないときはボタンを無効化して黙るのではなく、押せて、レーンごと首を横に振って断る。',
+    Component: AllocationSeesaw,
   },
 ]
 

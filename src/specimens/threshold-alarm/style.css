@@ -1,0 +1,158 @@
+.mz-threshold-alarm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.mz-threshold-alarm-chart {
+  padding: 4px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* ---- 平常の線 ----
+   細く薄い。ここに事件は無い、という状態そのもの */
+.mz-threshold-alarm-base {
+  stroke: #cfcfcd;
+  stroke-width: 2;
+}
+
+/* ---- 越えた区間 ----
+   同じ線をしきい値の窓で切り、太く濃く重ねる。
+   越えている間は静かに明滅し続け、目の端で危険を主張する */
+.mz-threshold-alarm-over {
+  stroke: #3d3d3d;
+  stroke-width: 3.4;
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+}
+.mz-threshold-alarm-over.is-over {
+  opacity: 1;
+  animation: mz-threshold-alarm-pulse 1.7s ease-in-out 0.5s infinite;
+}
+@keyframes mz-threshold-alarm-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ---- しきい値線 ---- */
+.mz-threshold-alarm-line {
+  stroke: #8c8c8c;
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+/* 跨がれた瞬間: 短く速い往復。移動量は1pxで、線が「びりっ」と鳴るだけに留める */
+.mz-threshold-alarm-line.is-alarm {
+  animation: mz-threshold-alarm-buzz 0.34s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+@keyframes mz-threshold-alarm-buzz {
+  0%,
+  100% {
+    transform: translateY(0);
+    stroke: #3d3d3d;
+  }
+  15% {
+    transform: translateY(-1.5px);
+  }
+  35% {
+    transform: translateY(1.5px);
+  }
+  55% {
+    transform: translateY(-1px);
+  }
+  75% {
+    transform: translateY(0.5px);
+  }
+}
+/* 戻ったとき: 震えではなく、ひとつ息をついて元の細さに収まる */
+.mz-threshold-alarm-line.is-relief {
+  animation: mz-threshold-alarm-relief 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mz-threshold-alarm-relief {
+  0% {
+    stroke: #3d3d3d;
+    stroke-width: 1.6;
+  }
+  100% {
+    stroke: #8c8c8c;
+    stroke-width: 1;
+  }
+}
+
+.mz-threshold-alarm-tick {
+  font-size: 8px;
+  font-weight: 700;
+  fill: #b3b3b3;
+  text-anchor: end;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 跨いだ点の輪 ----
+   一度だけ広がって消える。「ここで起きた」を刺す注釈 */
+.mz-threshold-alarm-ring {
+  fill: none;
+  stroke: #3d3d3d;
+  stroke-width: 1.5;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: mz-threshold-alarm-ring-out 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mz-threshold-alarm-ring-out {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.4);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(3.2);
+  }
+}
+
+/* ---- データ点 ----
+   平常はほとんど見えない。越えた点だけが実体を持つ */
+.mz-threshold-alarm-dot {
+  fill: #d8d8d6;
+  transform-origin: center;
+  transform-box: fill-box;
+  transition:
+    fill 0.35s ease-out,
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* 大きさは r 属性ではなく scale で変える(r のトランジションは環境差が大きい) */
+.mz-threshold-alarm-dot.is-over {
+  fill: #3d3d3d;
+  transform: scale(1.45);
+}
+
+.mz-threshold-alarm-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-threshold-alarm-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-threshold-alarm-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-threshold-alarm-actions button:active {
+  transform: scale(1.06, 0.88);
+}
+.mz-threshold-alarm-actions button.is-selected {
+  background: #3d3d3d;
+  color: #fff;
+}
