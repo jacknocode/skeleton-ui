@@ -1,0 +1,158 @@
+.mz-bar-sprout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.mz-bar-sprout-chart {
+  /* てっぺんのラベルがはみ出す分の余白 */
+  padding-top: 22px;
+}
+
+.mz-bar-sprout-plot {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  width: 230px;
+  height: 110px;
+  border-bottom: 1px solid #d8d8d6; /* ベースライン */
+}
+
+.mz-bar-sprout-col {
+  position: relative;
+  width: 18px;
+  height: 100%;
+}
+
+/* 棒: 根本からにょきっと伸びて行き過ぎ、ぷるんと戻る */
+.mz-bar-sprout-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  background: #6e6e6e;
+  transform-origin: bottom;
+  transform: scaleY(0);
+  animation: mz-bar-sprout-grow 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transition: background 0.2s ease-out;
+}
+.mz-bar-sprout-bar.is-max {
+  background: #4c4c4c;
+}
+@keyframes mz-bar-sprout-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* ホバーで少し濃く */
+.mz-bar-sprout-col:hover .mz-bar-sprout-bar {
+  background: #4c4c4c;
+}
+.mz-bar-sprout-col:hover .mz-bar-sprout-bar.is-max {
+  background: #3d3d3d;
+}
+
+/* ホバー時のふわっと出る値ラベル（ツールチップ） */
+.mz-bar-sprout-tip {
+  position: absolute;
+  left: 50%;
+  z-index: 3;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  font-size: 10px;
+  font-weight: 700;
+  color: #4c4c4c;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%) translateY(4px);
+  transition:
+    opacity 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mz-bar-sprout-col:hover .mz-bar-sprout-tip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 最大値の常設ラベル: てっぺんでぽんと咲く */
+.mz-bar-sprout-peak {
+  position: absolute;
+  left: 50%;
+  z-index: 2;
+  font-size: 11px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+  transform-origin: 50% 100%;
+  opacity: 0;
+  transform: translateX(-50%) scale(0);
+  animation: mz-bar-sprout-bloom 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mz-bar-sprout-bloom {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+/* 曜日ラベル */
+.mz-bar-sprout-days {
+  display: flex;
+  justify-content: space-between;
+  width: 230px;
+  margin-top: 6px;
+}
+.mz-bar-sprout-days span {
+  width: 18px;
+  text-align: center;
+  font-size: 10px;
+  color: #b3b3b3;
+}
+
+.mz-bar-sprout-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-bar-sprout-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-bar-sprout-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-bar-sprout-actions button:active {
+  transform: scale(1.06, 0.88);
+}
+.mz-bar-sprout-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
