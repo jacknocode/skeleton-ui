@@ -5,6 +5,14 @@
   gap: 14px;
 }
 
+/* チャート本体（リング＋キャプション）。外側と同じ縦並び・同じ間隔で、見た目は据え置き */
+.mz-goal-ring-burst-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
 /* リングと%数字の載る舞台。達成の瞬間、ぎゅっ→ぼんっと弾む */
 .mz-goal-ring-burst-stage {
   position: relative;

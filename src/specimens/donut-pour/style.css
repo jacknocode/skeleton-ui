@@ -6,6 +6,15 @@
   width: 200px;
 }
 
+/* チャート本体（ドーナツ＋凡例）。外側と同じ縦並び・同じ間隔で、見た目は据え置き */
+.mz-donut-pour-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
 /* ---- ドーナツ本体 ---- */
 .mz-donut-pour-ring {
   position: relative;
@@ -39,18 +48,8 @@
   stroke-width: 14;
   stroke-linecap: butt;
 }
-/* 1つ目: 12時からしゅるっ（0〜0.5s, ease-out） */
-.mz-donut-pour-seg1 {
-  transition: stroke-dasharray 0.5s cubic-bezier(0.33, 1, 0.68, 1);
-}
-/* 2つ目: 時間差で継ぎ足し（0.5〜0.95s） */
-.mz-donut-pour-seg2 {
-  transition: stroke-dasharray 0.45s cubic-bezier(0.33, 1, 0.68, 1) 0.5s;
-}
-/* 3つ目: 長め+強いease-outで、閉じ切る手前をゆっくり（0.95〜1.85s） */
-.mz-donut-pour-seg3 {
-  transition: stroke-dasharray 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.95s;
-}
+/* 注ぎの時間差（duration / easing / delay）はセグメント数から組んで
+   index.tsx がインライン style で与える。3本なら 0〜0.5s / 0.5〜0.95s / 0.95〜1.85s */
 
 /* セグメント境界を切り抜くギャップ（2px）。図鑑のステージ色に合わせて背景に溶かす */
 .mz-donut-pour-gap {
@@ -94,20 +93,11 @@
   /* リセット時はディレイなしでさっと消える */
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
-/* 各行は対応セグメントの描画完了に合わせてふわっと */
+/* 各行は対応セグメントの描画完了に合わせてふわっと（delay は index.tsx がインラインで指定） */
 .is-on .mz-donut-pour-row {
   opacity: 1;
   transform: none;
   transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.is-on .mz-donut-pour-row1 {
-  transition-delay: 0.5s;
-}
-.is-on .mz-donut-pour-row2 {
-  transition-delay: 0.95s;
-}
-.is-on .mz-donut-pour-row3 {
-  transition-delay: 1.85s;
 }
 
 .mz-donut-pour-dot {

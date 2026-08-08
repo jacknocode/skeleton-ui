@@ -1,0 +1,268 @@
+.mz-sparkline-ecg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+/* ---------- カード ---------- */
+
+.mz-sparkline-ecg-card {
+  position: relative;
+  width: 230px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* 3. 異常値のとき、カードの縁だけが一瞬濃くなって引く */
+.mz-sparkline-ecg-edge {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  pointer-events: none;
+  animation: mz-sparkline-ecg-edge 0.4s ease-out both;
+}
+@keyframes mz-sparkline-ecg-edge {
+  0% {
+    box-shadow: 0 0 0 1.5px rgba(61, 61, 61, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 1.5px rgba(61, 61, 61, 0);
+  }
+}
+
+.mz-sparkline-ecg-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.mz-sparkline-ecg-metric {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: #8c8c8c;
+}
+
+.mz-sparkline-ecg-value {
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 800;
+  color: #4c4c4c;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+/* 3. 異常値のとき、数字がバッと太く濃くなって0.6sで元に戻る */
+.mz-sparkline-ecg-value.is-alert {
+  animation: mz-sparkline-ecg-value 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mz-sparkline-ecg-value {
+  0% {
+    font-weight: 900;
+    color: #3d3d3d;
+    transform: scale(1.2);
+  }
+  35% {
+    font-weight: 900;
+    color: #3d3d3d;
+  }
+  100% {
+    font-weight: 800;
+    color: #4c4c4c;
+    transform: scale(1);
+  }
+}
+
+/* ---------- スパークライン ---------- */
+
+.mz-sparkline-ecg-chart {
+  display: block;
+  overflow: visible;
+}
+
+/* しきい値の破線。流れないので slide の外側に置く */
+.mz-sparkline-ecg-threshold {
+  stroke: #d8d8d6;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+/* 正常時の静かな呼吸。remount しない層なので途切れずに続く */
+.mz-sparkline-ecg-breath {
+  animation: mz-sparkline-ecg-breath 3.6s ease-in-out infinite alternate;
+}
+@keyframes mz-sparkline-ecg-breath {
+  from {
+    opacity: 0.86;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 1. 新しい点が入るたび、+1点ぶん右にずらした状態から 0 へ戻して左スライドさせる
+      （STEP = 198 / (20 - 1) = 10.4211） */
+.mz-sparkline-ecg-slide {
+  transform-box: view-box;
+  animation: mz-sparkline-ecg-slide 0.4s ease-out both;
+}
+@keyframes mz-sparkline-ecg-slide {
+  from {
+    transform: translateX(10.4211px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.mz-sparkline-ecg-line,
+.mz-sparkline-ecg-tip {
+  fill: none;
+  stroke: #5c5c5c;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 3. 異常値のとき、最終セグメントだけ手前の点を軸に scaleY で伸びる。
+      軸が固定なので線は繋がったまま、頂点だけがピクッと跳ねて戻る */
+.mz-sparkline-ecg-tip {
+  transform-box: view-box;
+}
+.mz-sparkline-ecg-tip.is-alert {
+  animation: mz-sparkline-ecg-twitch 0.34s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-sparkline-ecg-twitch {
+  from {
+    transform: scaleY(1.35);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* 3. 白フラッシュ: 短い白ダッシュが右端から左へ線の上を走り抜ける */
+.mz-sparkline-ecg-flash {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-dasharray: 0.14 1;
+  animation: mz-sparkline-ecg-flash 0.5s ease-out 0.05s both;
+}
+@keyframes mz-sparkline-ecg-flash {
+  0% {
+    stroke-dashoffset: -1;
+    opacity: 0.95;
+  }
+  75% {
+    opacity: 0.8;
+  }
+  100% {
+    stroke-dashoffset: 0.14;
+    opacity: 0;
+  }
+}
+
+/* 最新点まわりは、跳ねた頂点と同じぶんだけ持ち上げてから戻る（tip の scaleY と同期） */
+.mz-sparkline-ecg-tipmark {
+  transform-box: view-box;
+}
+.mz-sparkline-ecg-tipmark.is-alert {
+  animation: mz-sparkline-ecg-tipmark 0.34s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-sparkline-ecg-tipmark {
+  from {
+    transform: translateY(var(--mz-sparkline-ecg-dy, 0px));
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* 4. 異常値の点は、ウィンドウから流れ去るまで濃い点のまま残る */
+.mz-sparkline-ecg-spike {
+  fill: #3d3d3d;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+/* 3. 着点は一瞬 1.5 倍のスパイク点になってから収まる */
+.mz-sparkline-ecg-spike.is-new {
+  animation: mz-sparkline-ecg-spike 0.36s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-sparkline-ecg-spike {
+  from {
+    transform: scale(1.5);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* 着点の一瞬の光 */
+.mz-sparkline-ecg-halo {
+  fill: #8c8c8c;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mz-sparkline-ecg-halo 0.45s ease-out both;
+}
+@keyframes mz-sparkline-ecg-halo {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.45);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+/* 2. 正常値: 右端に点が静かに繋がるだけ */
+.mz-sparkline-ecg-tipdot {
+  fill: #5c5c5c;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mz-sparkline-ecg-tipdot 0.3s ease-out 0.06s both;
+}
+@keyframes mz-sparkline-ecg-tipdot {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---------- 操作ボタン ---------- */
+
+.mz-sparkline-ecg-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-sparkline-ecg-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-sparkline-ecg-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-sparkline-ecg-actions button:active {
+  transform: scale(1.06, 0.88);
+}
+.mz-sparkline-ecg-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
