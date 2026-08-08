@@ -78,8 +78,16 @@ export function EcgSparklineChart({
   }, [data, threshold])
 
   const { pts, mainPath, tipPath, fullPath, thresholdY, latest, prev, dy, alert, hasAlert } = shape
-  /* データが1点増えるたびに key が変わり、スライド／異常演出が頭から再生される */
-  const tick = data.length
+
+  /* data の参照が変わるたびに key を進め、スライド／異常演出を頭から再生する。
+     長さではなく参照を見るので、固定長ウィンドウ（[...d, v].slice(-20)）を
+     渡してくる consumer でも流れが止まらない */
+  const [seenData, setSeenData] = useState(data)
+  const [tick, setTick] = useState(0)
+  if (seenData !== data) {
+    setSeenData(data)
+    setTick((t) => t + 1)
+  }
 
   return (
     <div
