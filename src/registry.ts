@@ -42,6 +42,12 @@ import DonutPour from './specimens/donut-pour'
 import GaugeOvershoot from './specimens/gauge-overshoot'
 import KpiLanding from './specimens/kpi-landing'
 import GoalRingBurst from './specimens/goal-ring-burst'
+import ScatterPopcorn from './specimens/scatter-popcorn'
+import HeatmapConduction from './specimens/heatmap-conduction'
+import AreaTide from './specimens/area-tide'
+import RadarMorph from './specimens/radar-morph'
+import FunnelDrip from './specimens/funnel-drip'
+import SparklineEcg from './specimens/sparkline-ecg'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -578,6 +584,78 @@ export const specimens: Specimen[] = [
     ecology:
       '加算のたびにリングがぷるんと伸びて進み、最後のひと押しでは90%まで威勢よく駆けてから、残り数%をじわ〜っと閉じてタメを作る。閉じ切った瞬間、リングは一度ぎゅっと縮んでからぼんっと弾み、光の輪を2連発で外へ放ち、%数字はチェックマークのひと筆書きに席を譲る。経験値バー（No.16）の臨界を、ダッシュボードの言葉に翻訳した標本。',
     Component: GoalRingBurst,
+  },
+  {
+    id: 'scatter-popcorn',
+    no: 44,
+    nameJa: '散布図のポップコーン',
+    nameEn: 'Popcorn Scatter',
+    category: 'アナリティクス',
+    trigger: '「再生」をクリック / 点にホバー',
+    principles: ['時間差の登場', '連鎖', '外れ値の誇張'],
+    ecology:
+      '原点にいちばん近い点から50msずつ、ぽん、ぽん、と弾けて着地し、密集したクラスターはまとめて咲く。全員が着地したあと一拍おいて、重心からいちばん離れた1点だけが1.6倍まで跳ね、1.15倍のまま居座って「こいつを見ろ」と主張する。散布図でいちばん伝えたいのは分布ではなく外れ値だ、という主張を登場順で語る標本。',
+    Component: ScatterPopcorn,
+  },
+  {
+    id: 'heatmap-conduction',
+    no: 45,
+    nameJa: 'ヒートマップの熱伝導',
+    nameEn: 'Heat Conduction',
+    category: 'アナリティクス',
+    trigger: '「再生」をクリック / セルにホバー',
+    principles: ['波及', '時間差の登場', '鼓動'],
+    ecology:
+      '全セルが無色から始まり、最大値のセルを熱源として、そこからの距離ぶんだけ遅れて色がじわじわと波及していく。染まる瞬間に一つひとつがぷくっと弾むので、色が「塗られる」のではなく「伝わる」ものに見える。温まりきったあとも熱源だけがゆっくり鼓動し続け、どこがいちばん熱いかを言葉なしで指し示す。',
+    Component: HeatmapConduction,
+  },
+  {
+    id: 'area-tide',
+    no: 46,
+    nameJa: 'エリアチャートの満ち引き',
+    nameEn: 'Tidal Area',
+    category: 'アナリティクス',
+    trigger: '「今週」「先週」「先月」を切り替え / 面にホバー',
+    principles: ['モーフィング', 'ばねの揺り戻し', '慣性'],
+    ecology:
+      '期間を切り替えると水位が左から右へ抜けるように入れ替わり、目標を4%ほど行き過ぎてから一度だけ揺り戻して落ち着く。値が跳ね上がるのではなく「水が入れ替わる」ので、増減が量として体に入る。ホバーすればいちばん近い水面に浮きが現れ、たぷんと上下して値を教える。折れ線が線なら、こちらは体積の言語。',
+    Component: AreaTide,
+  },
+  {
+    id: 'radar-morph',
+    no: 47,
+    nameJa: 'レーダーチャートの変身',
+    nameEn: 'Radar Morph',
+    category: 'アナリティクス',
+    trigger: '「今月」「先月」「昨年」を切り替え',
+    principles: ['モーフィング', '時間差の変形', '残像'],
+    ecology:
+      '期間を切り替えると多角形がぐにゃりと形を変える。全頂点が同時に動くとただの拡大縮小に見えてしまうので、頂点ごとに30msずつ開始をずらす——この小さなズレだけが「変身」の生々しさを作る。伸びた頂点は到着の瞬間にきらっと光り、縮んだときは前の形が残像として薄く残って消える。何が伸びて何が落ちたかを、比較表なしで語る標本。',
+    Component: RadarMorph,
+  },
+  {
+    id: 'funnel-drip',
+    no: 48,
+    nameJa: 'ファネルの滴り',
+    nameEn: 'Dripping Funnel',
+    category: 'アナリティクス',
+    trigger: '「再生」をクリック',
+    principles: ['受け渡し', '重力', '霧散'],
+    ecology:
+      '各段が満ちると、その底からしずくが三粒ぽたぽたと落ちて次の段に注がれ、次の段が満ちはじめる。同時に、落ちきれなかったぶんは両脇へ霧のように散って消えていく。数字の差を引き算で見せるのではなく、水が「渡った量」と「こぼれた量」として見せるので、どこで漏れているかが体で分かる。最下段まで届いた水は、誇らしげに一度ぷるんと弾む。',
+    Component: FunnelDrip,
+  },
+  {
+    id: 'sparkline-ecg',
+    no: 49,
+    nameJa: 'スパークラインの心電図',
+    nameEn: 'ECG Sparkline',
+    category: 'アナリティクス',
+    trigger: '「正常値を流す」「異常値を流す」をクリック',
+    principles: ['ストリーミング', '静けさとの対比', 'フラッシュ'],
+    ecology:
+      '値が流れ込むたび波形は1点分だけ左へずれ、正常なあいだはごく浅い呼吸をするだけで何も主張しない。だからこそ、しきい値を超えた値が来た瞬間の変化が効く——波形の先端がピクッと跳ね、白い光が線上を走り抜け、数字が太く濃くなり、カードの縁が一瞬締まる。過ぎ去った異常値は濃い点として画面外へ流れ去るまで居残る。監視画面の作法は、9割の静けさが1割の警告を際立たせること。',
+    Component: SparklineEcg,
   },
 ]
 
