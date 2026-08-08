@@ -80,6 +80,14 @@
   animation: mz-go-beat 0.9s ease-in-out infinite;
 }
 
+/* メーター下の小ラベル（label prop を渡したときだけ出る） */
+.mz-gauge-overshoot-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #8c8c8c;
+}
+
 @keyframes mz-go-beat {
   0% {
     transform: scale(1);
