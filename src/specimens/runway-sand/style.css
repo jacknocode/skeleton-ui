@@ -1,26 +1,319 @@
 .mz-runway-sand {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 264px;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-runway-sand.is-active {
-  animation: mz-runway-sand-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+.mz-runway-sand-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
-@keyframes mz-runway-sand-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+
+/* ---------- 砂時計本体 ---------- */
+
+.mz-runway-sand-grab {
+  width: 90px;
+  height: 130px;
+  flex: none;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.mz-runway-sand-grab:focus-visible {
+  outline: 2px solid #8c8c8c;
+  outline-offset: 3px;
+}
+
+/* 掴んで回ろうとして、回りきらずに戻る＝ひっくり返せない、を仕草だけで言う */
+.mz-runway-sand-grab.is-wobbling {
+  animation: mz-rs-wobble 0.62s ease-in-out;
+  transform-origin: 50% 50%;
+}
+@keyframes mz-rs-wobble {
+  0% {
+    transform: rotate(0deg);
   }
-  60% {
-    transform: scale(0.9, 1.1);
+  35% {
+    transform: rotate(9deg);
+  }
+  65% {
+    transform: rotate(-3deg);
   }
   100% {
-    transform: none;
+    transform: rotate(0deg);
   }
+}
+
+.mz-runway-sand-frame {
+  position: relative;
+  width: 90px;
+  height: 130px;
+}
+/* 着地のたびに外枠全体がわずかに沈んで戻る。粒・山の潰れと同じ周期(--mz-rs-land)を共有するので、
+   収支を変えると沈みの拍まで一斉に速くなる／遅くなる */
+.mz-runway-sand-frame.is-flowing {
+  animation: mz-rs-sink var(--mz-rs-land) ease-out infinite;
+}
+@keyframes mz-rs-sink {
+  0%,
+  78% {
+    transform: translateY(0);
+  }
+  88% {
+    transform: translateY(0.5px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.mz-runway-sand-glass {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* 上球：残量(月)がそのまま逆台形の面積になる。カクつかせないよう0.9s linearで追従 */
+.mz-runway-sand-top-box {
+  position: absolute;
+  left: 5px;
+  top: 4px;
+  width: 80px;
+  height: 54px;
+  overflow: hidden;
+}
+.mz-runway-sand-sand-top {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background: #5c5c5c;
+  clip-path: polygon(0 0, 100% 0, 56% 100%, 44% 100%);
+  transform-origin: bottom center;
+  transition: height 0.9s linear;
+}
+/* 残り3ヶ月を切ると上端の縁が鼓動する。色は使わず、拍の速さだけで危機感を語る */
+.mz-runway-sand-sand-top.is-beating {
+  animation-name: mz-rs-beat;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+@keyframes mz-rs-beat {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.06);
+  }
+}
+
+/* くびれ〜下球：筋と粒。ここが標本の主役 */
+.mz-runway-sand-neck {
+  position: absolute;
+  left: 0;
+  top: 58px;
+  width: 90px;
+  height: 68px;
+  pointer-events: none;
+}
+.mz-runway-sand-stream {
+  position: absolute;
+  left: 45px;
+  top: 0;
+  height: 46px;
+  background: #5c5c5c;
+  border-radius: 1px;
+  transform: translateX(-50%);
+  transition:
+    opacity 0.4s ease,
+    width 0.4s ease;
+}
+.mz-runway-sand-grain {
+  position: absolute;
+  left: 45px;
+  top: 0;
+  width: 2.5px;
+  height: 2.5px;
+  background: #5c5c5c;
+  opacity: 0;
+  animation-name: mz-rs-fall;
+  animation-fill-mode: both;
+  animation-iteration-count: infinite;
+  /* 重力なので加速。ぷるんは使わない */
+  animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+}
+@keyframes mz-rs-fall {
+  0% {
+    transform: translate(-50%, 0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  90% {
+    transform: translate(-50%, calc(var(--mz-rs-fall) * 1px));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, calc(var(--mz-rs-fall) * 1px));
+    opacity: 0;
+  }
+}
+
+/* 下球：山が高さを増していく。着地のたびに1.5%潰れて戻る（粒・沈みと同じ周期） */
+.mz-runway-sand-bottom-box {
+  position: absolute;
+  left: 5px;
+  top: 58px;
+  width: 80px;
+  height: 68px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.mz-runway-sand-mound {
+  width: 62px;
+  background: #5c5c5c;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  transform-origin: bottom center;
+  transition: height 0.9s linear;
+}
+.mz-runway-sand-frame.is-flowing .mz-runway-sand-mound {
+  animation: mz-rs-squash var(--mz-rs-land) ease-out infinite;
+}
+@keyframes mz-rs-squash {
+  0%,
+  78% {
+    transform: scaleY(1);
+  }
+  88% {
+    transform: scaleY(0.985);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+/* 黒字へ止まった合図：上端の縁を白いハイライトが一度だけ抜ける */
+.mz-runway-sand-highlight {
+  position: absolute;
+  left: 5px;
+  top: 4px;
+  width: 80px;
+  height: 12px;
+  overflow: hidden;
+}
+.mz-runway-sand-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+  opacity: 0;
+}
+.mz-runway-sand-highlight.is-sweep::before {
+  animation: mz-rs-sweep 0.5s ease-out;
+}
+@keyframes mz-rs-sweep {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(340%);
+    opacity: 0;
+  }
+}
+
+/* 尽きたときの静かな終わり：0.6秒の沈黙のあと、褪せて#b3b3b3へ落ちる */
+.mz-runway-sand-veil {
+  position: absolute;
+  inset: 0;
+  background: #b3b3b3;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+}
+
+/* ---------- ラベル・操作 ---------- */
+
+.mz-runway-sand-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-width: 150px;
+}
+
+.mz-runway-sand-figure {
+  font-size: 16px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.mz-runway-sand-figure.is-beating {
+  animation-name: mz-rs-label-beat;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+@keyframes mz-rs-label-beat {
+  0%,
+  100% {
+    color: #5c5c5c;
+  }
+  50% {
+    color: #1a1a1a;
+  }
+}
+
+.mz-runway-sand-status {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #8c8c8c;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-runway-sand-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+}
+.mz-runway-sand-btn {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    box-shadow 0.2s,
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-runway-sand-btn:hover {
+  transform: translateY(-1px);
+}
+.mz-runway-sand-btn:active {
+  transform: scale(1.05, 0.9);
+}
+.mz-runway-sand-btn.is-active {
+  color: #232323;
+  box-shadow: 0 0 0 1.5px #5c5c5c inset;
+}
+.mz-runway-sand-reset {
+  color: #b3b3b3;
 }
