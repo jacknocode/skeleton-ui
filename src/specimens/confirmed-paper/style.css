@@ -1,26 +1,282 @@
+/* No.60「確定と含みの二層」
+   モノクロ・自己完結。動きだけで「まだ動く／もう動かない」を語る。 */
+
 .mz-confirmed-paper {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 232px;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-confirmed-paper.is-active {
-  animation: mz-confirmed-paper-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 数字（本体＋上付きの含み） ---------- */
+
+.mz-confirmed-paper-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
 }
-@keyframes mz-confirmed-paper-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+
+.mz-confirmed-paper-amount {
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+  transform-origin: left center;
+}
+/* 着弾のぷるん。増えたことを祝うのではなく、数字が「今ここに収まった」重みを一度だけ言う */
+.mz-confirmed-paper-amount.is-landed {
+  animation: mz-cp-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-cp-pop {
+  0% {
+    transform: scale(1);
   }
-  60% {
-    transform: scale(0.9, 1.1);
+  40% {
+    transform: scale(1.06, 0.94);
   }
   100% {
-    transform: none;
+    transform: scale(1);
   }
+}
+
+/* 上付きの含み額。バーの含み区間と同じ duration・イージング・開始位相で呼吸することで
+   「これはバーのあの区間と同じもの」を数字でも言う（durationはJSから inline で共有） */
+.mz-confirmed-paper-float-amount {
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+  /* duration は --mz-cp-breathe（JS の BREATHE_MS）を参照。バー側の呼吸と同じ変数を
+     見るので、値がどちらか一方だけ変わってズレる心配がない */
+  animation: mz-cp-super-breathe var(--mz-cp-breathe, 3400ms) ease-in-out infinite;
+}
+@keyframes mz-cp-super-breathe {
+  0%,
+  100% {
+    transform: translateY(0.8px);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateY(-0.8px);
+    opacity: 0.75;
+  }
+}
+/* 確定を押した瞬間: まず呼吸を止めて中立姿勢に落ち着き（0ms）、
+   380ms 待ってから本体へ吸い込まれて消える（加速するイージングで「吸われる」感を作る） */
+.mz-confirmed-paper-float-amount.is-absorbing {
+  animation-name: mz-cp-super-freeze, mz-cp-super-absorb;
+  animation-duration: 1ms, 0.34s;
+  animation-timing-function: linear, cubic-bezier(0.4, 0, 1, 1);
+  animation-delay: 0ms, 380ms;
+  animation-iteration-count: 1, 1;
+  animation-fill-mode: forwards, both;
+}
+@keyframes mz-cp-super-freeze {
+  to {
+    transform: translateY(0);
+    opacity: 0.65;
+  }
+}
+@keyframes mz-cp-super-absorb {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate(-16px, 10px) scale(0.7);
+    opacity: 0;
+  }
+}
+
+/* ---------- バー ---------- */
+
+/* 揺さぶり専用の外側ラッパー。締め(is-done)のスケールと同じ transform を
+   共有すると再確定時に上書きされて締めが再生してしまうので、器を分けてある */
+.mz-confirmed-paper-shake.is-deny {
+  animation: mz-cp-deny 0.4s ease-in-out;
+}
+@keyframes mz-cp-deny {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+  75% {
+    transform: translateX(-2px);
+  }
+}
+
+.mz-confirmed-paper-bar {
+  display: flex;
+  align-items: stretch;
+  height: 20px;
+}
+/* 締め: 最後の一拍だけ、バー全体が一度きゅっと締まる。1回のみ・繰り返さない */
+.mz-confirmed-paper-bar.is-done {
+  animation: mz-cp-squeeze 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes mz-cp-squeeze {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(0.99);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 確定分: 実線の塗り。絶対に呼吸しない・絶対に揺れない */
+.mz-confirmed-paper-fill {
+  flex-shrink: 0;
+  height: 100%;
+  background: #3d3d3d;
+  border-radius: 3px 0 0 3px;
+}
+.mz-confirmed-paper-fill.is-full {
+  border-radius: 3px;
+}
+
+/* 含み区間の外枠。幅の遷移（相場が動く）はここで。
+   「落ちて固まる」の上下1pxもここ（transformの用途を分けて確定分のスケールと衝突させない） */
+.mz-confirmed-paper-float-seg {
+  position: relative;
+  flex-shrink: 0;
+  height: 100%;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mz-confirmed-paper-float-seg.is-locking {
+  animation: mz-cp-fall 0.24s ease-out 140ms both;
+}
+@keyframes mz-cp-fall {
+  0% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(1px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* 呼吸そのもの（scaleXの往復）。基準幅に対して ±amp% を左端固定で伸縮させる。
+   確定の第一拍「止まる」はここ: animationを外して 0.14s でscaleX(1)へスナップするだけで、
+   呼吸のどの位相で押されても破綻しない。 */
+.mz-confirmed-paper-float-scale {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  animation: mz-cp-breathe var(--mz-cp-breathe, 3400ms) ease-in-out infinite;
+}
+@keyframes mz-cp-breathe {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(calc(1 + var(--mz-cp-amp, 4) / 100));
+  }
+}
+.mz-confirmed-paper-float-seg.is-locking .mz-confirmed-paper-float-scale {
+  animation: none;
+  transform: scaleX(1);
+  transition: transform 0.14s ease-out;
+}
+
+/* 破線＋marching ants（4辺を repeating-linear-gradient で偽装し background-position を流す） */
+.mz-confirmed-paper-float-dash {
+  position: absolute;
+  inset: 0;
+  border-radius: 0 3px 3px 0;
+  background-color: rgba(0, 0, 0, 0.04);
+  background-image:
+    linear-gradient(90deg, #8c8c8c 50%, transparent 0),
+    linear-gradient(90deg, #8c8c8c 50%, transparent 0),
+    linear-gradient(180deg, #8c8c8c 50%, transparent 0),
+    linear-gradient(180deg, #8c8c8c 50%, transparent 0);
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  background-size:
+    8px 1.5px,
+    8px 1.5px,
+    1.5px 8px,
+    1.5px 8px;
+  background-position:
+    0 0,
+    0 100%,
+    0 0,
+    100% 0;
+  animation: mz-cp-ants 0.9s linear infinite;
+  transition: opacity 0.3s ease 140ms;
+}
+@keyframes mz-cp-ants {
+  to {
+    background-position:
+      8px 0,
+      -8px 100%,
+      0 -8px,
+      100% 8px;
+  }
+}
+.mz-confirmed-paper-float-seg.is-locking .mz-confirmed-paper-float-dash {
+  animation: none;
+  opacity: 0;
+}
+
+/* 実線＋塗り。確定分と同じ濃さ #3d3d3d へフェードインし、輪郭は流れなくなる */
+.mz-confirmed-paper-float-solid {
+  position: absolute;
+  inset: 0;
+  border-radius: 0 3px 3px 0;
+  background: #3d3d3d;
+  opacity: 0;
+  transition: opacity 0.3s ease 140ms;
+}
+.mz-confirmed-paper-float-seg.is-locking .mz-confirmed-paper-float-solid {
+  opacity: 1;
+}
+
+/* ---------- 状態テキスト・操作 ---------- */
+
+.mz-confirmed-paper-status {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-confirmed-paper-actions {
+  display: flex;
+  gap: 6px;
+}
+.mz-confirmed-paper-actions button {
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 11px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-confirmed-paper-actions button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.mz-confirmed-paper-actions button:active:not(:disabled) {
+  transform: scale(1.06, 0.88);
+}
+.mz-confirmed-paper-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
 }
