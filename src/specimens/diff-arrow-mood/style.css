@@ -1,0 +1,180 @@
+.mz-diff-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.mz-diff-arrow-grid {
+  display: flex;
+  gap: 8px;
+}
+
+.mz-diff-arrow-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 78px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+.mz-diff-arrow-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #b3b3b3;
+}
+.mz-diff-arrow-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 差分の行。既定は薄く、良い変化だけが着地後に濃くなる */
+.mz-diff-arrow-diff {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #b3b3b3;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.4s ease-out;
+}
+.mz-diff-arrow-diff.is-good {
+  color: #3d3d3d;
+}
+
+.mz-diff-arrow-mark {
+  display: flex;
+  line-height: 0;
+}
+
+/* ---- 上向き ----
+   ぴょこんと跳ね上がり、着地でわずかに沈む。
+   頂点で縦に伸びる(ストレッチ)ので、勢いが体温として残る。 */
+.mz-diff-arrow-diff.is-up.is-live .mz-diff-arrow-mark {
+  animation: mz-diff-arrow-hop 0.62s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+@keyframes mz-diff-arrow-hop {
+  0% {
+    transform: translateY(5px) scaleY(0.8);
+    opacity: 0;
+  }
+  45% {
+    transform: translateY(-5px) scaleY(1.18);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(1px) scaleY(0.94);
+  }
+  100% {
+    transform: translateY(0) scaleY(1);
+    opacity: 1;
+  }
+}
+
+/* ---- 下向き ----
+   跳ねない。ぽとりと落ちて、着地でひとつ縮んでしぼむ。
+   跳ね返さないことが「戻ってこない」の言い方になる。 */
+.mz-diff-arrow-diff.is-down.is-live .mz-diff-arrow-mark {
+  animation: mz-diff-arrow-drop 0.66s cubic-bezier(0.4, 0, 0.5, 1) both;
+}
+@keyframes mz-diff-arrow-drop {
+  0% {
+    transform: translateY(-5px) scale(1);
+    opacity: 0;
+  }
+  55% {
+    transform: translateY(3px) scale(1);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(3px) scale(0.82, 1.1);
+  }
+  100% {
+    transform: translateY(2px) scale(0.9);
+    opacity: 0.85;
+  }
+}
+/* 数字も一緒にしぼむ。悪化は静かに、小さく */
+.mz-diff-arrow-diff.is-down.is-live .mz-diff-arrow-text {
+  animation: mz-diff-arrow-wilt 0.66s cubic-bezier(0.4, 0, 0.5, 1) both;
+}
+@keyframes mz-diff-arrow-wilt {
+  0% {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---- 横ばい ----
+   どちらへも行けず、左右にゆらゆら迷ってから水平に落ち着く。
+   「変化なし」を無表情ではなく、決めかねた態度として見せる。 */
+.mz-diff-arrow-diff.is-flat.is-live .mz-diff-arrow-mark {
+  animation: mz-diff-arrow-waver 0.9s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+@keyframes mz-diff-arrow-waver {
+  0% {
+    transform: translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  20% {
+    transform: translateX(-3px) rotate(-8deg);
+    opacity: 1;
+  }
+  42% {
+    transform: translateX(3px) rotate(7deg);
+  }
+  62% {
+    transform: translateX(-2px) rotate(-4deg);
+  }
+  80% {
+    transform: translateX(1px) rotate(2deg);
+  }
+  100% {
+    transform: translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* 上向き・横ばいの数字は素直に現れるだけ（下向きだけ別の余韻を持つ） */
+.mz-diff-arrow-diff.is-up.is-live .mz-diff-arrow-text,
+.mz-diff-arrow-diff.is-flat.is-live .mz-diff-arrow-text {
+  animation: mz-diff-arrow-text-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mz-diff-arrow-text-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mz-diff-arrow-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-diff-arrow-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-diff-arrow-actions button:active {
+  transform: scale(1.06, 0.88);
+}

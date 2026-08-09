@@ -1,0 +1,176 @@
+.mz-annotation-stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.mz-annotation-stamp-chart {
+  position: relative;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.mz-annotation-stamp-line {
+  stroke: #c6c6c4;
+  stroke-width: 2;
+}
+
+.mz-annotation-stamp-pins {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* ピン1本の原点はデータ点そのもの。頭・柄・札はすべてここからの相対配置 */
+.mz-annotation-stamp-pin {
+  position: absolute;
+}
+
+/* ---- 頭 ----
+   浮かび上がらせない。上から加速して落ち、当たった瞬間に一度だけ潰れる。 */
+.mz-annotation-stamp-head {
+  position: absolute;
+  top: -3.5px;
+  left: -3.5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3d3d3d;
+  animation: mz-annotation-stamp-drive 0.26s cubic-bezier(0.55, 0, 0.85, 0.35) both;
+}
+@keyframes mz-annotation-stamp-drive {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.9, 1.15);
+  }
+  78% {
+    opacity: 1;
+    transform: translateY(0) scale(0.9, 1.15);
+  }
+  90% {
+    /* 着弾。横に潰れて重さを出す */
+    transform: translateY(0) scale(1.35, 0.72);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---- 柄 ----
+   頭が刺さった直後に、根元から上へ伸びて札を持ち上げる */
+.mz-annotation-stamp-stem {
+  position: absolute;
+  bottom: 0;
+  left: -0.5px;
+  width: 1px;
+  height: 14px;
+  background: #a3a3a3;
+  transform-origin: bottom;
+  animation: mz-annotation-stamp-stem-up 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mz-annotation-stamp-stem-up {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* ---- 波紋 ----
+   打刻の衝撃。線の上を一度だけ広がって消える */
+.mz-annotation-stamp-ripple {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid #3d3d3d;
+  border-radius: 50%;
+  animation: mz-annotation-stamp-ripple-out 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mz-annotation-stamp-ripple-out {
+  0% {
+    opacity: 0.75;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(3.4);
+  }
+}
+
+/* ---- 札 ----
+   柄の先を蝶番にして、ひらっと開く。
+   先に「起きた」を刺し、あとから「何が」を読ませるので遅れて開く。 */
+.mz-annotation-stamp-label {
+  position: absolute;
+  bottom: 15px;
+  left: 0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #3d3d3d;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16);
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  transform-origin: 0 100%;
+  animation: mz-annotation-stamp-unfold 0.34s cubic-bezier(0.34, 1.5, 0.64, 1) both;
+}
+/* 右端の出来事だけ、蝶番を右に付け替えて内側へ開く（枠から札がはみ出さない） */
+.mz-annotation-stamp-label.is-flip {
+  right: 0;
+  left: auto;
+  transform-origin: 100% 100%;
+}
+
+@keyframes mz-annotation-stamp-unfold {
+  0% {
+    opacity: 0;
+    transform: rotate(-14deg) scale(0.7);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(3deg) scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+/* 支援技術向け。図では動きが語り、テキストは静かに事実だけ残す */
+.mz-annotation-stamp-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mz-annotation-stamp-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-annotation-stamp-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-annotation-stamp-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-annotation-stamp-actions button:active {
+  transform: scale(1.06, 0.88);
+}
