@@ -667,7 +667,8 @@ export const ideas: Idea[] = [
     motion:
       '見出しだけが薄い紙で先に貼られ、待っているあいだ端がかすかに揺れる。発効の週に濃度が入って本文が確定し、紙がぴたりと止まる',
     tags: ['ゲーム', '予告', '待ち時間', '通知'],
-    status: 'sprout',
+    status: 'captured',
+    specimenId: 'news-preview',
   },
   {
     id: 'confirmed-vs-paper',
@@ -675,7 +676,8 @@ export const ideas: Idea[] = [
     motion:
       '同じ数字を実線の土台と点線の上乗せに割る。含み分だけがゆらゆら呼吸し、確定した瞬間に点線が実線へ落ちて固まる',
     tags: ['アナリティクス', '数値', '確度'],
-    status: 'sprout',
+    status: 'captured',
+    specimenId: 'confirmed-paper',
   },
   {
     id: 'runway-sandglass',
@@ -683,7 +685,8 @@ export const ideas: Idea[] = [
     motion:
       '砂が落ちる速さが収支の悪さに比例する。黒字なら止まり、赤字が深いほど落ちが速まる。ひっくり返せない砂時計',
     tags: ['ゲーム', '待ち時間', '緊張感', '資源'],
-    status: 'seed',
+    status: 'captured',
+    specimenId: 'runway-sand',
   },
   {
     id: 'causal-relay',
