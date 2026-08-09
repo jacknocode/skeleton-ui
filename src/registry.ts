@@ -53,6 +53,10 @@ import ShareDilute from './specimens/share-dilute'
 import ThresholdAlarm from './specimens/threshold-alarm'
 import PendingCommit from './specimens/pending-commit'
 import AllocationSeesaw from './specimens/allocation-seesaw'
+import DiffArrowMood from './specimens/diff-arrow-mood'
+import QuestTrackerSlide from './specimens/quest-tracker-slide'
+import UnlockDoor from './specimens/unlock-door'
+import AnnotationStamp from './specimens/annotation-stamp'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -721,6 +725,54 @@ export const specimens: Specimen[] = [
     ecology:
       'どれかを増やすと、必ずどれかが減る。受け取る側は素直に伸び、譲る側だけ戻り成分のあるイージングでたわんでから引き下がるので、奪われたことが動きの質感で分かる。上の総量バーは決して伸びず、配分が動いた合図として光がひとつ横切るだけ——「増やしたのに全体は増えていない」を毎回同じ絵で念押しする。どこからも取れないときはボタンを無効化して黙るのではなく、押せて、レーンごと首を横に振って断る。',
     Component: AllocationSeesaw,
+  },
+  {
+    id: 'diff-arrow-mood',
+    no: 55,
+    nameJa: '前週比矢印の感情',
+    nameEn: 'Moody Diff Arrow',
+    category: 'アナリティクス',
+    trigger: '「別の週」をクリック',
+    principles: ['スカッシュ&ストレッチ', '跳ねない下降', '迷い'],
+    ecology:
+      '上向きはぴょこんと跳ね上がり、頂点で縦に伸びてから着地でわずかに沈む。下向きは跳ね返さずぽとりと落ち、着地で一度縮んでしぼむ——戻ってこないことを、跳ねないことで言う。横ばいは左右にゆらゆら迷ってから水平に落ち着き、「変化なし」を無表情ではなく決めかねた態度として見せる。単色なので「良い＝緑」に逃げられず、動きの質と着地後の濃さだけで温度を伝える。だから解約率や負債のような「上がると困る指標」も、矢印の向きは事実のまま、濃さの意味だけを入れ替えれば済む。',
+    Component: DiffArrowMood,
+  },
+  {
+    id: 'quest-tracker-slide',
+    no: 56,
+    nameJa: 'クエスト目標の差し替え',
+    nameEn: 'Sliding Quest Tracker',
+    category: 'ゲーム',
+    trigger: '「進める」を繰り返す',
+    principles: ['ひと筆書き', '速い退場と遅い登場', '席の受け渡し'],
+    ecology:
+      'ゲージが満ちるとチェックがひと筆書きで描かれ、描き終えた札は迷わず上へ抜ける。入れ替わりの主役は「消えた」ことではなく「次が来た」ことなので、退場は速く、せり上がりは少し行き過ぎてから着地する。控えの目標は1段ずつ繰り上がり、薄れながら奥に並んで「あと何が残っているか」を保ち続ける。新しい札が定位置に落ち着いてから、はじめて進捗バーがゼロから伸びる——最後に目に残るのが、次に積むものになる。',
+    Component: QuestTrackerSlide,
+  },
+  {
+    id: 'unlock-door',
+    no: 57,
+    nameJa: '新機能アンロック',
+    nameEn: 'Unlocking Door',
+    category: 'ゲーム',
+    trigger: '「条件を満たす」を3回クリック',
+    principles: ['進捗を錠の高さで語る', '重力', '原因と結果の分離'],
+    ecology:
+      '条件がひとつ灯るたびに掛け金が3分の1ずつ持ち上がる。開く前から「あと何が足りないか」が錠の高さとして読めるので、錠は障害ではなく進捗計になる。最後の条件が灯った瞬間、掛け金は一度跳ねて外れ、自重で回りながら枠の外へ落ちていく。扉はそれを見届けてから、蝶番を軸に奥へ逃げながら開く——原因（条件が揃った）と結果（解禁された）を同時に動かさないことで、因果が読める。中身は最初から在り、閉じているのは扉のほうだと分かるように、開ききってから名乗る。',
+    Component: UnlockDoor,
+  },
+  {
+    id: 'annotation-stamp',
+    no: 58,
+    nameJa: '注釈ピンの打刻',
+    nameEn: 'Stamping Annotation',
+    category: 'アナリティクス',
+    trigger: '「再生」「別の系列」をクリック',
+    principles: ['加速して当たる', '波紋', '打刻と開札の分離'],
+    ecology:
+      'ピンは浮かび上がらない。上から加速して落ち、当たった瞬間に横へ潰れてドンと刺さり、点から波紋がひとつ広がる。札は一拍おいてから、柄の先を蝶番にしてひらっと開く——先に「ここで何かが起きた」を刺し、あとから「それが何か」を読ませる順序になる。複数の出来事は時間差で打たれるので、打刻の順序がそのまま前後関係になる。折れ線の値そのものは静かなまま、文脈だけが事件として刻まれていく。',
+    Component: AnnotationStamp,
   },
 ]
 

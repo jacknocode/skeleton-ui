@@ -249,9 +249,11 @@ export const ideas: Idea[] = [
   {
     id: 'unlock-door',
     title: '新機能アンロック',
-    motion: '錠前が跳ねて外れて落ち、扉がひらいて中身がぽんと登場する',
-    tags: ['ゲーム', '祝福', '解放'],
-    status: 'seed',
+    motion:
+      '条件が灯るたび掛け金が3分の1ずつ持ち上がり、最後の1つで錠が跳ねて外れて落ちる。扉はそれを見届けてから開き、中身がぽんと登場する',
+    tags: ['ゲーム', '祝福', '解放', '条件'],
+    status: 'captured',
+    specimenId: 'unlock-door',
   },
   {
     id: 'check-chain',
@@ -299,9 +301,11 @@ export const ideas: Idea[] = [
   {
     id: 'quest-tracker-slide',
     title: 'クエスト目標の差し替え',
-    motion: '達成した目標がチェック付きで上へ抜け、次の目標が下からせり上がって入れ替わる',
+    motion:
+      '達成した目標がチェック付きで上へ抜け、次の目標が下からせり上がって入れ替わる。着地してから進捗バーがゼロから伸びる',
     tags: ['ゲーム', 'タスク', 'リスト'],
-    status: 'seed',
+    status: 'captured',
+    specimenId: 'quest-tracker-slide',
   },
   {
     id: 'radar-ping',
@@ -565,9 +569,11 @@ export const ideas: Idea[] = [
   {
     id: 'diff-arrow-mood',
     title: '前週比矢印の感情',
-    motion: '上向き矢印はぴょこんと跳ねて緑がにじみ、下向きはぽとりと沈んで灰色にしぼむ。横ばいはゆらゆら迷ってから水平に落ち着く',
+    motion:
+      '上向き矢印はぴょこんと跳ねて濃くなり、下向きは跳ね返さずぽとりと沈んでしぼむ。横ばいはゆらゆら迷ってから水平に落ち着く',
     tags: ['アナリティクス', '数値', '比較'],
-    status: 'seed',
+    status: 'captured',
+    specimenId: 'diff-arrow-mood',
   },
   {
     id: 'threshold-alarm',
@@ -611,7 +617,8 @@ export const ideas: Idea[] = [
     title: '注釈ピンの打刻',
     motion: 'グラフ上の出来事ポイントにピンがドンと落ちて波紋が広がり、ラベルが一拍遅れてひらっと開く。リリース日などの文脈が「事件」として刻まれる',
     tags: ['アナリティクス', 'グラフ', '注釈'],
-    status: 'seed',
+    status: 'captured',
+    specimenId: 'annotation-stamp',
   },
 
   /* ---------- 経営シミュレーションから採取した種 ----------
@@ -660,14 +667,6 @@ export const ideas: Idea[] = [
     motion:
       '見出しだけが薄い紙で先に貼られ、待っているあいだ端がかすかに揺れる。発効の週に濃度が入って本文が確定し、紙がぴたりと止まる',
     tags: ['ゲーム', '予告', '待ち時間', '通知'],
-    status: 'sprout',
-  },
-  {
-    id: 'unlock-latch',
-    title: '解禁の掛け金',
-    motion:
-      '条件ランプが灯るたび掛け金が半分ずつ持ち上がり、最後の1つが灯った瞬間にかちりと落ちて外れる。外れた錠は自重でひとつ揺れて止まる',
-    tags: ['ゲーム', '解禁', '条件', '達成'],
     status: 'sprout',
   },
   {
