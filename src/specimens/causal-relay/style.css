@@ -1,0 +1,259 @@
+.mz-causal-relay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.mz-causal-relay-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 236px;
+}
+
+/* ---- 判断の札 ---- */
+.mz-causal-relay-card {
+  padding: 10px 14px 8px;
+  border: 1.5px solid #e0e0de;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* ---- 原因の行 ----
+   自分の番が来るまで薄いまま待つ。前の因果が渡り終えるまで動かないことが
+   「読む順番」そのものになる。 */
+.mz-causal-relay-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+  animation: mz-causal-relay-head-in 0.3s ease-out both;
+}
+@keyframes mz-causal-relay-head-in {
+  from {
+    opacity: 0.38;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.mz-causal-relay-action {
+  font-size: 12px;
+  font-weight: 800;
+  color: #3d3d3d;
+}
+
+/* コストバッジ = 押印。回転せず1px沈んで締まり、インクが一度だけにじむ
+   (No.53 予約と一斉確定の押印の血筋)。ぷるんは原因の側だけに許す。 */
+.mz-causal-relay-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 18px;
+  border: 1.5px solid #e0e0de;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #b3b3b3;
+  background: #fff;
+  animation: mz-causal-relay-stamp 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: inherit; /* 原因の行と同じ時刻に降りる */
+}
+@keyframes mz-causal-relay-stamp {
+  0% {
+    transform: none;
+    border-color: #e0e0de;
+    background: #fff;
+    color: #b3b3b3;
+  }
+  40% {
+    transform: translateY(1px) scale(0.92);
+    border-color: #3d3d3d;
+    background: #3d3d3d;
+    color: #fff;
+  }
+  100% {
+    transform: none;
+    border-color: #3d3d3d;
+    background: #3d3d3d;
+    color: #fff;
+  }
+}
+/* インクのにじみ。押印の輪郭から一度だけ広がって消える */
+.mz-causal-relay-badge::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 6px;
+  border: 1.5px solid #3d3d3d;
+  opacity: 0;
+  animation: mz-causal-relay-ink 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: inherit;
+}
+@keyframes mz-causal-relay-ink {
+  0% {
+    opacity: 0;
+    transform: none;
+  }
+  30% {
+    opacity: 0.45;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+/* ---- 渡りの軌道 ----
+   薄い軌道は最初から見せておき(構造の予告)、押印の締まり際から
+   インクの線が結果へ向かって降りていく。白地の単色図鑑では「光」は濃度で描く。 */
+.mz-causal-relay-body {
+  position: relative;
+}
+.mz-causal-relay-track,
+.mz-causal-relay-rail {
+  position: absolute;
+  top: -4px;
+  bottom: 13px; /* 最後の結果行の中心で止まる(行高26pxの半分) */
+  left: 15px;
+  width: 2px;
+  border-radius: 1px;
+}
+.mz-causal-relay-track {
+  background: #ececea;
+}
+.mz-causal-relay-rail {
+  background: linear-gradient(to bottom, #d6d6d4, #8c8c8c);
+  transform: scaleY(0);
+  transform-origin: top;
+  /* duration は行数×LIGHT_SEG。JSが inline で渡す */
+  animation: mz-causal-relay-descend linear both;
+}
+@keyframes mz-causal-relay-descend {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* 先端のインク粒。渡り終えると自分は消え、濃さは行に受け渡される */
+.mz-causal-relay-spark {
+  position: absolute;
+  top: -7px;
+  left: 13px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3d3d3d;
+  opacity: 0;
+  animation: mz-causal-relay-drop linear both;
+}
+@keyframes mz-causal-relay-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  10% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(var(--mz-cr-run, 40px));
+  }
+}
+
+/* ---- 結果の行 ----
+   光が触れた順にインクを得る。原因と違って跳ねない——静かに沈着するだけ。 */
+.mz-causal-relay-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px; /* index.tsx の ROW_H と揃える */
+  padding-left: 30px;
+  animation: mz-causal-relay-row-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mz-causal-relay-row-in {
+  from {
+    opacity: 0.25;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 軌道の上の結び目。光が通過した合図として一度だけ膨らむ */
+.mz-causal-relay-tick {
+  position: absolute;
+  top: 10px;
+  left: 13px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e0e0de;
+  animation: mz-causal-relay-tick-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: inherit;
+}
+@keyframes mz-causal-relay-tick-in {
+  from {
+    background: #e0e0de;
+    transform: none;
+  }
+  60% {
+    background: #5c5c5c;
+    transform: scale(1.5);
+  }
+  to {
+    background: #5c5c5c;
+    transform: none;
+  }
+}
+
+.mz-causal-relay-effect {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+.mz-causal-relay-delta {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 操作 ---- */
+.mz-causal-relay-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-causal-relay-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-causal-relay-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-causal-relay-actions button:active {
+  transform: scale(1.06, 0.88);
+}

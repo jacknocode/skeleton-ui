@@ -57,6 +57,7 @@ import DiffArrowMood from './specimens/diff-arrow-mood'
 import QuestTrackerSlide from './specimens/quest-tracker-slide'
 import UnlockDoor from './specimens/unlock-door'
 import AnnotationStamp from './specimens/annotation-stamp'
+import CausalRelay from './specimens/causal-relay'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -773,6 +774,18 @@ export const specimens: Specimen[] = [
     ecology:
       'ピンは浮かび上がらない。上から加速して落ち、当たった瞬間に横へ潰れてドンと刺さり、点から波紋がひとつ広がる。札は一拍おいてから、柄の先を蝶番にしてひらっと開く——先に「ここで何かが起きた」を刺し、あとから「それが何か」を読ませる順序になる。複数の出来事は時間差で打たれるので、打刻の順序がそのまま前後関係になる。折れ線の値そのものは静かなまま、文脈だけが事件として刻まれていく。',
     Component: AnnotationStamp,
+  },
+  {
+    id: 'causal-relay',
+    no: 59,
+    nameJa: '因果のリレー',
+    nameEn: 'Causal Relay',
+    category: 'アナリティクス',
+    trigger: '「再生」をクリック',
+    principles: ['押印', '光の受け渡し', '読む順番の演出'],
+    ecology:
+      '週報の上では、原因の札も結果の数字も同じ一瞬に確定している。この標本はまず原因の札に押印が1px沈んで降り、その締まり際からインクの粒が下の結果行へ渡っていく——触れられた行だけが順にインクを得て、跳ねずに静かに沈着する。主役は原因のほうだからだ。ひとつの因果が渡り終えるまで次の札は薄いまま待つので、同時に起きた出来事が「原因→結果→次の原因」という読む順番を持つ。経営シミュレーションの週報「今週の判断」ログから逆算して採取した、リストのための因果の語法。',
+    Component: CausalRelay,
   },
 ]
 

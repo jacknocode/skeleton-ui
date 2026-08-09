@@ -691,7 +691,8 @@ export const ideas: Idea[] = [
     motion:
       '原因の行から結果の行へ光がすっと渡り、渡り終えてから次の因果が動きだす。同時に起きた出来事に読む順番を与える',
     tags: ['アナリティクス', 'リスト', '因果'],
-    status: 'seed',
+    status: 'captured',
+    specimenId: 'causal-relay',
   },
   {
     id: 'paper-press',
