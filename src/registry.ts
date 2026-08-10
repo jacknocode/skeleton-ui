@@ -58,6 +58,7 @@ import QuestTrackerSlide from './specimens/quest-tracker-slide'
 import UnlockDoor from './specimens/unlock-door'
 import AnnotationStamp from './specimens/annotation-stamp'
 import CausalRelay from './specimens/causal-relay'
+import LineMeasure from './specimens/line-measure'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -786,6 +787,18 @@ export const specimens: Specimen[] = [
     ecology:
       '同時に確定した出来事は、並べただけでは「全部が一度に起きた」に見える。この標本は上段に原因の配分（区画の幅＝投じた資源）、下段に結果の軸を置き、区画がひとつ押し込まれるたびに、その原因が動かした帯だけが±0の線から一斉に伸びる。原因どうしは厳密に直列、ひとつの原因が動かした結果は並列——この組み方だけで「どれがどれを動かしたか」の対応が、番号を追う前に体で分かる。帯は色ではなく伸びる向きで符号を語り、望ましくない結果だけ斜線になる。行の合計は帯が伸び切ってから遅れて浮き上がる：先に「どう動いたか」、あとから「いくつになったか」。幅の物差しは行ごとに独立で、読ませるのは絶対量ではなく「その軸で動いた量の取り分」。資源を使わなかった原因も細い区画で残る——使わなかったことも配分の一部だから。',
     Component: CausalRelay,
+  },
+  {
+    id: 'line-measure',
+    no: 60,
+    nameJa: '数値行の物差し',
+    nameEn: 'Line Measure',
+    category: 'アナリティクス',
+    trigger: '「再生」「別の週」をクリック',
+    principles: ['行ごとの物差し', '継ぎ足しと遅延ゴースト', '集計しない'],
+    ecology:
+      '数字の行そのものに、その数字だけの物差しを敷く。満幅の意味は行ごとに違う——分母を持つ数字（進捗12/45、商談3/4、0〜100の指標）はその分母、持たない数字（現金・人数・ユーザー）は動く前と後の大きいほう。だから行をまたいで長さを比べることはできず、読めるのは「その数字がどこまで来たか」と「今週動いたぶんはそのうちどれだけか」の2つだけ。複数の行を1つの図に集計しないので、単位の違うものを同じ物差しに載せる嘘が生まれない。地は最初から引かれていて、満ちてから動いたぶんが遅れて名乗る——増えたぶんは満ちた先へ継ぎ足して灯り（No.16 経験値バー）、減ったぶんは失う前の位置に斜線で残ってから薄れる（No.13 HPバーの遅延ゴースト）。数字の括弧と物差しの区画が同じことを二度言うので、読み飛ばしても取りこぼさない。',
+    Component: LineMeasure,
   },
 ]
 

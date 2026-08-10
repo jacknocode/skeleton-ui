@@ -695,6 +695,15 @@ export const ideas: Idea[] = [
     specimenId: 'causal-relay',
   },
   {
+    id: 'line-measure',
+    title: '数値行の物差し',
+    motion:
+      '数字の行に、その数字だけの物差しが敷かれる。いまの値まで満ちてから、今週動いたぶんが継ぎ足しで灯る。減った週は失う前の位置に斜線が残ってから薄れる',
+    tags: ['アナリティクス', 'ゲージ', '数値', '増減'],
+    status: 'captured',
+    specimenId: 'line-measure',
+  },
+  {
     id: 'paper-press',
     title: '紙の押し込み',
     motion:
