@@ -57,6 +57,7 @@ import DiffArrowMood from './specimens/diff-arrow-mood'
 import QuestTrackerSlide from './specimens/quest-tracker-slide'
 import UnlockDoor from './specimens/unlock-door'
 import AnnotationStamp from './specimens/annotation-stamp'
+import CausalRelay from './specimens/causal-relay'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -773,6 +774,18 @@ export const specimens: Specimen[] = [
     ecology:
       'ピンは浮かび上がらない。上から加速して落ち、当たった瞬間に横へ潰れてドンと刺さり、点から波紋がひとつ広がる。札は一拍おいてから、柄の先を蝶番にしてひらっと開く——先に「ここで何かが起きた」を刺し、あとから「それが何か」を読ませる順序になる。複数の出来事は時間差で打たれるので、打刻の順序がそのまま前後関係になる。折れ線の値そのものは静かなまま、文脈だけが事件として刻まれていく。',
     Component: AnnotationStamp,
+  },
+  {
+    id: 'causal-relay',
+    no: 59,
+    nameJa: '因果のリレー',
+    nameEn: 'Causal Relay',
+    category: 'アナリティクス',
+    trigger: '「再生」「別の週」をクリック',
+    principles: ['原因と結果の分離', '直列の因果・並列の帰結', '取り分で語る'],
+    ecology:
+      '同時に確定した出来事は、並べただけでは「全部が一度に起きた」に見える。この標本は上段に原因の配分（区画の幅＝投じた資源）、下段に結果の軸を置き、区画がひとつ押し込まれるたびに、その原因が動かした帯だけが±0の線から一斉に伸びる。原因どうしは厳密に直列、ひとつの原因が動かした結果は並列——この組み方だけで「どれがどれを動かしたか」の対応が、番号を追う前に体で分かる。帯は色ではなく伸びる向きで符号を語り、望ましくない結果だけ斜線になる。行の合計は帯が伸び切ってから遅れて浮き上がる：先に「どう動いたか」、あとから「いくつになったか」。幅の物差しは行ごとに独立で、読ませるのは絶対量ではなく「その軸で動いた量の取り分」。資源を使わなかった原因も細い区画で残る——使わなかったことも配分の一部だから。',
+    Component: CausalRelay,
   },
 ]
 

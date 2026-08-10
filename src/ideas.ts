@@ -689,9 +689,10 @@ export const ideas: Idea[] = [
     id: 'causal-relay',
     title: '因果のリレー',
     motion:
-      '原因の行から結果の行へ光がすっと渡り、渡り終えてから次の因果が動きだす。同時に起きた出来事に読む順番を与える',
-    tags: ['アナリティクス', 'リスト', '因果'],
-    status: 'seed',
+      '原因の区画が押し込まれると、その原因が動かした結果の帯だけが±0から一斉に伸びる。伸び切ってから次の原因へ渡り、同時に起きた出来事に読む順番を与える',
+    tags: ['アナリティクス', 'グラフ', '因果'],
+    status: 'captured',
+    specimenId: 'causal-relay',
   },
   {
     id: 'paper-press',
