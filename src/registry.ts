@@ -57,6 +57,9 @@ import DiffArrowMood from './specimens/diff-arrow-mood'
 import QuestTrackerSlide from './specimens/quest-tracker-slide'
 import UnlockDoor from './specimens/unlock-door'
 import AnnotationStamp from './specimens/annotation-stamp'
+import TooltipMagnetDot from './specimens/tooltip-magnet-dot'
+import PiePullOut from './specimens/pie-pull-out'
+import SankeyStream from './specimens/sankey-stream'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -773,6 +776,42 @@ export const specimens: Specimen[] = [
     ecology:
       'ピンは浮かび上がらない。上から加速して落ち、当たった瞬間に横へ潰れてドンと刺さり、点から波紋がひとつ広がる。札は一拍おいてから、柄の先を蝶番にしてひらっと開く——先に「ここで何かが起きた」を刺し、あとから「それが何か」を読ませる順序になる。複数の出来事は時間差で打たれるので、打刻の順序がそのまま前後関係になる。折れ線の値そのものは静かなまま、文脈だけが事件として刻まれていく。',
     Component: AnnotationStamp,
+  },
+  {
+    id: 'tooltip-magnet-dot',
+    no: 59,
+    nameJa: 'データ点の磁力ツールチップ',
+    nameEn: 'Magnet Dot Tooltip',
+    category: 'アナリティクス',
+    trigger: 'グラフの上をなぞる',
+    principles: ['最寄りへの吸着', 'ばね追従', '減衰でフォーカス'],
+    ecology:
+      'カーソルの生の座標には従わない。x が最も近いデータ点ひとつを選び、そこへ吸着する——連続なカーソルを、離散な意味の単位に翻訳している。選ばれた点はぷるんと1.9倍に膨らみ、外側の輪は脈打たずに静止して「いまここ」を指す。ほかの点は薄まる。主役は光らせて作るのではなく、脇を引かせて作る。破線のガイドが先に0.18sで動き、ツールチップは0.34sのばねで後から追う——先に「どこ」、あとから「いくつ」。点から点へ乗り移るとき、箱は滑り続けたまま中身の文字だけが一瞬薄れて戻る。値が別物に入れ替わった合図を、動きを止めずに鳴らしている。離れると点はしゅっと縮み、ツールチップは膨らまずに縮んで消える。探索の動きは何十往復もするので、退場が主張してはいけない。',
+    Component: TooltipMagnetDot,
+  },
+  {
+    id: 'pie-pull-out',
+    no: 60,
+    nameJa: '円グラフの切り分け',
+    nameEn: 'Cake Server Pie',
+    category: 'アナリティクス',
+    trigger: 'ピースの上にカーソルを置く',
+    principles: ['出は速く戻りは粘る', '減衰でフォーカス', '割り込み前提の遷移'],
+    ecology:
+      'ケーキサーバーで一切れ取るように、触れたピースが自分の角度の二等分線方向へ14px抜け出す。出は0.30sで行き過ぎ、戻りは0.42sで粘る——この非対称が「取った」と「戻した」を別の動作として感じさせる。手前に来たことは影ではなく縁の濃さで言う。ほかの3枚は薄まるだけでなく半径を2px縮める。主役が出たぶん、脇が引く。中央の数字は合計から内訳へ、上へ抜けて下から入れ替わる。隣のピースへ移ると、前のピースは戻りきる前に引き返す——探索の動きは最後まで再生されないのが常態なので、keyframes ではなく transition で書く。いま居る場所から補間できることが、触り続けられる動きの条件になる。',
+    Component: PiePullOut,
+  },
+  {
+    id: 'sankey-stream',
+    no: 61,
+    nameJa: 'サンキーの水流',
+    nameEn: 'Streaming Sankey',
+    category: 'アナリティクス',
+    trigger: '流路の上にカーソルを置く（触らなくても流れている）',
+    principles: ['常時アニメーション', '量の二重符号化', '薄めるが止めない'],
+    ecology:
+      '図鑑で初めて、触らなくても動き続けている標本。粒は帯の中をさらさらと流れ、その密度と速度は帯の太さから計算される——太い流路ほど粒が密で速い。幅を読まなくても量が分かる、単色の図鑑がもう一本手に入れた量の語り口になっている。ホバーすると、その流路だけ流速が1.8倍になって濃くなり、上流と下流のノードも連鎖で濃くなる。触れた帯ではなく、その帯が属する経路全体が浮かび上がる。ほかの流路は0.25まで薄まり、流れも遅くなる——が、止まらない。止めた瞬間それは「主役でない」ではなく「死んでいる」に見えるからで、常時動く画面における減衰には下限がある。動きを減らす設定では粒を消さず、散らばった位置のまま凍らせる。',
+    Component: SankeyStream,
   },
 ]
 
