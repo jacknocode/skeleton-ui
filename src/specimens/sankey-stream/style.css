@@ -1,0 +1,129 @@
+.mz-sankey-stream {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.mz-sankey-stream-chart {
+  display: block;
+  overflow: visible;
+}
+
+/* ---- 帯（流路） ----
+   待機中も #c6c6c4 のまま生きている。ホバーで入るときは速く跳ね、
+   離れて戻るときは少し遅く粘る（transitionを状態ごとに切り替えて非対称にする） */
+.mz-sankey-stream-ribbon {
+  fill: #c6c6c4;
+  opacity: 1;
+  cursor: pointer;
+  transition:
+    fill 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mz-sankey-stream-ribbon.is-active {
+  fill: #3d3d3d;
+  opacity: 1;
+  transition:
+    fill 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-sankey-stream-ribbon.is-faded {
+  fill: #c6c6c4;
+  opacity: 0.25;
+  transition:
+    fill 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---- 粒の群れ ----
+   opacityは帯と同じ非対称タイミングで追従させ、粒自体の移動アニメーションは別レイヤー
+   （@keyframesのoffset-distance）が常時回り続けているので、ここでは邪魔しない */
+.mz-sankey-stream-flow {
+  opacity: 0.8;
+  transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mz-sankey-stream-flow.is-active {
+  opacity: 1;
+  transition: opacity 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-sankey-stream-flow.is-faded {
+  opacity: 0.3;
+  transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 粒そのもの。単色図鑑なので「濃い点」＝ライトバンドの上のダークドット。
+   移動はリニア（水に緩急は付けない）で、帯の中心線をoffset-pathでなぞる。
+   durationとdelayは太さ・ホバー状態から粒ごとにJSで計算してインラインで渡す */
+.mz-sankey-stream-particle {
+  fill: #3d3d3d;
+  offset-rotate: 0deg;
+  animation-name: mz-sankey-stream-travel;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes mz-sankey-stream-travel {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+/* 動きを控える設定のときは移動アニメーションだけ止め、
+   粒はoffset-distanceの静止値（帯の上にばらけた位置）のまま残す＝空にしない */
+@media (prefers-reduced-motion: reduce) {
+  .mz-sankey-stream-particle {
+    animation: none;
+  }
+}
+
+/* ---- ノード（左右の器） ---- */
+.mz-sankey-stream-node-bar {
+  fill: #8c8c8c;
+  opacity: 1;
+  transition:
+    fill 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mz-sankey-stream-node-bar.is-lit {
+  fill: #3d3d3d;
+  transition:
+    fill 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-sankey-stream-node-bar.is-dim {
+  opacity: 0.5;
+  transition:
+    fill 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mz-sankey-stream-node-label {
+  font-size: 9px;
+  font-weight: 700;
+  fill: #3d3d3d;
+  transition: fill 0.35s ease-out;
+}
+.mz-sankey-stream-node-value {
+  font-size: 8px;
+  font-variant-numeric: tabular-nums;
+  fill: #8c8c8c;
+  transition: fill 0.35s ease-out;
+}
+.mz-sankey-stream-node-label.is-lit,
+.mz-sankey-stream-node-value.is-lit {
+  fill: #3d3d3d;
+}
+.mz-sankey-stream-node-label.is-dim,
+.mz-sankey-stream-node-value.is-dim {
+  fill: #c6c6c4;
+}
+
+.mz-sankey-stream-hint {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #8c8c8c;
+}
