@@ -96,6 +96,22 @@ const CHOREO = {
     await glide(page, cur, px(...OUT), 380)
     await sleep(1000)
   },
+  /* ボタン駆動の標本は「触り方」ではなく「回し方」を決める。
+     1回目は素の再生、2回目はデータ差し替え——同じ動きが別の中身で回ることまで見せる */
+  'causal-relay': async (page) => {
+    await sleep(700)
+    await page.getByRole('button', { name: '再生' }).click()
+    await sleep(3400)
+    await page.getByRole('button', { name: '別の週' }).click()
+    await sleep(3400)
+  },
+  'line-measure': async (page) => {
+    await sleep(700)
+    await page.getByRole('button', { name: '再生' }).click()
+    await sleep(2200)
+    await page.getByRole('button', { name: '別の週' }).click()
+    await sleep(2600)
+  },
   'sankey-stream': async (page) => {
     // まず何も触らず、常時流れている待機状態を見せる
     await page.mouse.move(...px(0.5, 1.2))

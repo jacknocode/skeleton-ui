@@ -1,0 +1,131 @@
+.mz-line-measure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+}
+
+.mz-line-measure-chart {
+  width: min(300px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mz-line-measure-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mz-line-measure-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+}
+.mz-line-measure-label {
+  color: #b3b3b3;
+}
+.mz-line-measure-value {
+  font-weight: 800;
+  color: #6e6e6e;
+  font-variant-numeric: tabular-nums;
+}
+/* 分母は「まだ届いていない側」の話なので、いまの値より一段引いて添える */
+.mz-line-measure-value em {
+  font-style: normal;
+  font-weight: 700;
+  color: #b3b3b3;
+}
+/* 今週動いたぶん。数字のほうは括弧で、物差しのほうは継ぎ足しの区画で、同じことを二度言う */
+.mz-line-measure-value b {
+  margin-left: 5px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+
+/* ---- 物差し ----
+   地は最初から引かれている(素の状態が完成形)。満幅の意味は行ごとに違う——
+   分母を持つ数字はその分母、持たない数字は動く前と後の大きいほう。
+   だから行をまたいだ長さの比較はできない。 */
+.mz-line-measure-track {
+  position: relative;
+  height: 5px;
+  border-radius: 3px;
+  background: #ececea;
+  overflow: hidden;
+}
+.mz-line-measure-base {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+  background: #c2c2c0;
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: mz-line-measure-fill 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* 増えたぶんは、満ちた先へ継ぎ足して灯る(No.16 経験値バーの語彙) */
+.mz-line-measure-tip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+  background: #6e6e6e;
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: mz-line-measure-fill 0.2s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+}
+/* 減ったぶんは、失う前の位置に斜線で残ってから引く(No.13 HPバーの遅延ゴースト)。
+   伸びるのではなく「まだそこに在ったもの」なので、幅は最初から在り、濃度だけが変わる */
+.mz-line-measure-row.is-down .mz-line-measure-tip {
+  background: repeating-linear-gradient(-45deg, #b3b3b3 0 3px, #e4e4e2 3px 6px);
+  transform: none;
+  animation: mz-line-measure-ghost 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mz-line-measure-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes mz-line-measure-ghost {
+  0% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.45;
+  }
+}
+
+.mz-line-measure-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-line-measure-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-line-measure-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-line-measure-actions button:active {
+  transform: scale(1.06, 0.88);
+}
