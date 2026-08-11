@@ -57,6 +57,9 @@ import DiffArrowMood from './specimens/diff-arrow-mood'
 import QuestTrackerSlide from './specimens/quest-tracker-slide'
 import UnlockDoor from './specimens/unlock-door'
 import AnnotationStamp from './specimens/annotation-stamp'
+import NewsPreview from './specimens/news-preview'
+import ConfirmedPaper from './specimens/confirmed-paper'
+import RunwaySand from './specimens/runway-sand'
 import TooltipMagnetDot from './specimens/tooltip-magnet-dot'
 import PiePullOut from './specimens/pie-pull-out'
 import SankeyStream from './specimens/sankey-stream'
@@ -778,8 +781,44 @@ export const specimens: Specimen[] = [
     Component: AnnotationStamp,
   },
   {
-    id: 'tooltip-magnet-dot',
+    id: 'news-preview',
     no: 59,
+    nameJa: '予告と発効',
+    nameEn: 'Pending Headline',
+    category: 'ゲーム',
+    trigger: '「週を進める」を繰り返す',
+    principles: ['揺れ＝未確定', '止まって確定を言う', '濃度＝効力'],
+    ecology:
+      '見出しだけの薄い紙が、効くよりも先に貼られる。まだ効いていないから紙は薄く、留めは1点だけ——だから端がいつまでもかすかに揺れている。発効が近づくと揺れの周期が速まり、待たされている時間そのものがそわそわに変わる。発効の瞬間、紙は減衰して止まるのではなく1拍で角度ゼロに固定され、それからインクが左から右へ入って本文が確定する。止まったあとでもう1枚のテープが留まり、揺れない理由が絵として残る。動いている＝まだ効いていない、止まっている＝もう効いた、という対応を最後まで崩さない標本。',
+    Component: NewsPreview,
+  },
+  {
+    id: 'confirmed-paper',
+    no: 60,
+    nameJa: '確定と含みの二層',
+    nameEn: 'Paper Gain',
+    category: 'アナリティクス',
+    trigger: '「相場が動く」→「確定する」',
+    principles: ['呼吸＝未実現', '振幅＝確度', '落ちて固まる'],
+    ecology:
+      'ひとつの数字を、実線の土台（確定）と破線の上乗せ（含み）に割って持つ。含みの側だけが浅く呼吸し、境界の破線が流れ続けるので、同じ画面の中で「もう動かない分」と「まだ動く分」が見分けられる。相場が振れると呼吸の振幅そのものが増し、確度の低さが幅として手に伝わる——数字は同じでも、危うさが違うことを言える。確定すると、まず呼吸が現在値で止まり、破線が1pxだけ落ちて実線になり、上乗せの数字が本体へ滑り込んで桁が繰り上がる。増えたことではなく、動かなくなったことを祝う標本。',
+    Component: ConfirmedPaper,
+  },
+  {
+    id: 'runway-sand',
+    no: 61,
+    nameJa: '残りの砂',
+    nameEn: 'Irreversible Sandglass',
+    category: 'ゲーム',
+    trigger: '収支を切り替える / 砂時計をクリック',
+    principles: ['速度が量を語る', '不可逆', '静かな終わり'],
+    ecology:
+      '砂の落ちる速さが、そのまま毎月の焼け方になっている。黒字なら筋は消えて砂は止まり、赤字が深いほど粒の間隔が詰まって筋が太くなる——残量ではなく速度が危機感を運ぶので、同じ残高でも「あと何ヶ月か」が一目で違って見える。粒が着地するたび砂時計はわずかに沈み、下の山が盛り上がっていく。残り3ヶ月を切ると上球の縁が鼓動しはじめ、拍が速まる。ひっくり返そうとして掴むと、少しだけ回りかけてから首を横に振って戻る——時間は買い戻せない、というルールを禁止ではなく仕草で言う。尽きたときも派手には鳴らさず、ひと呼吸おいて静かに色が落ちる。',
+    Component: RunwaySand,
+  },
+  {
+    id: 'tooltip-magnet-dot',
+    no: 62,
     nameJa: 'データ点の磁力ツールチップ',
     nameEn: 'Magnet Dot Tooltip',
     category: 'アナリティクス',
@@ -791,7 +830,7 @@ export const specimens: Specimen[] = [
   },
   {
     id: 'pie-pull-out',
-    no: 60,
+    no: 63,
     nameJa: '円グラフの切り分け',
     nameEn: 'Cake Server Pie',
     category: 'アナリティクス',
@@ -803,14 +842,14 @@ export const specimens: Specimen[] = [
   },
   {
     id: 'sankey-stream',
-    no: 61,
+    no: 64,
     nameJa: 'サンキーの水流',
     nameEn: 'Streaming Sankey',
     category: 'アナリティクス',
     trigger: '流路の上にカーソルを置く（触らなくても流れている）',
     principles: ['常時アニメーション', '量の二重符号化', '薄めるが止めない'],
     ecology:
-      '図鑑で初めて、触らなくても動き続けている標本。粒は帯の中をさらさらと流れ、その密度と速度は帯の太さから計算される——太い流路ほど粒が密で速い。幅を読まなくても量が分かる、単色の図鑑がもう一本手に入れた量の語り口になっている。ホバーすると、その流路だけ流速が1.8倍になって濃くなり、上流と下流のノードも連鎖で濃くなる。触れた帯ではなく、その帯が属する経路全体が浮かび上がる。ほかの流路は0.25まで薄まり、流れも遅くなる——が、止まらない。止めた瞬間それは「主役でない」ではなく「死んでいる」に見えるからで、常時動く画面における減衰には下限がある。動きを減らす設定では粒を消さず、散らばった位置のまま凍らせる。',
+      '触らなくても動き続けている標本。粒は帯の中をさらさらと流れ、その密度と速度は帯の太さから計算される——太い流路ほど粒が密で速い。幅を読まなくても量が分かる、単色の図鑑がもう一本手に入れた量の語り口になっている。ホバーすると、その流路だけ流速が1.8倍になって濃くなり、上流と下流のノードも連鎖で濃くなる。触れた帯ではなく、その帯が属する経路全体が浮かび上がる。ほかの流路は0.25まで薄まり、流れも遅くなる——が、止まらない。止めた瞬間それは「主役でない」ではなく「死んでいる」に見えるからで、常時動く画面における減衰には下限がある。動きを減らす設定では粒を消さず、散らばった位置のまま凍らせる。',
     Component: SankeyStream,
   },
 ]
