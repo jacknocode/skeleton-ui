@@ -98,6 +98,38 @@ const CHOREO = {
   },
   /* ボタン駆動の標本は「触り方」ではなく「回し方」を決める。
      1回目は素の再生、2回目はデータ差し替え——同じ動きが別の中身で回ることまで見せる */
+  /* 猶予の標本は「途中で取り消す回」と「ほどけ切って確定する回」の両方が要る。
+     片方だけだと、糸が減っていくのが何のためなのか分からない */
+  'undo-unravel': async (page) => {
+    await sleep(700)
+    await page.getByRole('button', { name: '実行する', exact: true }).click()
+    await sleep(2600) // 半分ほどけたところで
+    await page.getByRole('button', { name: '取り消す', exact: true }).first().click()
+    await sleep(1500)
+    await page.getByRole('button', { name: '実行する', exact: true }).click()
+    await sleep(6000) // 今度は最後まで（5秒の猶予 + 確定の1拍）
+  },
+  'effect-lag-shadow': async (page) => {
+    await sleep(600)
+    await page.getByRole('button', { name: '広告を出す', exact: true }).click()
+    await sleep(700)
+    await page.getByRole('button', { name: '採用する', exact: true }).click()
+    await sleep(1000)
+    /* 週を1つずつ進める。影に届くまでの「まだ効かない」時間が要るので間を詰めない */
+    for (let i = 0; i < 4; i++) {
+      await page.getByRole('button', { name: '週を進める', exact: true }).click()
+      await sleep(1100)
+    }
+    await sleep(1200)
+  },
+  'optimistic-rollback': async (page) => {
+    await sleep(700)
+    await page.getByRole('button', { name: '+120 を送る', exact: true }).click()
+    await sleep(2400) // 承認まで見せる（呼吸 → 浮きが落ちて実塗り）
+    await page.getByRole('button', { name: '+120 を送る（弾かれる）', exact: true }).click()
+    await sleep(2800) // 巻き戻し → 震え → 理由
+    await sleep(600)
+  },
   'causal-relay': async (page) => {
     await sleep(700)
     await page.getByRole('button', { name: '再生' }).click()
@@ -133,7 +165,10 @@ const CHOREO = {
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
-const browser = await chromium.launch()
+/* playwright を --no-save で入れ直すと、同梱ブラウザの版が
+   実行環境に置いてある版とずれて launch に失敗することがある。
+   その場合だけ CAP_CHROME に実体のパスを渡して逃がす（未設定なら従来どおり同梱版） */
+const browser = await chromium.launch({ executablePath: process.env.CAP_CHROME || undefined })
 const ctx = await browser.newContext({
   viewport: { width: W, height: H },
   recordVideo: { dir, size: { width: W, height: H } },

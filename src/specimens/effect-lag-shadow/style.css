@@ -1,0 +1,187 @@
+/* 効き始めるまでの影 ── 押した瞬間は何も動かない。動くのは「まだ効いていない」影の呼吸だけ。
+   到達した瞬間に呼吸が止まり、線がそこまで持ち上がる。モノクロ階調のみ、色相は使わない。
+   フォルダ単体で完結させるため色は直値、リセットも自前で持つ。 */
+
+.mz-effect-lag-shadow {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 280px;
+}
+.mz-effect-lag-shadow * {
+  box-sizing: border-box;
+}
+.mz-effect-lag-shadow button {
+  all: unset;
+  cursor: pointer;
+}
+
+/* ---------- 状態テキスト ---------- */
+.mz-els-status {
+  margin: 0 0 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- チャート ---------- */
+.mz-els-chart {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+.mz-els-axis {
+  stroke: #d6d6d4;
+  stroke-width: 1;
+}
+
+.mz-els-tick {
+  font-size: 6px;
+  font-weight: 600;
+  fill: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 現在位置ガイド: 週を進めるたびに右へ滑る。これは結果ではなく「今どこか」の印なので薄く点線 */
+.mz-els-guide {
+  stroke: #b3b3b3;
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  transition: x1 0.35s cubic-bezier(0.4, 0, 0.2, 1), x2 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---------- 影の帯 ----------
+   上端の高さ＝そこで持ち上がる量。押した瞬間にここへフェードインし、以後は
+   「動いている＝まだ効いていない」を示すためだけに浅く呼吸し続ける。 */
+.mz-els-band {
+  fill: #1a1a1a;
+  opacity: 0.18;
+  animation: mz-els-appear 0.3s ease-out, mz-els-breathe 1.6s ease-in-out 0.3s infinite;
+  transition: x 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    y 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes mz-els-appear {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes mz-els-breathe {
+  0%,
+  100% {
+    opacity: 0.18;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+/* 到達した瞬間: 呼吸をアニメーションごと止め、そのまま溶けて消える。減衰させず1回で終える */
+.mz-els-band.is-realized {
+  animation: mz-els-fade 0.3s ease-out 0.15s both;
+}
+@keyframes mz-els-fade {
+  from {
+    opacity: 0.24;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* 呼吸だけは消さずその場で止める（＝止まっている＝もう効いた、と誤読させないため中間値に固定） */
+  .mz-els-band {
+    animation: mz-els-appear 0.3s ease-out;
+    opacity: 0.24;
+  }
+  .mz-els-band.is-realized {
+    animation: mz-els-fade 0.3s ease-out 0.15s both;
+  }
+}
+
+/* ---------- 折れ線 ---------- */
+.mz-els-segment {
+  stroke: #5c5c5c;
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: x1 0.28s cubic-bezier(0.34, 1.3, 0.64, 1), y1 0.28s cubic-bezier(0.34, 1.3, 0.64, 1),
+    x2 0.28s cubic-bezier(0.34, 1.3, 0.64, 1), y2 0.28s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+/* ---------- データ点 ----------
+   影が実体化するとその週の点だけ cy が動く。跳ねてよい区間として cubic-bezier(0.34,1.3,0.64,1)
+   を明示的に使う（このバッチの原則4を上書きする、No.68固有の指示）。
+   点が灯る演出は r / opacity にだけ少し遅らせた transition を掛けて「線が先、点はその後」にする。 */
+.mz-els-point {
+  fill: #3d3d3d;
+  opacity: 1;
+  transition: cx 0.28s cubic-bezier(0.34, 1.3, 0.64, 1), cy 0.28s cubic-bezier(0.34, 1.3, 0.64, 1),
+    r 0.2s ease-out 0.1s, opacity 0.2s ease-out 0.1s;
+}
+/* 実体化待ちの一瞬（実行順をずらしているタイマー待ち）は控えめに小さく・薄く */
+.mz-els-point.is-awaiting {
+  opacity: 0.4;
+}
+
+/* ---------- 操作 ---------- */
+.mz-els-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.mz-els-actions button {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #5c5c5c;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-els-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-els-actions button:active {
+  transform: scale(1.06, 0.88);
+}
+.mz-els-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
+
+/* 施策ボタン: 押した受領（波紋 + 1px沈み）だけを返す。結果はまだ何も確定していない */
+.mz-els-policy-btn {
+  position: relative;
+  overflow: hidden;
+}
+.mz-els-policy-btn.is-pressed {
+  transform: translateY(1px);
+  transition: transform 0.16s ease-out;
+}
+.mz-els-ripple {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.16);
+  pointer-events: none;
+  animation: mz-els-ripple 0.4s ease-out forwards;
+}
+@keyframes mz-els-ripple {
+  from {
+    transform: scale(0);
+    opacity: 1;
+  }
+  to {
+    transform: scale(11);
+    opacity: 0;
+  }
+}

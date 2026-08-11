@@ -1,0 +1,231 @@
+/* No.69「先に見せて、あとで戻す」
+   モノクロ・自己完結。色相を使わず、階調と動きだけで「借り／実体」を語る。 */
+
+.mz-optimistic-rollback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 272px;
+}
+
+.mz-or-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #a3a3a3;
+}
+
+/* ---------- 数字＋バーの共通ラッパー（震えはここで一括して掛ける） ---------- */
+
+.mz-or-shakebox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+/* 戻り切ったあとの一度だけの震え。往復で減衰させ、繰り返さない */
+.mz-or-shakebox.is-shaking {
+  animation: mz-or-shake 0.18s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+@keyframes mz-or-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(-2px);
+  }
+  65% {
+    transform: translateX(2px);
+  }
+}
+
+/* ---------- 数字 ---------- */
+
+.mz-or-number {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+  transition:
+    transform 0.2s ease-out,
+    color 0.2s ease-out;
+}
+/* 借りを抱えている間だけ「薄く／わずかに浮く」。
+   常時アニメーションは持たせない（動き続けるのはバーの帯ひとつだけ、という設計則を数字側は破らない） */
+.mz-or-number.is-borrowed {
+  color: #8c8c8c;
+  transform: translateY(-1.5px);
+}
+
+/* ---------- バー ---------- */
+
+.mz-or-bar {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  height: 20px;
+  border-radius: 4px;
+  background: #ececea;
+  overflow: hidden;
+}
+
+/* 確定分: 実塗り。絶対に呼吸しない・絶対に揺れない */
+.mz-or-fill {
+  flex-shrink: 0;
+  height: 100%;
+  background: #3d3d3d;
+  transition: width 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 借り分の帯。押した瞬間に0からこの幅までバウンドしながら伸びる（=行き過ぎてよい出）。
+   幅は --mz-or-w（JSからPUSH_AMOUNT×SCALEで渡す）を参照する */
+.mz-or-seg {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--mz-or-w);
+  height: 100%;
+  animation: mz-or-grow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transform: translateY(-1.5px); /* 借りの見た目1: 浮き */
+}
+@keyframes mz-or-grow {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--mz-or-w);
+  }
+}
+
+/* 承認: 浮きが落ちる→（保持）→最後にもう一段沈んで確定。跳ねさせない。1回のみ */
+.mz-or-seg.is-approving {
+  animation: mz-or-approve-drop 0.54s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes mz-or-approve-drop {
+  0% {
+    transform: translateY(-1.5px);
+  }
+  44% {
+    transform: translateY(0);
+  }
+  74% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(1px);
+  }
+}
+
+/* 否定: 来た道をそのまま逆再生。伸びたときと同じ width という経路を、
+   同じ長さぶん、減速のみ（linearではない）で 0 へ戻す。新しいアニメーションを起こさない */
+.mz-or-seg.is-denying {
+  animation: none;
+  width: 0;
+  transition: width 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 呼吸する器。「動いている＝未確定」の唯一の証拠はこれだけに絞る（数字やハッチは呼吸させない） */
+.mz-or-seg-scale {
+  position: absolute;
+  inset: 0;
+  transform-origin: bottom;
+  animation: mz-or-breathe 1.4s ease-in-out infinite;
+}
+@keyframes mz-or-breathe {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.04);
+  }
+}
+.mz-or-seg.is-approving .mz-or-seg-scale,
+.mz-or-seg.is-denying .mz-or-seg-scale {
+  animation: none;
+  transform: scaleY(1);
+}
+/* 常時アニメーションは「消す」のではなく「止める」。呼吸を静止状態で固定するだけにする */
+@media (prefers-reduced-motion: reduce) {
+  .mz-or-seg-scale {
+    animation: none;
+    transform: scaleY(1);
+  }
+}
+
+/* 斜線ハッチ＝借りの見た目2: まだ実体ではない */
+.mz-or-seg-hatch {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(135deg, #6e6e6e 0 3px, transparent 3px 7px);
+  opacity: 0.7;
+  transition: opacity 0.3s ease 100ms;
+}
+/* 実塗り。確定分と同じ濃さへクロスフェードする */
+.mz-or-seg-solid {
+  position: absolute;
+  inset: 0;
+  background: #3d3d3d;
+  opacity: 0;
+  transition: opacity 0.3s ease 100ms;
+}
+.mz-or-seg.is-approving .mz-or-seg-hatch {
+  opacity: 0;
+}
+.mz-or-seg.is-approving .mz-or-seg-solid {
+  opacity: 1;
+}
+
+/* ---------- 否定理由 ---------- */
+
+.mz-or-reason {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  animation: mz-or-reason-in 0.2s ease-out both;
+}
+@keyframes mz-or-reason-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- 状態テキスト・操作 ---------- */
+
+.mz-or-status {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-or-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.mz-or-actions button {
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 11px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-or-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-or-actions button:active {
+  transform: scale(1.06, 0.88);
+}

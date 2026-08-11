@@ -1,0 +1,250 @@
+/* 取り消し猶予のほどけ ── 動いている＝まだ確定していない／止まった＝もう戻せない。
+   モノクロ階調のみ。フォルダ単体で完結させるため色は直値、リセットも自前で持つ。 */
+
+.mz-uu {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 264px;
+}
+.mz-uu * {
+  box-sizing: border-box;
+}
+.mz-uu button {
+  all: unset;
+  cursor: pointer;
+}
+
+/* ---------- 一覧 ---------- */
+.mz-uu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+.mz-uu-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- 札 ---------- */
+.mz-uu-card {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 46px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.07);
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.2s ease-out,
+    box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mz-uu-card-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #5c5c5c;
+  transition: color 0.22s ease-out;
+}
+
+/* 縁を縫う糸。SVGの矩形だけがこの札の境界線を担う（CSS borderは持たせない） */
+.mz-uu-thread {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.mz-uu-thread-rect {
+  fill: none;
+  stroke: #e0e0de;
+  stroke-width: 1.5px;
+  /* pathLength=100 に正規化しているので、周長計算をせずに割合だけで扱える。
+     dash=100 / gap=100 の1本だけの配列にすることで、dashoffsetを0→100へ動かすと
+     「解けて消えていく」動きになる（offset=0で全周描画、offset=100で全周が隙間）。 */
+  stroke-dasharray: 100 100;
+  transition:
+    stroke-dashoffset 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    stroke 0.25s ease-out,
+    stroke-width 0.16s ease-out;
+}
+
+/* ---------- 実行（受領） ----------
+   押した瞬間に1px沈んで戻るだけ。結果はまだ確定していないので、この動きは
+   「押した」を伝えるだけで意味を持たせすぎない。 */
+@keyframes mz-uu-press {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(1px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* ---------- 猶予 ----------
+   ここだけは絶対にlinear。等速でないと「残っている糸の長さ」が読めなくなる。
+   本体の高さは変えない（戻る先の位置が動くと取り消しの着地点が分からなくなる）。 */
+.mz-uu-card.is-grace {
+  opacity: 0.45;
+  animation: mz-uu-press 0.16s ease-out;
+}
+.mz-uu-thread-rect.is-grace {
+  stroke: #8c8c8c;
+  transition: none; /* linearなアニメーションにtransitionが割り込むと等速が崩れる */
+  animation: mz-uu-unwind var(--mz-uu-grace, 5000ms) linear forwards;
+}
+@keyframes mz-uu-unwind {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: var(--mz-uu-end, 97);
+  }
+}
+
+/* ---------- 猶予切れ（糸端が張る） ----------
+   ほどけ切った先端がぴんと張る。stroke-widthだけを一瞬太らせて、まだ動かさない。 */
+.mz-uu-card.is-settling {
+  opacity: 0.45;
+}
+.mz-uu-thread-rect.is-settling {
+  stroke: #8c8c8c;
+  animation: mz-uu-taut 0.12s ease-out;
+}
+@keyframes mz-uu-taut {
+  0% {
+    stroke-width: 1.5px;
+  }
+  50% {
+    stroke-width: 2.6px;
+  }
+  100% {
+    stroke-width: 1.5px;
+  }
+}
+
+/* ---------- 確定 ----------
+   張った1拍あとに札が静かに1px沈み、糸は全周が実線に落ちる。跳ねは付けない。 */
+.mz-uu-card.is-committed {
+  opacity: 1;
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.mz-uu-card.is-committed .mz-uu-card-label {
+  color: #3d3d3d;
+}
+.mz-uu-thread-rect.is-committed {
+  stroke: #3d3d3d;
+}
+
+/* ---------- 取り消し（逆回しの縫い戻し） ----------
+   糸は現在値(--mz-uu-from)から0へ、往路と同じ0.45sで戻る。オーバーシュートは付けない。
+   札は0.45sの間に -2px を経て0へ吸い戻る＝新しく生まれるのではなく元の位置に帰る動き。 */
+.mz-uu-thread-rect.is-cancelling {
+  stroke: #8c8c8c;
+  transition: none;
+  animation: mz-uu-rewind 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes mz-uu-rewind {
+  from {
+    stroke-dashoffset: var(--mz-uu-from, 97);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.mz-uu-card.is-cancelling {
+  animation: mz-uu-card-rewind 0.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes mz-uu-card-rewind {
+  0% {
+    opacity: 0.45;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 0.85;
+    transform: translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- 取り消しボタン ---------- */
+/* 要素セレクタを足して詳細度を (0,1,1) に上げる。
+   `.mz-uu button { all: unset }` と同じ詳細度にしないと、
+   クラス1つ (0,1,0) ではリセットに負けて素のテキストに戻ってしまう */
+button.mz-uu-cancel {
+  flex: none;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #6e6e6e;
+  transition:
+    opacity 0.2s ease-out,
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-uu-cancel:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-uu-cancel:active:not(:disabled) {
+  transform: scale(1.06, 0.88);
+}
+.mz-uu-cancel:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+
+/* ---------- 状態テキスト ---------- */
+.mz-uu-status {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 操作 ---------- */
+.mz-uu-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-uu-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-uu-actions button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.mz-uu-actions button:active:not(:disabled) {
+  transform: scale(1.06, 0.88);
+}
+.mz-uu-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
