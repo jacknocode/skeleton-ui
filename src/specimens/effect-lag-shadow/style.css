@@ -59,13 +59,11 @@
   initial-value: 6;
 }
 
+/* ゴースト本体は<g>（中空の破線の小円 + 手前の点からそこへ向かう破線パス）。
+   opacity/animationをこの<g>にまとめて掛けることで、円とパスが「同じ濃度・同じ呼吸」で
+   一体に見える（ひとつの生き物）。transform-originはJS側で到達点の実座標に固定しているので、
+   ここで拡縮しても円の位置そのものは動かない＝線が持ち上がったとき円とぴったり重なる。 */
 .mz-effect-lag-shadow-ghost {
-  fill: rgba(0, 0, 0, 0.05);
-  stroke: #6e6e6e;
-  stroke-width: 1.1;
-  stroke-dasharray: 3 3; /* 破線。実線（実際に効いた線）と混同させない */
-  transform-box: fill-box;
-  transform-origin: center;
   opacity: 0;
   /* 週が進むたびに JS が --mz-els-op / --mz-els-amp を書き換える。ここで transition を
      張っておくことで「1週ぶん近づいた濃度・振幅へ」の変化が0.42sでなだらかに繋がる */
@@ -77,6 +75,14 @@
     mz-els-seep 0.6s ease-out 80ms both,
     /* 呼吸: にじみ終わった直後(80+600=680ms)から無限に続く。速さは固定、振幅だけが距離で変わる */
     mz-els-breathe 2.6s ease-in-out 680ms infinite;
+}
+/* 円もパスも塗りは持たない（中空）。「風船」に見えないよう、影は線と同じ細さの破線だけで示す */
+.mz-effect-lag-shadow-ghost-path,
+.mz-effect-lag-shadow-ghost-dot {
+  fill: none;
+  stroke: #6e6e6e;
+  stroke-width: 1.1;
+  stroke-dasharray: 3 3; /* 破線。実線（実際に効いた線）と混同させない */
 }
 @keyframes mz-els-seep {
   from {

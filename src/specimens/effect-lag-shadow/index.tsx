@@ -13,6 +13,10 @@ const weekX = (i: number) => Math.round((X_MIN + (i * X_SPAN) / (WEEKS - 1)) * 1
 const BASE_Y = [102, 97, 105, 96, 103, 98, 106, 99]
 // 週を跨いで施策を打てる最後の週（+3週先が8週目に収まる範囲）
 const LAST_APPLICABLE_WEEK = WEEKS - 1 - LAG_WEEKS
+// 標本は「開いた瞬間の絵」で読ませる必要がある。第1週始まりだと点1つ+影1つで何のグラフか
+// 分からないため、第3週（index=2）から始め、第1〜3週分の折れ線と点を最初から完成済みの
+// 状態で置いておく。「やり直す」もここへ戻す。
+const INITIAL_WEEK_INDEX = 2
 
 /* ---- 拍（企画書 No.68 の表をそのまま値にする） ----
    「次の週へ」の0.42s ease-in-out、持ち上がりの0.55s cubic-bezier(0.34,1.3,0.64,1) 等、
@@ -39,7 +43,7 @@ type Effect = {
 }
 
 export default function EffectLagShadow() {
-  const [weekIndex, setWeekIndex] = useState(0)
+  const [weekIndex, setWeekIndex] = useState(INITIAL_WEEK_INDEX)
   const [effects, setEffects] = useState<Effect[]>([])
   const [bounceWeek, setBounceWeek] = useState<number | null>(null)
   const [rippleSeq, setRippleSeq] = useState(0)
@@ -117,7 +121,7 @@ export default function EffectLagShadow() {
 
   const reset = () => {
     clearTimers()
-    setWeekIndex(0)
+    setWeekIndex(INITIAL_WEEK_INDEX)
     setEffects([])
     setBounceWeek(null)
     setRippleSeq(0)
@@ -157,26 +161,37 @@ export default function EffectLagShadow() {
         />
         <rect className="mz-effect-lag-shadow-now" x={now.x - 0.75} y={8} width={1.5} height={104} />
 
-        {/* 影（施策が届く前の予告）。破線・低opacity。実線と混同させない */}
+        {/* 影＝「これから線が通る形」のゴースト。中空の破線の小円（到達後の実座標）と、
+            1つ手前の点からそこへ向かう破線のパスを同じ<g>にまとめる。
+            transform-originを到達点そのもの（e.ghostX, e.ghostY）に固定して呼吸させるので、
+            拡縮しても円の位置自体は動かない＝実線が持ち上がったとき、この円とぴったり重なる。
+            円とパスは同じ<g>の opacity/animation を共有＝1つの生き物として濃度・呼吸が同期する。 */}
         {effects.map((e) => {
           const distance = e.targetWeek - weekIndex
+          const prev = points[e.targetWeek - 1]
           return (
-            <ellipse
+            <g
               key={e.id}
               className={`mz-effect-lag-shadow-ghost${e.arrived ? ' is-absorbing' : ''}`}
-              cx={e.ghostX}
-              cy={e.ghostY}
-              rx={13}
-              ry={8}
               style={
-                !e.arrived
-                  ? ({
-                      '--mz-els-op': SHADOW_OPACITY[distance] ?? 0.5,
-                      '--mz-els-amp': SHADOW_AMP[distance] ?? 3,
-                    } as CSSProperties)
-                  : undefined
+                {
+                  transformBox: 'view-box', // viewBox座標系そのものを基準にする＝ghostX/Yがそのままpxとして通る
+                  transformOrigin: `${e.ghostX}px ${e.ghostY}px`,
+                  ...(!e.arrived
+                    ? {
+                        '--mz-els-op': SHADOW_OPACITY[distance] ?? 0.5,
+                        '--mz-els-amp': SHADOW_AMP[distance] ?? 3,
+                      }
+                    : {}),
+                } as CSSProperties
               }
-            />
+            >
+              <path
+                className="mz-effect-lag-shadow-ghost-path"
+                d={`M${prev.x} ${prev.y} L${e.ghostX} ${e.ghostY}`}
+              />
+              <circle className="mz-effect-lag-shadow-ghost-dot" cx={e.ghostX} cy={e.ghostY} r={4} />
+            </g>
           )
         })}
 
@@ -188,6 +203,14 @@ export default function EffectLagShadow() {
             className="mz-effect-lag-shadow-seg"
             d={`M${points[i - 1].x} ${points[i - 1].y} L${points[i].x} ${points[i].y}`}
             pathLength={1}
+            // 第1〜3週分（i<=INITIAL_WEEK_INDEX）は開いた瞬間から「素の完成形」で見せたいので、
+            // 伸びる登場アニメーションを止めてdashoffset:0（描き終わった状態）に固定する。
+            // 第4週以降は「次の週へ」で新規に現れるので、通常どおり伸びるアニメーションを効かせる。
+            style={
+              i <= INITIAL_WEEK_INDEX
+                ? ({ animation: 'none', strokeDashoffset: 0 } as CSSProperties)
+                : undefined
+            }
           />
         ))}
 
@@ -198,7 +221,14 @@ export default function EffectLagShadow() {
             className={`mz-effect-lag-shadow-dot-wrap${bounceWeek === i ? ' is-bounce' : ''}`}
             style={{ transformBox: 'fill-box', transformOrigin: 'center' } as CSSProperties}
           >
-            <circle className="mz-effect-lag-shadow-dot" cx={points[i].x} cy={points[i].y} r={4} />
+            <circle
+              className="mz-effect-lag-shadow-dot"
+              cx={points[i].x}
+              cy={points[i].y}
+              r={4}
+              // 同上：初期表示分の点は弾んで出てくる登場アニメーションを止めて最初から実サイズにする
+              style={i <= INITIAL_WEEK_INDEX ? ({ animation: 'none' } as CSSProperties) : undefined}
+            />
           </g>
         ))}
       </svg>
