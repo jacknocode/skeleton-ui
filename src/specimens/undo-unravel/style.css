@@ -163,13 +163,34 @@
 
 /* 取り消し: 糸が巻き戻る（縫い戻り）。猶予5000msをそのまま逆再生すると
    取り消しに5秒かかることになり遅い。0.45sに圧縮した「別の動き」として実装する
-   （逆再生ではなく縫い戻りという固有の動作）。dashoffsetの着地点(0)はindex.tsxのstyleで指定。 */
+   （逆再生ではなく縫い戻りという固有の動作）。実際に戻る量（残りの弧）は
+   下の .mz-undo-unravel-mask-thread.is-rewinding-mask が担う。 */
 .mz-undo-unravel-thread.is-rewinding {
   stroke-dasharray: 0.011 0.0074;
   opacity: 0.55;
-  transition:
-    stroke-dashoffset 0.45s ease-out,
-    opacity 0.3s ease-out;
+  transition: opacity 0.3s ease-out;
+}
+
+/* ---------- 縫い目マスク（残りの弧だけを見せる） ----------
+   なぜ mask なのか: 繰り返しの stroke-dasharray に stroke-dashoffset を
+   進めても縫い目が周回するだけで糸の総量は減らない（marching ants）。
+   企画書の「dashoffset を一周ぶん進める」指定はこの意味で誤りだった。
+   ここでは pathLength=1 の rect を白ストロークで描き、stroke-dasharray を
+   `{残り} 1` にすることで「始点から残り量ぶんの単発の連続した弧」を作り、
+   それを縫い目 rect にマスクとして重ねる。残りが 0 に近づくほど弧そのものが
+   短くなる＝本当に糸が消費されて見える。 */
+.mz-undo-unravel-mask-thread {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+/* 取り消し時だけ、残り量（stroke-dasharray の第1値）を CSS transition で
+   1（＝全周・糸が戻り切った状態）へ収束させる。猶予中は index.tsx の rAF が
+   transition:none で直接書き込むので、このルールは undoing 中にのみ効く。 */
+.mz-undo-unravel-mask-thread.is-rewinding-mask {
+  transition: stroke-dasharray 0.45s ease-out;
 }
 
 /* ---------- 縫い跡（取り消し後に残る痕跡） ----------

@@ -149,14 +149,41 @@ export default function UndoUnravel() {
             .filter(Boolean)
             .join(' ')
 
-          /* grace中はJSが毎フレーム直接値を書き込む（transition:none で滑らかさに頼らない）。
-             undoing中だけ CSS 側の transition（.is-rewinding）に0への収束を委ねる。 */
-          const threadStyle: CSSProperties | undefined =
+          /*
+           * 企画側の誤り修正: 繰り返しの stroke-dasharray（縫い目の並び）に
+           * stroke-dashoffset を進めても、縫い目が周回するだけで糸の総量は
+           * 減らない（marching ants）。t=500ms と t=4200ms がほぼ同じ絵に
+           * なっていたのはこれが原因。
+           *
+           * 正しくは「残りの弧だけを見せる」こと。そのために <mask> を使う。
+           * マスク側の rect は pathLength=1 のまま stroke-dasharray を
+           * `{残り} 1` にする＝始点から残り量ぶんだけの「単発の連続した弧」になり、
+           * dashoffset を進めるのとは違って弧そのものが本当に短くなる。
+           * このマスクを、いまの縫い目パターン（繰り返し破線）の rect に重ねることで、
+           * 見た目は「縫い目が残っている側だけが見える」＝糸が消費される、になる。
+           * 見た目のパターン（並縫いの破線）自体は縫い目 rect 側にそのまま残す。
+           */
+          const remain = Math.max(0, 1 - s.progress)
+          const maskId = `mz-undo-unravel-mask-${row.id}`
+          // 確定後は「ほどけ切った直後に縁が実線で締まる」動きを見せたいので、
+          // committed ではマスクを外して縫い目 rect をそのまま（is-committed の
+          // 実線化アニメーションに任せる）見せる。マスクをかけたままだと
+          // remain=0 のせいで実線が丸ごと隠れてしまう。
+          const maskApplied = s.phase === 'grace' || s.undoing
+
+          // grace中はJSが毎フレーム直接値を書き込む（transition:none で滑らかさに頼らない）。
+          // undoing中だけ CSS 側の transition（.is-rewinding-mask）に「残り=1」への
+          // 収束を委ねる（＝縫い目が逆向きに戻ってくる）。
+          const maskStyle: CSSProperties | undefined =
             s.phase === 'grace'
-              ? { strokeDashoffset: s.progress, transition: 'none' }
+              ? { strokeDasharray: `${remain} 1`, strokeDashoffset: 0, transition: 'none' }
               : s.undoing
-                ? { strokeDashoffset: 0 }
+                ? { strokeDasharray: '1 1', strokeDashoffset: 0 }
                 : undefined
+
+          const maskThreadClass = ['mz-undo-unravel-mask-thread', s.undoing && 'is-rewinding-mask']
+            .filter(Boolean)
+            .join(' ')
 
           return (
             <li key={row.id} className="mz-undo-unravel-row">
@@ -168,15 +195,31 @@ export default function UndoUnravel() {
                     preserveAspectRatio="none"
                     aria-hidden="true"
                   >
+                    {maskApplied && (
+                      <defs>
+                        <mask id={maskId}>
+                          <rect
+                            className={maskThreadClass}
+                            style={maskStyle}
+                            x={1}
+                            y={1}
+                            width={258}
+                            height={38}
+                            rx={8}
+                            pathLength={1}
+                          />
+                        </mask>
+                      </defs>
+                    )}
                     <rect
                       className={threadClass}
-                      style={threadStyle}
                       x={1}
                       y={1}
                       width={258}
                       height={38}
                       rx={8}
                       pathLength={1}
+                      mask={maskApplied ? `url(#${maskId})` : undefined}
                     />
                   </svg>
                 )}
