@@ -1,0 +1,291 @@
+/* No.67「取り消し猶予のほどけ」
+   モノクロ・自己完結。実行したのに、まだ効いていない5秒間を
+   「札の縁を縫う糸がほどける」ことで見せる。
+
+   この標本はどこにもオーバーシュート（cubic-bezier(0.34, 1.56, 0.64, 1) ＝ぷるん）を
+   使わない。猶予は物理ではなく契約で、ぷるんは「弾んで収まる＝物理現象」を語る文法。
+   ここに持ち込むと「残り時間の読み取り」自体が嘘になるので、この標本全体で封印する。 */
+
+.mz-undo-unravel {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 260px;
+}
+.mz-undo-unravel * {
+  box-sizing: border-box;
+}
+.mz-undo-unravel button {
+  all: unset;
+  cursor: pointer;
+}
+
+.mz-undo-unravel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mz-undo-unravel-row {
+  width: 100%;
+}
+
+/* ---------- 札 ---------- */
+
+.mz-undo-unravel-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transform: translateY(0);
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out;
+}
+
+/* 猶予中: 1px浮く。影が深くなる＝「まだ効いていない」の合図（設計則2） */
+.mz-undo-unravel-card.is-grace {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.14);
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out;
+}
+
+/* 確定: 1px沈む。影が浅くなる＝もう動かない（設計則2） */
+.mz-undo-unravel-card.is-committed {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.28s ease-out,
+    box-shadow 0.28s ease-out;
+}
+
+/* 取り消し後の着地。0.38s・跳ねさせない（設計則3の「戻り道は往路と変える」の一部：
+   往路の浮きはぷるんで始まったわけではないので、復路も跳ねる理由がない） */
+.mz-undo-unravel-card.is-undoing {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition:
+    transform 0.38s ease-out,
+    box-shadow 0.38s ease-out;
+}
+
+.mz-undo-unravel-name {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  font-weight: 700;
+  color: #3d3d3d;
+  opacity: 0.9;
+  transition: opacity 0.28s ease-out;
+}
+/* 確定した瞬間、文字の濃度も落ちる（0.9→0.55）。糸だけでなく文字でも「効いた」を言う */
+.mz-undo-unravel-card.is-committed .mz-undo-unravel-name {
+  opacity: 0.55;
+}
+
+/* ---------- 縫い糸（SVG） ---------- */
+
+.mz-undo-unravel-stitch {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.mz-undo-unravel-thread {
+  fill: none;
+  stroke: #3d3d3d;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  /* pathLength=1 で正規化しているので、実寸に関わらずこの比率がそのまま縫い目の粗さになる。
+     6px相当の並縫い（周長約590pxを想定した近似値） */
+  stroke-dasharray: 0.011 0.0074;
+  opacity: 0.55;
+}
+
+/* 残り20%（t=4000〜）: 縫い目が詰まり（6→3px相当）、2回まばたく。
+   まばたきは「もうすぐ効く」を体で言う装飾なので、動きを控えたい人には見せない
+   （下の @media ブロックで殺す）。糸そのもの＝ dashoffset の進行はJS側の値なので、
+   ここでは触らない。 */
+.mz-undo-unravel-thread.is-tight {
+  stroke-dasharray: 0.0055 0.0037;
+  animation: mz-undo-unravel-blink 0.4s ease-in-out 2;
+}
+@keyframes mz-undo-unravel-blink {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+/* 確定の瞬間: 糸が消えるのではなく実線の縁になる。「ぴんと張って留まる」を
+   一度だけの太さのパルスで言う（オーバーシュートのぷるんは使わず、単純な ease-out） */
+.mz-undo-unravel-thread.is-committed {
+  stroke-dasharray: none;
+  opacity: 0.85;
+  animation: mz-undo-unravel-taut 0.28s ease-out;
+}
+@keyframes mz-undo-unravel-taut {
+  0% {
+    stroke-width: 1.4;
+    opacity: 0.55;
+  }
+  55% {
+    stroke-width: 2;
+    opacity: 1;
+  }
+  100% {
+    stroke-width: 1.4;
+    opacity: 0.85;
+  }
+}
+
+/* 取り消し: 糸が巻き戻る（縫い戻り）。猶予5000msをそのまま逆再生すると
+   取り消しに5秒かかることになり遅い。0.45sに圧縮した「別の動き」として実装する
+   （逆再生ではなく縫い戻りという固有の動作）。実際に戻る量（残りの弧）は
+   下の .mz-undo-unravel-mask-thread.is-rewinding-mask が担う。 */
+.mz-undo-unravel-thread.is-rewinding {
+  stroke-dasharray: 0.011 0.0074;
+  opacity: 0.55;
+  transition: opacity 0.3s ease-out;
+}
+
+/* ---------- 縫い目マスク（残りの弧だけを見せる） ----------
+   なぜ mask なのか: 繰り返しの stroke-dasharray に stroke-dashoffset を
+   進めても縫い目が周回するだけで糸の総量は減らない（marching ants）。
+   企画書の「dashoffset を一周ぶん進める」指定はこの意味で誤りだった。
+   ここでは pathLength=1 の rect を白ストロークで描き、stroke-dasharray を
+   `{残り} 1` にすることで「始点から残り量ぶんの単発の連続した弧」を作り、
+   それを縫い目 rect にマスクとして重ねる。残りが 0 に近づくほど弧そのものが
+   短くなる＝本当に糸が消費されて見える。 */
+.mz-undo-unravel-mask-thread {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+/* 取り消し時だけ、残り量（stroke-dasharray の第1値）を CSS transition で
+   1（＝全周・糸が戻り切った状態）へ収束させる。猶予中は index.tsx の rAF が
+   transition:none で直接書き込むので、このルールは undoing 中にのみ効く。 */
+.mz-undo-unravel-mask-thread.is-rewinding-mask {
+  transition: stroke-dasharray 0.45s ease-out;
+}
+
+/* ---------- 縫い跡（取り消し後に残る痕跡） ----------
+   逆再生にしないぶん、跡を残さないと「最初から何も起きていない」に見えてしまう
+   （設計則3）。薄い破線の縁を0.8s linearでフェードさせるだけの、糸とは別の存在。 */
+.mz-undo-unravel-trace {
+  position: absolute;
+  inset: 0;
+  border: 1.5px dashed rgba(61, 61, 61, 0.28);
+  border-radius: 8px;
+  pointer-events: none;
+  animation: mz-undo-unravel-trace-fade 0.8s linear forwards;
+}
+@keyframes mz-undo-unravel-trace-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ---------- 操作 ---------- */
+
+.mz-undo-unravel-action {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: #f4f4f2;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #6e6e6e;
+  white-space: nowrap;
+  transition:
+    transform 0.2s ease-out,
+    opacity 0.2s ease-out;
+}
+.mz-undo-unravel-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-undo-unravel-action:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.mz-undo-unravel-action:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.mz-undo-unravel-status {
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-undo-unravel-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-undo-unravel-actions button {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 11px;
+  font-weight: 700;
+  color: #5c5c5c;
+  transition: transform 0.2s ease-out;
+}
+.mz-undo-unravel-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-undo-unravel-actions button:active {
+  transform: scale(0.96);
+}
+
+/* ---------- 動きを控えたい人へ ----------
+   グローバルCSSに頼らずフォルダ単体で成立させるための自前ブロック。
+   殺すのは「まばたき」と「浮き沈み（札の1px移動・影の変化）」だけ。
+   猶予の進行（糸のdashoffset）はCSSアニメーションではなくJSが直接styleに
+   書き込んでいる値なので、このブロックの対象にそもそも入らない＝触らなくても
+   5秒はちゃんと5秒のまま残る。これが「JSで進行を持つ」ことの効能そのもの。 */
+@media (prefers-reduced-motion: reduce) {
+  .mz-undo-unravel-card,
+  .mz-undo-unravel-card.is-grace,
+  .mz-undo-unravel-card.is-committed,
+  .mz-undo-unravel-card.is-undoing {
+    transform: none;
+    transition: none;
+  }
+  .mz-undo-unravel-thread.is-tight {
+    animation: none;
+  }
+}

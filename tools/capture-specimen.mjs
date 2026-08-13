@@ -112,6 +112,43 @@ const CHOREO = {
     await page.getByRole('button', { name: '別の週' }).click()
     await sleep(2600)
   },
+  /* 「押した時点と効いた時点のずれ」の3種（No.67〜69）は、
+     ずれている時間そのものが中身なので、待つ長さまで含めて撮り方になる。
+     短く詰めると「ずれ」が消えて、ただの遅いUIに見えてしまう */
+  'undo-unravel': async (page) => {
+    // 1回目: 猶予を最後まで見せる（5秒ほどけ切って確定するまで）
+    await sleep(600)
+    await page.getByRole('button', { name: 'アーカイブ', exact: true }).first().click()
+    await sleep(5600)
+    // 2回目: 途中で取り消す。巻き戻りと、そのあとに残る縫い跡まで写す
+    await page.getByRole('button', { name: 'アーカイブ', exact: true }).first().click()
+    await sleep(2100)
+    await page.getByRole('button', { name: '元に戻す' }).click()
+    await sleep(1600)
+  },
+  'effect-lag-shadow': async (page) => {
+    await sleep(700)
+    await page.getByRole('button', { name: '施策を打つ' }).click()
+    await sleep(1400) // 線が動かないことを見せる間。ここを詰めると主題が消える
+    for (let i = 0; i < 3; i++) {
+      await page.getByRole('button', { name: '次の週へ' }).click()
+      await sleep(1200)
+    }
+    await sleep(1400) // 到達（影が線に吸われる）の余韻
+  },
+  'optimistic-rollback': async (page) => {
+    // 1回目は成功。押した瞬間もう効いていることと、成功が祝われないことを見せる
+    await sleep(600)
+    await page.getByRole('switch', { name: '保存する' }).click()
+    await sleep(1600)
+    await page.getByRole('button', { name: 'やり直す' }).click()
+    await sleep(700)
+    // 2回目は失敗を仕込む。ここからが本題（たわみ→引き剥がし→跡）
+    await page.getByRole('button', { name: '失敗' }).click()
+    await sleep(400)
+    await page.getByRole('switch', { name: '保存する' }).click()
+    await sleep(2400)
+  },
   'sankey-stream': async (page) => {
     // まず何も触らず、常時流れている待機状態を見せる
     await page.mouse.move(...px(0.5, 1.2))
