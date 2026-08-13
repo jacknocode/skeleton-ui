@@ -1,0 +1,300 @@
+/* No.71「他人の操作のこだま」
+   無彩色・自己完結。誰がやったかを色ではなく緩急で語るのがこの標本の主題なので、
+   図鑑のグローバル変数（--zk-*）は参照せず、値はすべて直値で持つ。 */
+
+.mz-pe {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 320px;
+}
+
+.mz-pe-head {
+  align-self: flex-start;
+  margin-left: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #a3a3a3;
+}
+
+/* ---------- リスト全体 ---------- */
+
+.mz-pe-list {
+  display: flex;
+  width: 100%;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+  transition:
+    opacity 0.32s ease,
+    filter 0.32s ease;
+}
+/* 目を離しているあいだのヴェール。行き（暗くなる）も帰り（晴れる）も同じ320msで、
+   同じ一枚の布がかかって取れるだけ、という対称な動きにする */
+.mz-pe-list.is-away {
+  opacity: 0.28;
+  filter: blur(1.2px);
+}
+
+/* ---------- 溝とghost（気配） ---------- */
+
+.mz-pe-gutter {
+  position: relative;
+  width: 14px;
+  flex-shrink: 0;
+  border-right: 1px solid #ececea;
+}
+
+/* 他人の気配そのもの。位置はJSがtranslateYで行に合わせる。
+   跳ねを一切含まない減速のみのイージング——ここが跳ねると他人が「自分」に見えてしまう */
+.mz-pe-ghost {
+  position: absolute;
+  left: 6px;
+  top: 0;
+  width: 2px;
+  height: 18px;
+  border-radius: 1px;
+  background: #8c8c8c;
+  opacity: 0;
+  transition:
+    transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 0.2s linear;
+}
+.mz-pe-ghost.is-visible {
+  opacity: 1;
+}
+
+/* ---------- 行 ---------- */
+
+.mz-pe-rows {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mz-pe-row {
+  position: relative;
+  height: 40px;
+  display: grid;
+  grid-template-columns: 1fr auto 14px;
+  align-items: center;
+  column-gap: 8px;
+  padding: 0 10px 0 12px;
+  border-bottom: 1px solid #f1f1ef;
+  background-color: rgba(0, 0, 0, 0);
+}
+.mz-pe-row:last-child {
+  border-bottom: none;
+}
+
+/* 気配を受けて、地がうっすら墨に染まる（跳ねない・等速に近い滑らかさで） */
+.mz-pe-row.is-sensing {
+  background-color: rgba(0, 0, 0, 0.06);
+  transition: background-color 0.22s linear;
+}
+/* 変化の瞬間に地が濃く染まり、そこから1.4sかけて引いていく。
+   animationはtransitionと違って自分の0%から必ず始まるので、直前の値が0.06でも
+   ここで確実に0.10へ一段跳ね上げてから減衰できる（transitionの二段トリックが要らない） */
+.mz-pe-row.is-peak-decay {
+  animation: mz-pe-tint-decay 1.4s ease-out both;
+}
+@keyframes mz-pe-tint-decay {
+  0% {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+  100% {
+    background-color: rgba(0, 0, 0, 0);
+  }
+}
+/* 目を離しているあいだの変化。気配が無い分、テンションを上げずに0.16で静止したまま留まる */
+.mz-pe-row.is-away-hold {
+  background-color: rgba(0, 0, 0, 0.16);
+}
+/* ヴェールが晴れ切った瞬間からだけ引き始める、視線で消える残光 */
+.mz-pe-row.is-away-decay {
+  animation: mz-pe-tint-decay-away 1.8s ease-out both;
+}
+@keyframes mz-pe-tint-decay-away {
+  0% {
+    background-color: rgba(0, 0, 0, 0.16);
+  }
+  100% {
+    background-color: rgba(0, 0, 0, 0);
+  }
+}
+
+.mz-pe-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 値（旧・新の2枚重ね） ---------- */
+
+.mz-pe-val {
+  position: relative;
+  height: 20px;
+  min-width: 28px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-pe-digit {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+/* 自分：予備動作なし、押した0msで数字が入れ替わり、跳ねて着地する。
+   scale(1)→1.13→1 と translateY(-8px)→0 を同じ420msの一続きの動きにする */
+.mz-pe-digit.is-mine {
+  animation: mz-pe-digit-mine 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-pe-digit-mine {
+  0% {
+    transform: translateY(-8px) scale(1);
+  }
+  55% {
+    transform: translateY(0) scale(1.13);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 他人・目を離す共通：拡大も跳ねもしない。旧は上へ抜けて消え、新は下から滑って着地する */
+.mz-pe-digit.is-leaving {
+  animation: mz-pe-digit-leave 0.24s ease-in both;
+}
+@keyframes mz-pe-digit-leave {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+.mz-pe-digit.is-entering {
+  animation: mz-pe-digit-enter 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes mz-pe-digit-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- 自分の操作の印（左端の縦線） ---------- */
+
+.mz-pe-mine-stripe {
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 1px;
+  background: #3d3d3d;
+  transform-origin: top;
+  opacity: 0;
+}
+.mz-pe-mine-stripe.is-active {
+  animation: mz-pe-mine-stripe 0.26s ease-out both;
+}
+@keyframes mz-pe-mine-stripe {
+  0% {
+    transform: scaleY(0);
+    opacity: 1;
+  }
+  60% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 0;
+  }
+}
+
+/* ---------- 右端の点（残光がある行にだけ出る） ---------- */
+
+.mz-pe-mark {
+  justify-self: center;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #8c8c8c;
+  opacity: 0;
+  transform: scale(0);
+}
+.mz-pe-mark.is-shown {
+  opacity: 1;
+  transform: scale(1);
+}
+.mz-pe-mark.is-decay {
+  animation: mz-pe-mark-decay 1.4s ease-out both;
+}
+.mz-pe-mark.is-decay-away {
+  animation: mz-pe-mark-decay 1.8s ease-out both;
+}
+@keyframes mz-pe-mark-decay {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+
+/* ---------- 状態テキスト・操作 ---------- */
+
+.mz-pe-status {
+  font-size: 11px;
+  font-weight: 700;
+  color: #b3b3b3;
+}
+
+.mz-pe-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.mz-pe-actions button {
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 11px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-pe-actions button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.mz-pe-actions button:active:not(:disabled) {
+  transform: scale(1.06, 0.88);
+}
+.mz-pe-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}

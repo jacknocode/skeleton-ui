@@ -149,6 +149,54 @@ const CHOREO = {
     await page.getByRole('switch', { name: '保存する' }).click()
     await sleep(2400)
   },
+  /* No.70 は再生ヘッドをこちらが握っている標本なので、撮り方＝「どう回すか」ではなく
+     「どう握るか」になる。行きだけ撮ると、時間駆動の動きと見分けが付かない
+     ——逆走して同じ道を巻き戻すところまで撮って初めて主題が写る。 */
+  'scroll-baton': async (page) => {
+    /* 1回のホイールは 60px。これより刻むと proximity のスナップに食われて
+       進まない（近くの停留点へ引き戻される）ので、収録では粗めに回す。 */
+    const wheel = async (dy, steps, wait) => {
+      for (let i = 0; i < steps; i++) {
+        await page.mouse.wheel(0, dy / steps)
+        await sleep(wait)
+      }
+    }
+    await page.mouse.move(...px(0.5, 0.5))
+    await sleep(700)
+    await wheel(360, 6, 70) // 点 → 棒
+    await sleep(900) // 止まると到着の印が出る
+    await wheel(360, 6, 70) // 棒 → 輪
+    await sleep(1000)
+    // ここからが主題。同じ道をそのまま巻き戻す
+    await wheel(-300, 5, 70)
+    await sleep(600)
+    await wheel(180, 3, 70) // 途中で向きを変えても破綻しない
+    await sleep(700)
+    await wheel(-480, 8, 70)
+    await sleep(1000)
+  },
+  /* No.71 は「自分」と「他人」を続けて押すことがそのまま説明になる。
+     間を空けずに並べると、跳ねる／滑るの差が同じ画面の記憶の中で比べられる。 */
+  'presence-echo': async (page) => {
+    await sleep(800)
+    await page.getByRole('button', { name: '自分が変える', exact: true }).click()
+    await sleep(1400) // 跳ねて確定するまで
+    await page.getByRole('button', { name: '他人が変える', exact: true }).click()
+    await sleep(2600) // 気配 → 180msの間 → 滑って入る → 残光が引く
+    await page.getByRole('button', { name: '目を離す', exact: true }).click()
+    await sleep(5200) // ヴェール → 留守中の3件 → 晴れた瞬間から残光が引き始める
+  },
+  /* No.72 は触らない時間そのものが中身なので、頭に「何もしない4.5秒」を置く。
+     ここを削ると、更新の2拍だけが写って「古くなる」が写らない。 */
+  'stale-refresh': async (page) => {
+    await page.mouse.move(...px(0.5, 1.2))
+    await sleep(4500) // 放っておくと退色していく（この標本の待機状態）
+    await page.getByRole('button', { name: '更新（値が動く）', exact: true }).click()
+    await sleep(2600) // 第1拍（全体が濃さを取り戻す）→ 間 → 第2拍（変わった値だけ名乗る）
+    await page.getByRole('button', { name: '更新（変化なし）', exact: true }).click()
+    await sleep(1800) // 第1拍だけが起きて、第2拍が起きないことを見せる
+    await sleep(1200)
+  },
   'sankey-stream': async (page) => {
     // まず何も触らず、常時流れている待機状態を見せる
     await page.mouse.move(...px(0.5, 1.2))
@@ -170,7 +218,10 @@ const CHOREO = {
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
-const browser = await chromium.launch()
+const tContext = Date.now() // 録画はコンテキスト生成の時点から始まる（＝ページ読込も写る）
+/* playwright を入れ直すと、同梱ブラウザの版が実行環境に置いてある版とずれて
+   launch に失敗することがある。その場合だけ CAP_CHROME に実体のパスを渡して逃がす */
+const browser = await chromium.launch({ executablePath: process.env.CAP_CHROME || undefined })
 const ctx = await browser.newContext({
   viewport: { width: W, height: H },
   recordVideo: { dir, size: { width: W, height: H } },
@@ -187,6 +238,11 @@ await sleep(500)
 
 const choreo = CHOREO[id]
 if (!choreo) throw new Error(`no choreography for ${id}`)
+/* 録画の頭には、開発サーバのページ読込ぶんの「何も起きていない数秒」が必ず入る。
+   放っておくと GIF の4割が静止画になり、レビューでいちばん見たい所まで待たされる。
+   撮り始めから触り始めまでの実測時間を控えておいて、あとでその枚数を捨てる。 */
+const LEAD_IN_MS = 400 // ただし触る直前の間は少し残す（いきなり動き出すと読めない）
+const preRollMs = Math.max(0, Date.now() - tContext - LEAD_IN_MS)
 await choreo(page)
 
 await ctx.close()
@@ -209,8 +265,13 @@ execFileSync(FFMPEG, ['-y', '-i', src, '-vf', `scale=${GIF_W}:-1`, path.join(fra
   stdio: 'pipe',
 })
 
-const files = readdirSync(frameDir).filter((f) => f.endsWith('.png')).sort()
-if (!files.length) throw new Error('no frames decoded')
+const all = readdirSync(frameDir).filter((f) => f.endsWith('.png')).sort()
+if (!all.length) throw new Error('no frames decoded')
+
+/* ページ読込ぶんを頭から落とす（25fps ＝ 1枚 40ms）。
+   全部落とし切らないよう、念のため後半は必ず残す */
+const skip = Math.min(Math.floor(preRollMs / 40), Math.floor(all.length / 2))
+const files = all.slice(skip)
 
 /* 収録は 25fps。STRIDE 枚おきに間引いて、そのぶん1枚あたりの表示時間を延ばす（実時間は保たれる） */
 const STRIDE = 2
@@ -238,4 +299,6 @@ gif.finish()
 writeFileSync(out, Buffer.from(gif.bytes()))
 rmSync(dir, { recursive: true, force: true })
 const kb = Math.round(statSync(out).size / 1024)
-console.log(`[${id}] -> ${out}  (${n} frames, ${first.width}x${first.height}, ${kb}KB)`)
+console.log(
+  `[${id}] -> ${out}  (${n} frames, ${first.width}x${first.height}, ${kb}KB, 頭の読込ぶん ${skip} 枚を捨てた)`,
+)
