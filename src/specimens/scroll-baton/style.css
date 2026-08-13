@@ -1,0 +1,224 @@
+/* No.70「スクロールのバトン渡し」
+   モノクロ・自己完結。色は #3d3d3d #8c8c8c #b3b3b3 #f0f0ee #eaeae8 の直値のみ。
+   主役（.mz-sb-figure）には transition を一切かけない。時間で補間すると、
+   指を止めた瞬間に主役だけ動き続けて「スクロール量＝再生ヘッド」の契約が破れるため。
+   気持ちよさは距離のイージング（JS側で計算した --e）だけで作る。 */
+
+.mz-sb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 380px;
+
+  /* JSのuseEffectが走るまでの初期値（マウント直後は scrollTop=0=「点」で止まっている） */
+  --p: 0;
+  --e: 0;
+  --settled: 1;
+  --near0: 1;
+  --near1: 0;
+  --near2: 0;
+}
+
+/* ---------- スクロールのヒント ---------- */
+
+.mz-sb-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #b3b3b3;
+  /* p>0 で消える。実質 p>0.125 くらいで完全に見えなくなる（opacityは0..1に自動クランプされる） */
+  opacity: calc(1 - var(--p) * 8);
+  animation: mz-sb-hint-bob 1.8s ease-in-out infinite;
+}
+.mz-sb-hint-arrow {
+  font-size: 13px;
+}
+@keyframes mz-sb-hint-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+}
+/* これは主役ではなく待機中の呼びかけなので時間駆動でよい。
+   図鑑グローバルの prefers-reduced-motion がこの animation-duration を止めてくれる */
+
+/* ---------- 枠（実スクロール層と、動かない主役層を横に並べて重ねる土台） ---------- */
+
+.mz-sb-frame {
+  position: relative;
+  width: 100%;
+}
+
+/* ---------- ビューポート（実際にスクロールする層） ---------- */
+
+.mz-sb-viewport {
+  width: 100%;
+  height: 260px;
+  overflow-y: auto;
+  overscroll-behavior: contain; /* 図鑑ページ自体を巻き込まない */
+  scroll-snap-type: y proximity; /* mandatoryにしない。自由にスクラブできることが主題 */
+  border-radius: 14px;
+  background: #f0f0ee;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.07);
+  scrollbar-width: none;
+}
+.mz-sb-viewport::-webkit-scrollbar {
+  display: none;
+}
+.mz-sb-viewport:focus-visible {
+  outline: 2px solid #b3b3b3;
+  outline-offset: 2px;
+}
+
+/* ---------- パネル（スクロールする実体） ---------- */
+
+.mz-sb-panel {
+  position: relative;
+  height: 260px;
+  scroll-snap-align: center;
+}
+
+/* キャプションはパネル下部に置き、中央120pxは主役のために空けておく */
+.mz-sb-cap {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: none;
+}
+.mz-sb-cap-word {
+  font-size: 22px;
+  font-weight: 800;
+  color: #3d3d3d;
+}
+.mz-sb-cap-desc {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8c8c8c;
+}
+
+/* 前のキャプションが薄れる速度と次が濃くなる速度が同じスクロール量で釣り合う＝バトンが渡る */
+.mz-sb-panel[data-index='0'] .mz-sb-cap {
+  opacity: calc(0.16 + 0.84 * var(--near0));
+  transform: translateY(calc((1 - var(--near0)) * 10px));
+  transition: none;
+}
+.mz-sb-panel[data-index='1'] .mz-sb-cap {
+  opacity: calc(0.16 + 0.84 * var(--near1));
+  transform: translateY(calc((1 - var(--near1)) * 10px));
+  transition: none;
+}
+.mz-sb-panel[data-index='2'] .mz-sb-cap {
+  opacity: calc(0.16 + 0.84 * var(--near2));
+  transform: translateY(calc((1 - var(--near2)) * 10px));
+  transition: none;
+}
+
+/* ---------- 主役の層（スクロールしない） ---------- */
+
+.mz-sb-stage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none; /* 下の実スクロールを邪魔しない */
+  display: grid;
+  place-items: center;
+}
+
+/* 主役。区間をまたいで幅18px・高さ104px・角丸9pxで連続するので継ぎ目が出ない（-14px→+14px） */
+.mz-sb-figure {
+  position: relative;
+  display: grid;
+  place-items: center;
+  background: #3d3d3d;
+  transform: translateX(calc((var(--p) - 1) * 14px));
+  transition: none; /* 主役に時間補間を一切かけない、がこの標本の芯 */
+}
+
+/* [data-seg="0"] 点(22×22, 角丸11) → 棒(18×104, 角丸9) */
+.mz-sb[data-seg='0'] .mz-sb-figure {
+  width: calc(22px - 4px * var(--e));
+  height: calc(22px + 82px * var(--e));
+  border-radius: calc(11px - 2px * var(--e));
+}
+.mz-sb[data-seg='0'] .mz-sb-hole {
+  width: 0;
+  height: 0;
+}
+
+/* [data-seg="1"] 棒(18×104, 角丸9) → 輪(84×84, 角丸42=正円) */
+.mz-sb[data-seg='1'] .mz-sb-figure {
+  width: calc(18px + 66px * var(--e));
+  height: calc(104px - 20px * var(--e));
+  border-radius: calc(9px + 33px * var(--e));
+}
+.mz-sb[data-seg='1'] .mz-sb-hole {
+  width: calc(52px * var(--e));
+  height: calc(52px * var(--e));
+  border-radius: 50%;
+}
+
+/* 穴。背景をビューポート地色に合わせることで「くり抜かれて見える」だけの張りぼて */
+.mz-sb-hole {
+  background: #f0f0ee;
+  transition: none;
+}
+
+/* 到着したときだけ現れる印。主役の子なので水平ドリフトは transform の入れ子で自動的に付いてくる。
+   「主役の26px下」＝主役の中心からではなく、主役の下端から26px。主役は中心を軸に
+   伸び縮みするので、下端の位置は半分の高さぶんだけ中心からずれる——それを打ち消すために
+   セグメントごとの高さの式の半分をそのまま流用する（点11px→棒52px→輪42pxの半分＋26px）。
+   固定26pxのままだと棒・輪では主役の内側に埋もれてしまう（高さの半分が26pxを超えるため） */
+.mz-sb-tick {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 1px;
+  background: #8c8c8c;
+  opacity: var(--settled);
+  transition: none; /* 時間ではなく位置(settled)の関数なので、逆走しても対称に振る舞う */
+}
+/* 点(高さ22→棒104の半分11→52) + 26px */
+.mz-sb[data-seg='0'] .mz-sb-tick {
+  transform: translate(-50%, -50%) translateY(calc(37px + 41px * var(--e)))
+    scaleX(calc(0.2 + 0.8 * var(--settled)));
+}
+/* 棒(高さ104→輪84の半分52→42) + 26px */
+.mz-sb[data-seg='1'] .mz-sb-tick {
+  transform: translate(-50%, -50%) translateY(calc(78px - 10px * var(--e)))
+    scaleX(calc(0.2 + 0.8 * var(--settled)));
+}
+
+/* ---------- 右端のレール（つまみ位置＝p、同じ1つの数から導く） ---------- */
+
+.mz-sb-rail {
+  position: absolute;
+  top: 30px;
+  right: 6px;
+  width: 3px;
+  height: 200px;
+  border-radius: 999px;
+  background: #eaeae8;
+  pointer-events: none;
+}
+.mz-sb-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 64px;
+  border-radius: 999px;
+  background: #8c8c8c;
+  transform: translateY(calc(var(--p) / 2 * 136px));
+  transition: none;
+}

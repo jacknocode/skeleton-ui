@@ -1,0 +1,247 @@
+/* No.72「古くなった数字」
+   単色・自己完結。地は #eaeae8（グリッド線）、数字とルールは #3d3d3d。
+   退色は opacity / blur / scaleY だけで作る。letter-spacing や width は使わない
+   ——数字の幅が動くと、古くなることが「値が変わった」に見えてしまうため。 */
+
+.mz-sr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 380px;
+}
+
+/* ---------- 2×2 のタイル ---------- */
+
+.mz-sr-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  width: 100%;
+  background: #eaeae8;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.mz-sr-tile {
+  background: #fbfbf9;
+  padding: 16px 18px 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.mz-sr-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #3d3d3d;
+  margin-bottom: 6px;
+  /* 退色の0%地点そのものが「満タン」。1ではなく0.85から始まる */
+  opacity: 0.85;
+  animation: mz-sr-decay-label 7s linear forwards;
+}
+
+.mz-sr-num {
+  position: relative;
+  height: 34px;
+  line-height: 34px;
+  font-size: 28px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+  opacity: 1;
+  filter: blur(0);
+  margin-bottom: 10px;
+  animation: mz-sr-decay-num 7s linear forwards;
+}
+
+.mz-sr-num-cur {
+  display: block;
+}
+
+/* 旧/新の数字はここでだけ重ねる。絶対配置なのでレイアウトの幅・高さは動かない */
+.mz-sr-num-old,
+.mz-sr-num-new {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  white-space: nowrap;
+}
+
+.mz-sr-rule-track {
+  position: relative;
+  width: 100%;
+  height: 2px;
+}
+
+.mz-sr-rule {
+  position: absolute;
+  inset: 0;
+  background: #3d3d3d;
+  transform-origin: left;
+  opacity: 1;
+  transform: scaleY(1);
+  animation: mz-sr-decay-rule 7s linear forwards;
+}
+
+/* 下線の上を走るバー。ルール自体とは別レイヤーで、変わったタイルにだけ一瞬現れる */
+.mz-sr-runner {
+  position: absolute;
+  inset: 0;
+  background: #3d3d3d;
+  transform-origin: left;
+  transform: scaleX(0);
+  animation: mz-sr-runner 540ms ease-out both;
+}
+
+/* ---------- 退色（触らなくても7秒かけて線形に進む） ----------
+   数字の幅・字間は絶対に動かさない。動くのは opacity / blur / scaleY だけ。
+   床は0にしない（0.42 / 0.34 / 0.5）——消えるのは「古い」であって「無い」ではない */
+@keyframes mz-sr-decay-num {
+  from {
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    opacity: 0.42;
+    filter: blur(0.55px);
+  }
+}
+@keyframes mz-sr-decay-label {
+  from {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 0.34;
+  }
+}
+@keyframes mz-sr-decay-rule {
+  from {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  to {
+    opacity: 0.5;
+    transform: scaleY(0.35);
+  }
+}
+
+/* ---------- 第1拍「更新された」 ----------
+   4タイル同時、420ms ease-out で退色前の濃さへ戻る。時間差は付けない
+   （ここで stagger すると「届いた」が「変わった」に混ざる）。
+   .mz-sr-grid に is-fresh が付いている間は退色アニメーションを止めて、
+   この濃さのまま第2拍の終わりまで保持し続ける（何も足さない＝何も起きない）。 */
+.mz-sr-grid.is-fresh .mz-sr-label {
+  animation: none;
+  transition: opacity 420ms ease-out;
+  opacity: 0.85;
+}
+.mz-sr-grid.is-fresh .mz-sr-num {
+  animation: none;
+  transition:
+    opacity 420ms ease-out,
+    filter 420ms ease-out;
+  opacity: 1;
+  filter: blur(0);
+}
+.mz-sr-grid.is-fresh .mz-sr-rule {
+  animation: none;
+  transition:
+    opacity 420ms ease-out,
+    transform 420ms ease-out;
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+/* ---------- 第2拍「変わった」（変わったタイルだけ） ----------
+   跳ねない。誰も押していない変化なので、オーバーシュートする理由がない。 */
+@keyframes mz-sr-old-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-9px);
+  }
+}
+@keyframes mz-sr-new-in {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes mz-sr-runner {
+  0% {
+    transform: scaleX(0);
+    opacity: 1;
+  }
+  59.26% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+.mz-sr-num-old {
+  animation: mz-sr-old-out 260ms ease-in both;
+}
+.mz-sr-num-new {
+  animation: mz-sr-new-in 320ms cubic-bezier(0.22, 0.61, 0.36, 1) 40ms both;
+}
+
+/* ---------- ボタン ---------- */
+
+.mz-sr-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.mz-sr-actions button {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-sr-actions button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.mz-sr-actions button:active:not(:disabled) {
+  transform: scale(1.06, 0.88);
+}
+.mz-sr-actions button:disabled {
+  color: #b3b3b3;
+  cursor: default;
+}
+
+/* ---------- 動きを控える設定の人へ（この標本だけの追加規則） ----------
+   図鑑のグローバルCSSは全アニメーションを 0.01ms に潰す。それをこの標本に
+   そのまま当てると、開いた瞬間に退色の床まで飛んで「壊れた画面」に見えてしまう。
+   そこで退色の常時アニメーションだけを明示的に無効化し、途中の濃さで静止させる。
+   第1拍・第2拍はグローバル側の短縮に任せてよい（順序はJSのタイマーで持っている）。 */
+@media (prefers-reduced-motion: reduce) {
+  .mz-sr-num,
+  .mz-sr-label,
+  .mz-sr-rule {
+    animation: none !important;
+  }
+  /* 退色は「途中の濃さ」で静止させる。古さは伝わり、動きは無い */
+  .mz-sr-num {
+    opacity: 0.72;
+    filter: none;
+  }
+}
