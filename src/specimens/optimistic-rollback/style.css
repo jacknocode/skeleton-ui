@@ -1,0 +1,353 @@
+/* No.69「楽観のあと出し訂正」
+   押した瞬間もう成功したように動く保存スイッチ。遅れて失敗が返ったら、
+   成功状態がたわんでから横へ引き剥がされて戻る。モノクロ・自己完結。
+
+   ==== この標本だけ「未確定＝呼吸する」の則を破る ====
+   図鑑の No.59 / No.60 は「まだ確定していない値は呼吸する（周期的に揺れる・脈打つ）」を
+   共通の約束にしている。しかし楽観的更新の目的は「本当はまだ確定していない」という事実を
+   隠して『もう終わった』と見せ、待ちの体感を消すことにある。だからここで未確定の合図を
+   呼吸のような目立つ動きで出すと本末転倒になる——見た瞬間「あ、これはまだ危ういんだな」と
+   伝わってしまい、結局は待たされているのと同じ体感になる。
+   なのでここでの「未確定」の合図は
+     ・縁がごく薄い破線（is-pending の間だけ）
+     ・影が1pxだけ深い
+   の2つに留め、scale や opacity を周期的に往復させるアニメーション（呼吸）は
+   一切使わない。図鑑で唯一この則を破る標本、というのが設計上の判断。
+
+   ==== 訂正: 破線リングが「合図」として強すぎた ====
+   初稿は rgba(61,61,61,0.4) の破線で縁をぐるり囲んでおり、静止していても
+   「これは仮のものです」と大声で言ってしまっていた。楽観的更新は本当らしく
+   見せることが目的なので、alpha を約1/3（0.14）まで落とし「言われれば気づく」
+   程度に抑える。破線→実線（is-success）のクロスフェード自体は変えず 0.25s のまま。 */
+
+.mz-optimistic-rollback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 252px;
+}
+
+/* ---------- 上：次の結果を仕込むスイッチ（収録を決定的にするため乱数は使わない） ---------- */
+
+.mz-optimistic-rollback-arm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mz-optimistic-rollback-arm-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+.mz-optimistic-rollback-arm-btns {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: #e6e6e4;
+}
+.mz-optimistic-rollback-arm-btn {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease-out,
+    color 0.2s ease-out;
+}
+.mz-optimistic-rollback-arm-btn.is-selected {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 中央：スイッチ本体＋カウンタ ---------- */
+
+.mz-optimistic-rollback-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* 首振り（拒否）専用の外側ラッパー。中の .switch は「たわみ→引き剥がし」で
+   自分自身の transform を使っているので、器を分けないと上書きし合ってしまう */
+.mz-optimistic-rollback-shake.is-deny {
+  animation: mz-optimistic-rollback-deny 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+@keyframes mz-optimistic-rollback-deny {
+  12% {
+    transform: translateX(-4px);
+  }
+  32% {
+    transform: translateX(4px);
+  }
+  52% {
+    transform: translateX(-2.5px);
+  }
+  72% {
+    transform: translateX(1.5px);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+.mz-optimistic-rollback-switch {
+  position: relative;
+  width: 50px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+/* 破線／実線のリング。楽観の間だけ薄く見える「言われれば気づく程度」の合図。
+   border-style は直接アニメーションできないので、破線用と実線用を別レイヤーで
+   重ねて opacity をクロスフェードさせている（confirmed-paper の float-dash/solid と同じ手口） */
+.mz-optimistic-rollback-ring-dash,
+.mz-optimistic-rollback-ring-solid {
+  position: absolute;
+  inset: -4px;
+  border-radius: 18px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease-out;
+}
+.mz-optimistic-rollback-ring-dash {
+  border: 1px dashed rgba(61, 61, 61, 0.14);
+}
+.mz-optimistic-rollback-ring-solid {
+  border: 1px solid rgba(61, 61, 61, 0.4);
+}
+.mz-optimistic-rollback-switch.is-pending .mz-optimistic-rollback-ring-dash {
+  opacity: 1;
+}
+/* 成功: 破線が実線になる（＝クロスフェード）。祝うわけではなく、もう動かないことの印 */
+.mz-optimistic-rollback-switch.is-success .mz-optimistic-rollback-ring-solid {
+  opacity: 1;
+}
+
+.mz-optimistic-rollback-track {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #d6d6d6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition:
+    background-color 0.5s ease-in-out,
+    box-shadow 0.25s ease-out;
+}
+.mz-optimistic-rollback-switch.is-on .mz-optimistic-rollback-track {
+  background: #787878;
+}
+/* 楽観の間、影がぴったり1pxだけ深い＝「浮いている」。これが未確定の唯一の物理的手がかり */
+.mz-optimistic-rollback-switch.is-pending .mz-optimistic-rollback-track {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.14);
+}
+
+/* 失敗の訂正。ここだけ「戻り道は往路と変える」（設計則3）。
+   往路（0.42s ぷるん）をそのまま逆再生すると「取り消した」ではなく
+   「最初から何も起きていない」に見え、押した操作が届いていたことに気づけなくなる。
+   なので巻き戻しはぷるんを使わず、①たわむ（力がかかった証）→②横へ6px引き剥がされて
+   戻る、の一本道にする。跳ねさせない＝ease-in-outで往復し、オーバーシュートさせない。
+   影・背景色・ノブの移動は「たわみ」が終わる140msまで待ってから戻す
+   （transition-delay .14s）ことで、力がかかってから初めて崩れる順序を守っている。 */
+.mz-optimistic-rollback-switch.is-failing .mz-optimistic-rollback-track {
+  transition:
+    background-color 0.5s ease-in-out 0.14s,
+    box-shadow 0.5s ease-in-out 0.14s;
+  animation: mz-optimistic-rollback-recoil 0.64s both;
+}
+@keyframes mz-optimistic-rollback-recoil {
+  0% {
+    transform: scale(1) translateX(0);
+    animation-timing-function: ease-out; /* 0→140ms: たわむ（0.14s ease-out） */
+  }
+  21.9% {
+    /* =140ms/640ms */
+    transform: scale(1.06, 0.94) translateX(0);
+    animation-timing-function: ease-in-out; /* 140→640ms: 引き剥がされて戻る（0.5s ease-in-out） */
+  }
+  60.9% {
+    /* =390ms/640ms（片道250ms） */
+    transform: scale(1, 1) translateX(-6px);
+  }
+  100% {
+    transform: scale(1) translateX(0);
+  }
+}
+
+.mz-optimistic-rollback-knob {
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+  transform: translateX(0);
+  /* 往路: 0.42s ぷるん（表の t=0 行そのまま） */
+  transition: transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-optimistic-rollback-switch.is-on .mz-optimistic-rollback-knob {
+  transform: translateX(22px);
+}
+/* 復路: ぷるんを使わない。ease-in-outで一定に戻し、たわみ(0-140ms)の間は動かさない */
+.mz-optimistic-rollback-switch.is-failing .mz-optimistic-rollback-knob {
+  transition: transform 0.5s ease-in-out 0.14s;
+}
+
+/* 跡（薄い輪郭）。成功状態だった＝ノブが右にあった位置に、ノブと同じ形の輪郭だけを
+   置いて、そこにあったことを 0.9s かけて薄れて消す。逆再生にしないぶん、
+   「操作が確かに効いていた」ことをこの跡だけが語る */
+.mz-optimistic-rollback-ghost {
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(61, 61, 61, 0.4);
+  opacity: 0;
+}
+.mz-optimistic-rollback-switch.is-failing .mz-optimistic-rollback-ghost {
+  transform: translateX(22px);
+  animation: mz-optimistic-rollback-ghost-fade 0.9s linear 0.24s forwards;
+}
+@keyframes mz-optimistic-rollback-ghost-fade {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ---------- カウンタ（増減で入れ替わる向きが逆） ---------- */
+
+.mz-optimistic-rollback-counter {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  font-variant-numeric: tabular-nums;
+}
+.mz-optimistic-rollback-counter-window {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  height: 1.3em;
+  line-height: 1.3em;
+}
+.mz-optimistic-rollback-counter-num {
+  display: inline-block;
+  font-size: 15px;
+  font-weight: 800;
+  color: #3d3d3d;
+}
+/* 増える＝下から入ってくる。押した瞬間の楽観の勢いと同じ向き（0.42s ぷるん） */
+.mz-optimistic-rollback-counter-num.is-rising {
+  animation: mz-optimistic-rollback-num-up 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-optimistic-rollback-num-up {
+  0% {
+    transform: translateY(70%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+/* 戻る＝上から落ちてくる。増えたときと逆向きにすることで「巻き戻し」だと数字だけでも言う */
+.mz-optimistic-rollback-counter-num.is-falling {
+  animation: mz-optimistic-rollback-num-down 0.4s ease-out;
+}
+@keyframes mz-optimistic-rollback-num-down {
+  0% {
+    transform: translateY(-70%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ---------- 下：エラー文・操作 ---------- */
+
+/* 高さを固定して確保しておくことで、説明文の出現でレイアウトが跳ねないようにする */
+.mz-optimistic-rollback-status-slot {
+  display: flex;
+  align-items: flex-start;
+  min-height: 16px;
+}
+.mz-optimistic-rollback-error {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  /* t=300ms からせり上がる。次に押すか「やり直す」まで残す＝失敗の記録を勝手に消さない */
+  animation: mz-optimistic-rollback-error-in 0.3s ease-out 0.3s both;
+}
+@keyframes mz-optimistic-rollback-error-in {
+  0% {
+    transform: translateY(60%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.mz-optimistic-rollback-actions {
+  display: flex;
+}
+.mz-optimistic-rollback-actions button {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 11px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-optimistic-rollback-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-optimistic-rollback-actions button:active {
+  transform: scale(1.06, 0.88);
+}
+
+/* ---------- reduced motion ----------
+   フォルダ単体で他プロジェクトへ移しても機能するよう自前でも面倒を見る。
+   この標本の「情報」（成功/失敗の判定・カウンタの値）は React の state と
+   setTimeout が持っていて CSS アニメーションの尺には依存していないので、
+   ここで尺を削っても情報は欠けない（No.67 のほどけとは事情が違う）。
+   安全に、装飾側だけを削る。 */
+@media (prefers-reduced-motion: reduce) {
+  .mz-optimistic-rollback-track,
+  .mz-optimistic-rollback-knob,
+  .mz-optimistic-rollback-ring-dash,
+  .mz-optimistic-rollback-ring-solid,
+  .mz-optimistic-rollback-arm-btn {
+    transition-duration: 0.01ms !important;
+  }
+  .mz-optimistic-rollback-track,
+  .mz-optimistic-rollback-ghost,
+  .mz-optimistic-rollback-shake.is-deny,
+  .mz-optimistic-rollback-counter-num,
+  .mz-optimistic-rollback-error {
+    animation-duration: 0.01ms !important;
+  }
+}
