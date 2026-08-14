@@ -1,0 +1,273 @@
+/* No.70「保留の行列」
+   モノクロ・自己完結。返事を待たずに「送る」を連打すると、溜まっているのは
+   列の長さではなく列の歪みとして見える。待ち件数の数字・進捗バー・スピナーは
+   一切出さない。「向こう（返事）」は跳ねない・弱い、「自分（送る）」だけがぷるんと跳ねる、
+   の強弱で誰が起こした動きかを語る（設計則1）。 */
+
+.mz-pending-queue {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 276px;
+}
+.mz-pending-queue * {
+  box-sizing: border-box;
+}
+
+/* ---------- 上段：送る／回線トグル ---------- */
+
+.mz-pending-queue-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 満杯連打の首振り。中の送るボタン自身は transform を持たないので、
+   器を分けて deny 用の transform とぶつからないようにする（optimistic-rollback と同じ手口） */
+.mz-pending-queue-shake.is-deny {
+  animation: mz-pending-queue-deny 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+@keyframes mz-pending-queue-deny {
+  12% {
+    transform: translateX(-4px);
+  }
+  32% {
+    transform: translateX(4px);
+  }
+  52% {
+    transform: translateX(-2.5px);
+  }
+  72% {
+    transform: translateX(1.5px);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+.mz-pending-queue-send {
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-pending-queue-send:hover {
+  transform: translateY(-2px);
+}
+.mz-pending-queue-send:active {
+  transform: scale(1.06, 0.88);
+}
+
+.mz-pending-queue-toggle {
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #eaeae8;
+  color: #6e6e6e;
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease-out,
+    color 0.2s ease-out;
+}
+.mz-pending-queue-toggle.is-connected {
+  background: #dcdcda;
+  color: #3d3d3d;
+}
+
+/* ---------- 中段：回線の線 ----------
+   border-style は直接アニメーションできないので、実線用・破線用を別レイヤーで
+   重ねて opacity をクロスフェードさせる（optimistic-rollback のリングと同じ手口）。
+   「つながっている⇄切れている」を文章ではなくこの線の見た目だけで語る。 */
+
+.mz-pending-queue-line {
+  position: relative;
+  width: 260px;
+  height: 1px;
+}
+.mz-pending-queue-line-solid,
+.mz-pending-queue-line-dash {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+.mz-pending-queue-line-solid {
+  border-top: 1px solid #dcdcda;
+}
+.mz-pending-queue-line-dash {
+  border-top: 1px dashed #b3b3b3;
+  opacity: 1;
+}
+.mz-pending-queue-line.is-connected .mz-pending-queue-line-solid {
+  opacity: 1;
+}
+.mz-pending-queue-line.is-connected .mz-pending-queue-line-dash {
+  opacity: 0;
+}
+
+/* ---------- 下段：札の列 ---------- */
+
+.mz-pending-queue-track {
+  position: relative;
+  width: 260px;
+  /* 札の高さ(40) + たわみの最大(16) + 着地の張り出し ぶんの余白 */
+  height: 78px;
+}
+
+/* 受け皿。列が空でもここだけは残る（企画書の「空」の状態） */
+.mz-pending-queue-tray {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 40px;
+  border: 1px dashed rgba(61, 61, 61, 0.14);
+  border-radius: 7px;
+}
+
+/* 詰める：先頭が抜けて配列がずれた分、translateX が変わって左へ寄る。
+   0.5s ease-out、札ごとに 60ms ずつ遅らせる（一斉に動かさない＝設計則4の3枚版） */
+.mz-pending-queue-slot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 32px;
+  height: 40px;
+  transition: transform 0.5s ease-out;
+}
+
+/* たわみ（この標本の主題）。企画書の式そのまま。0.55s ease-out。
+   詰める(translateX)と別レイヤーにしているのは、指定尺が0.5s/0.55sと
+   わずかに異なり、同じ transform に同じ transition は使えないため。 */
+.mz-pending-queue-sag {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.55s ease-out;
+}
+
+.mz-pending-queue-ticket {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #3d3d3d;
+  /* 積む：自分が起こした動き（強い）。translateX(14px) scale(0.7) から
+     0.32s ぷるんで着地。着地に scale(1.12, 0.88) の潰れを挟む */
+  animation: mz-pending-queue-enter 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-pending-queue-enter {
+  0% {
+    transform: translateX(14px) scale(0.7);
+  }
+  70% {
+    transform: translateX(0) scale(1.12, 0.88);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* 先頭だけ「いま飛んでいる」。呼吸させない（設計則5）。縁はごく薄い破線、影は1pxだけ深い */
+.mz-pending-queue-ticket.is-inflight {
+  border: 1px dashed rgba(61, 61, 61, 0.16);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.14);
+}
+
+/* 抜ける：向こうが起こした動き（弱い・跳ねない）。0.5s cubic-bezier(0.22,1,0.36,1) */
+.mz-pending-queue-ticket.is-leaving {
+  animation: mz-pending-queue-exit 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes mz-pending-queue-exit {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+}
+
+/* 跡。抜けた位置に1px輪郭が残り、0.8s かけて linear に薄れる（設計則3） */
+.mz-pending-queue-ghost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 32px;
+  height: 40px;
+  border-radius: 6px;
+  border: 1px solid rgba(61, 61, 61, 0.35);
+  pointer-events: none;
+  animation: mz-pending-queue-trace-fade 0.8s linear forwards;
+}
+@keyframes mz-pending-queue-trace-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ---------- 下：操作 ---------- */
+
+.mz-pending-queue-actions {
+  display: flex;
+}
+.mz-pending-queue-actions button {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 11px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.2s ease-out;
+}
+.mz-pending-queue-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-pending-queue-actions button:active {
+  transform: scale(0.96);
+}
+
+/* ---------- reduced motion ----------
+   フォルダ単体で成立させるための自前ブロック。この標本の「情報」（列の中身・
+   何枚待っているか・回線がつながっているか）はすべて React の state と
+   setTimeout が持っていて、CSS アニメーションの尺には依存していない
+   （900ms/220ms/600msの間隔はJS側のタイマーで、ここを削っても変わらない）。
+   なので装飾側の尺だけを削って安全。 */
+@media (prefers-reduced-motion: reduce) {
+  .mz-pending-queue-slot,
+  .mz-pending-queue-sag,
+  .mz-pending-queue-toggle,
+  .mz-pending-queue-line-solid,
+  .mz-pending-queue-line-dash,
+  .mz-pending-queue-send,
+  .mz-pending-queue-actions button {
+    transition-duration: 0.01ms !important;
+  }
+  .mz-pending-queue-ticket,
+  .mz-pending-queue-ticket.is-leaving,
+  .mz-pending-queue-ghost,
+  .mz-pending-queue-shake.is-deny {
+    animation-duration: 0.01ms !important;
+  }
+}

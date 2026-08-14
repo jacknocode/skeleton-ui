@@ -1,0 +1,215 @@
+/* No.71「さかのぼり訂正」
+   確定済みに見えていた過去の2本（W3=上方向、W6=下方向）が、押した瞬間に書き換わる。
+   消して差し替えるのではなく、旧い値の位置に上辺1pxの輪郭を残し、新しい実体が
+   同じ緩急（上げも下げも cubic-bezier(0.22,1,0.36,1)）でその外／内へ滑り込む。
+   動きが終われば訂正の跡は残さない——濃度差もアスタリスクも付けない。
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。 */
+
+.mz-revised-past {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 256px;
+}
+
+/* ---------- 棒グラフ ---------- */
+
+.mz-revised-past-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mz-revised-past-plot {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  width: 256px;
+  height: 104px;
+  border-bottom: 1px solid #dcdcda; /* ベースライン。訂正が起きても動かない */
+}
+
+/* 列の高さは104px固定（index.tsx の SCALE=1.6 は最大値61を基準に決めてある）。
+   訂正されない6列はここに一切のtransitionを持たない＝計算も再描画も起きない。 */
+.mz-revised-past-col {
+  position: relative;
+  width: 20px;
+  height: 104px;
+}
+
+/* 実体。全部が確定済みの見た目として同じ塗りで並ぶ。訂正が終わったあと、
+   訂正された棒と最初からその値だった棒に見た目の差は一切無い（跡は動きの中にだけある）。 */
+.mz-revised-past-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  background: #8c8c8c;
+  /* 上げも下げも同じ緩急・同じ0.6s。訂正は祝い事でも事故でもないので速さを変えない */
+  transition: height 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 一度だけ低く鳴る「たわみ」。訂正される棒だけに掛かる別プロパティ(transform)のアニメーション
+   なので、上のheightのtransitionと衝突しない。0.12s前に始まり、0.45sかけて沈んで戻る。 */
+.mz-revised-past-bar.is-dipping {
+  animation: mz-revised-past-dip 0.45s ease-out;
+}
+@keyframes mz-revised-past-dip {
+  0% {
+    transform: translateY(0);
+  }
+  22% {
+    transform: translateY(2px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* 旧い値の輪郭。訂正の瞬間に旧い高さの位置へ即座に現れ（フェードインはしない）、
+   0.6s（=実体が滑り切るのと同じ時間）だけそのまま留まってから、0.9sかけてlinearに薄れる。
+   animation-fill-mode:bothにより、delayの間は from(opacity:1) の状態で描画され続ける。 */
+.mz-revised-past-outline {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 0;
+  border-top: 1px solid rgba(61, 61, 61, 0.28);
+  pointer-events: none;
+  /* 実体より前面に置く。下方向の訂正しか見ていないと気づけないが、上方向の訂正では
+     旧い縁は新しい実体の「中」に来るので、背面に置くと塗りに飲まれて跡が消える。 */
+  z-index: 1;
+  animation: mz-revised-past-outline-fade 0.9s linear 0.6s both;
+}
+/* 旧い縁が実体の中に来るとき（上方向の訂正）だけ、線の色を地の側へ反転させる。
+   同じ濃さの線を塗りの上に載せても沈むので、「跡が読めること」を優先して色を変える。
+   跡の意味（旧い値の縁がここにあった）は同じなので、太さ・尺・消え方は一切変えない。 */
+.mz-revised-past-outline.is-inside {
+  border-top-color: rgba(245, 245, 243, 0.8);
+}
+@keyframes mz-revised-past-outline-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.mz-revised-past-labels {
+  display: flex;
+  justify-content: space-between;
+  width: 256px;
+  margin-top: 6px;
+}
+.mz-revised-past-labels span {
+  width: 20px;
+  text-align: center;
+  font-size: 10px;
+  color: #b3b3b3;
+}
+
+/* ---------- 合計 ---------- */
+
+.mz-revised-past-total {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+.mz-revised-past-total-window {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  height: 1.3em;
+  line-height: 1.3em;
+}
+.mz-revised-past-total-num {
+  display: inline-block;
+  font-size: 17px;
+  font-weight: 800;
+  color: #3d3d3d;
+}
+/* 合計は棒より0.25s遅れて追いかける。増は下から湧き、減は上から落ちる。
+   振幅は棒の変化の主張を超えないよう小さく抑える（企画書「振幅は小さく」）。跳ねない。 */
+.mz-revised-past-total-num.is-rising {
+  animation: mz-revised-past-total-up 0.5s ease-out;
+}
+@keyframes mz-revised-past-total-up {
+  from {
+    transform: translateY(35%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.mz-revised-past-total-num.is-falling {
+  animation: mz-revised-past-total-down 0.5s ease-out;
+}
+@keyframes mz-revised-past-total-down {
+  from {
+    transform: translateY(-35%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ---------- 操作 ---------- */
+
+.mz-revised-past-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-revised-past-actions button {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-revised-past-actions button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.mz-revised-past-actions button:active:not(:disabled) {
+  transform: scale(1.06, 0.88);
+}
+.mz-revised-past-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
+
+/* ---- reduced motion ----
+   標本フォルダ単体で他プロジェクトへ移しても機能するよう、自前でも面倒を見る。
+   この標本の「情報」（各週の値・合計値）は React の state が持っていて、
+   JS の setTimeout が刻む時間割（120ms前に沈む・90msずらす・0.6sで滑る 等）は
+   CSSの尺には依存していない。よって尺を削っても「何が起きたか」は最終状態として
+   正しく残る＝装飾側だけを縮めて安全（No.68/No.69 と同じ扱い）。 */
+@media (prefers-reduced-motion: reduce) {
+  .mz-revised-past-bar,
+  .mz-revised-past-total-num,
+  .mz-revised-past-actions button {
+    transition-duration: 0.01ms !important;
+  }
+  .mz-revised-past-bar.is-dipping,
+  .mz-revised-past-outline,
+  .mz-revised-past-total-num.is-rising,
+  .mz-revised-past-total-num.is-falling {
+    animation-duration: 0.01ms !important;
+  }
+}
