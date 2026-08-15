@@ -149,6 +149,44 @@ const CHOREO = {
     await page.getByRole('switch', { name: '保存する' }).click()
     await sleep(2400)
   },
+  'pending-queue': async (page) => {
+    // 前半: つながったまま4連打。積む(強い)と抜ける(弱い)が同じ列で交互に起きるところ
+    await sleep(600)
+    for (let i = 0; i < 4; i++) {
+      await page.getByRole('button', { name: '送る' }).click()
+      await sleep(160)
+    }
+    await sleep(1500)
+    // 後半が本題: 回線を切ってから連打し、たわみが深くなるところ→戻して順に流れ出すところ
+    await page.getByRole('switch', { name: '回線' }).click()
+    await sleep(500)
+    for (let i = 0; i < 6; i++) {
+      await page.getByRole('button', { name: '送る' }).click()
+      await sleep(200)
+    }
+    await sleep(1300) // 深くたわんだまま止まっている時間。ここを詰めると「詰まり」が読めない
+    await page.getByRole('switch', { name: '回線' }).click()
+    await sleep(3200) // 0.6sの間 + 220ms間隔のドレインが終わるまで
+  },
+  'revised-past': async (page) => {
+    await sleep(900) // 訂正前の「確定済みに見えている」状態を先に見せる
+    await page.getByRole('button', { name: '遅れて届く' }).click()
+    await sleep(2600) // 90msずれた2本の訂正 → 合計の追従 → 輪郭が薄れきるまで
+    await page.getByRole('button', { name: '元に戻す' }).click()
+    await sleep(2600)
+  },
+  'others-hand': async (page) => {
+    // 前半: 何も触らずに眺める。他者のカーソルが遅れて滑り、勝手に値が書き換わる
+    await page.mouse.move(...px(0.5, 1.3))
+    await sleep(5200)
+    // 後半が本題: 書き換わる行にカーソルを置いたまま待ち、よその版が右端で待つのを見せる
+    const row2 = px(0.5, 0.39)
+    await glide(page, px(0.5, 1.3), row2, 400)
+    await sleep(4200)
+    // 離れると、待っていた値が滑り込む
+    await glide(page, row2, px(0.5, 1.3), 400)
+    await sleep(1800)
+  },
   'sankey-stream': async (page) => {
     // まず何も触らず、常時流れている待機状態を見せる
     await page.mouse.move(...px(0.5, 1.2))
