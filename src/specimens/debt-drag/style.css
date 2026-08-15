@@ -1,0 +1,323 @@
+/* No.75「利子のかかる速さ」
+   「急ぐ」で進捗を稼ぐたびに、下へ薄い層が1枚溜まる。以後パネル内の全ての動き
+   （チップ・トグル・バー・層自身）はその分だけ鈍くなる——尺は calc(var(--base-xxx) * var(--drag))
+   で一括して作る。JS が触るのは --drag（と沈み具合を示す --sink）だけ。
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。 */
+
+.mz-debt-drag {
+  /* ---- 基本の尺（正本はここ1箇所）。個別の秒数は他の場所に直書きしない ---- */
+  --base-bar: 260ms;
+  --base-chip: 220ms;
+  --base-toggle: 300ms;
+  --base-layer: 340ms;
+  --base-complete: 320ms;
+  --base-spark: 120ms; /* 報酬の光。drag では鈍らない（報酬は常に即時・強いまま） */
+  --base-panel: 500ms; /* パネルの沈み／浮き。これもdragでは鈍らない（企画書どおり固定0.5s） */
+
+  /* ---- JS が触るのはこの2つだけ ---- */
+  --drag: 1; /* 負債の重さ。1操作ごとに *1.07 / 返済で /1.07 */
+  --sink: 0; /* パネルの沈み込み段数(0..8)。積むほど下がる一方で戻らない */
+
+  /* 進捗バーだけはこの緩急に固定（drag が上がっても弱めない）。近道の気持ちよさは常に保つ */
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 288px;
+}
+
+/* data-weight は drag の3段階(0|1.15|1.45)を読み替えたもの。チップ・トグルの
+   跳ね返り方だけがここで弱まる——「遅くなる」だけでなく「跳ね返らなくなる」のが手ざわりの本体。 */
+.mz-debt-drag[data-weight='0'] {
+  --ease-weight: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-debt-drag[data-weight='1'] {
+  --ease-weight: cubic-bezier(0.34, 1.22, 0.64, 1);
+}
+.mz-debt-drag[data-weight='2'] {
+  --ease-weight: cubic-bezier(0.32, 1.06, 0.64, 1);
+}
+
+/* ---------- 作業パネル（このなかの動きが全部「鈍る」対象） ---------- */
+
+.mz-debt-drag-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 256px;
+  padding: 16px 0;
+  /* 積むたびに1pxずつ、最大8pxまで沈む。沈み込みそのものはdragの影響を受けない固定0.5s。
+     「返す」の瞬間だけ is-floating が一時的に1px持ち上げるが、戻り先はこの沈んだ位置のまま
+     ——沈みは戻らない、が企画の芯 */
+  transform: translateY(calc(var(--sink) * 1px));
+  transition: transform var(--base-panel) ease-out;
+}
+.mz-debt-drag-panel.is-floating {
+  animation: mz-debt-drag-panel-float var(--base-panel) ease-out;
+}
+@keyframes mz-debt-drag-panel-float {
+  0% {
+    transform: translateY(calc(var(--sink) * 1px - 1px));
+  }
+  100% {
+    transform: translateY(calc(var(--sink) * 1px));
+  }
+}
+
+/* ---------- 進捗バー ---------- */
+
+.mz-debt-drag-bar {
+  position: relative;
+  width: 256px;
+  height: 10px;
+  border-radius: 5px;
+  background: #dcdcda;
+  overflow: hidden;
+}
+
+.mz-debt-drag-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+  width: 0%;
+  border-radius: 5px;
+  background: #3d3d3d;
+  transition-property: width;
+  transition-duration: calc(var(--base-bar) * var(--drag));
+  /* 急ぐ＝ここだけ行き過ぎてよい。dragが上がっても緩急は弱めない（報酬は常に強いまま） */
+  transition-timing-function: var(--ease-bounce);
+}
+/* 返済は跳ねずに戻る。祝いもしないし悔しがらせもしない */
+.mz-debt-drag-bar-fill.is-return {
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 伸びた先端が一瞬だけ白く光る。報酬の一部なのでdragでは鈍らない、固定120ms */
+.mz-debt-drag-spark {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #fff;
+  animation: mz-debt-drag-spark-fade var(--base-spark) linear forwards;
+}
+@keyframes mz-debt-drag-spark-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* 完了：バーが1度だけ光る。この演出もdrag倍で鈍る（急いで着いたほど、着いた瞬間は重い） */
+.mz-debt-drag-bar-fill.is-glow {
+  animation: mz-debt-drag-bar-glow calc(var(--base-complete) * var(--drag)) ease-out;
+}
+@keyframes mz-debt-drag-bar-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+  45% {
+    box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.9);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+/* ---------- チップ（意味のない、触れるだけの部品。鈍りを読むための手がかり） ---------- */
+
+.mz-debt-drag-chips {
+  display: flex;
+  gap: 10px;
+}
+.mz-debt-drag-chip {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  font-size: 11px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+}
+.mz-debt-drag-chip-inner {
+  display: inline-block;
+}
+.mz-debt-drag-chip-inner.is-bouncing {
+  animation: mz-debt-drag-chip-bounce calc(var(--base-chip) * var(--drag)) var(--ease-weight);
+}
+@keyframes mz-debt-drag-chip-bounce {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.26, 0.8);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ---------- トグル（自動） ---------- */
+
+.mz-debt-drag-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+.mz-debt-drag-toggle-knob {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  background: #dcdcda;
+  transition: background-color calc(var(--base-toggle) * var(--drag)) var(--ease-weight);
+}
+.mz-debt-drag-toggle-knob::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform calc(var(--base-toggle) * var(--drag)) var(--ease-weight);
+}
+.mz-debt-drag-toggle.is-on .mz-debt-drag-toggle-knob {
+  background: #8c8c8c;
+}
+.mz-debt-drag-toggle.is-on .mz-debt-drag-toggle-knob::after {
+  transform: translateX(18px);
+}
+.mz-debt-drag-toggle-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+
+/* ---------- 床と層（負債） ---------- */
+
+.mz-debt-drag-floor {
+  width: 256px;
+  height: 1px;
+  background: #b3b3b3;
+}
+/* 上限(8枚)に達したことだけを、線の太さで言う。文字も数字も出さない */
+.mz-debt-drag-floor.is-capped {
+  height: 2px;
+}
+
+.mz-debt-drag-layers {
+  position: relative;
+  width: 256px;
+  height: 40px; /* 5px(1枚ぶんのピッチ) * 最大8枚。積んでも崩れても再レイアウトが起きない */
+}
+
+/* 1枚 = 高さ4pxの帯。パネル幅より左右6pxずつ内側。積んでも脈動・点滅はしない——溜まって沈黙するだけ */
+.mz-debt-drag-layer {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  /* 帯は3px・ピッチは5px（index.tsx の top: i*5）。初稿は4px帯を4pxピッチで積んでいて、
+     隣り合う層が接して1枚の塊に見え、枚数が数えられなかった。負債の量は「層の枚数」と
+     「動きの鈍さ」の2つだけで語る約束なので、数えられないのは企画の誤りだった。
+     2pxの隙間を空けて、地の色が層と層の間に見えるようにしてある。 */
+  height: 3px;
+  background: #8c8c8c;
+  opacity: 0;
+  transform: translateX(-16px);
+  animation: mz-debt-drag-layer-in calc(var(--base-layer) * var(--drag)) ease-out forwards;
+}
+@keyframes mz-debt-drag-layer-in {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 0.5;
+    transform: translateX(0);
+  }
+}
+.mz-debt-drag-layer.is-leaving {
+  animation: mz-debt-drag-layer-out calc(var(--base-layer) * var(--drag)) ease-out forwards;
+}
+@keyframes mz-debt-drag-layer-out {
+  from {
+    opacity: 0.5;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
+
+/* ---------- 操作 ---------- */
+
+.mz-debt-drag-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-debt-drag-actions button {
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+  font-weight: 700;
+  color: #3d3d3d;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-debt-drag-actions button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.mz-debt-drag-actions button:active:not(:disabled) {
+  transform: scale(1.06, 0.88);
+}
+.mz-debt-drag-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
+
+/* ---- reduced motion ----
+   標本フォルダ単体で他プロジェクトへ移しても機能するよう、自前でも面倒を見る。
+   drag による重さの表現・層の増減・進捗の値はすべて React の state が持っていて、
+   JS の setTimeout が刻む時間割（180ms遅れて層が入る・層が消えてからdragが戻る 等）は
+   CSSの尺に依存していない。よって尺を縮めても「何が起きたか」は最終状態として
+   正しく残る＝装飾側だけを縮めて安全。 */
+@media (prefers-reduced-motion: reduce) {
+  .mz-debt-drag-panel,
+  .mz-debt-drag-bar-fill,
+  .mz-debt-drag-toggle-knob,
+  .mz-debt-drag-toggle-knob::after,
+  .mz-debt-drag-actions button {
+    transition-duration: 0.01ms !important;
+  }
+  .mz-debt-drag-panel.is-floating,
+  .mz-debt-drag-spark,
+  .mz-debt-drag-bar-fill.is-glow,
+  .mz-debt-drag-chip-inner.is-bouncing,
+  .mz-debt-drag-layer,
+  .mz-debt-drag-layer.is-leaving {
+    animation-duration: 0.01ms !important;
+  }
+}
