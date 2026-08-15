@@ -65,12 +65,12 @@
   color: #8c8c8c;
 }
 
-/* panel1: 数値「48」。中心yを WP_PANEL1 の y(130) に合わせてあるので、
+/* panel1: 数値「48」。中心yを WP_PANEL1 の y(170) に合わせてあるので、
    バトン(正方形)がちょうどこの数値の行頭に立つ位置関係になる */
 .mz-scroll-baton-panel-1 .mz-scroll-baton-number {
   position: absolute;
   left: 70px;
-  top: 110px; /* 中心130 - line-height(40)/2 */
+  top: 150px; /* 中心170 - line-height(40)/2 */
   font-size: 40px;
   line-height: 40px;
   font-weight: 800;
