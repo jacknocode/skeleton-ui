@@ -1,0 +1,227 @@
+/* No.73「スクロールのバトン渡し」
+   再生ヘッドがユーザーの手にある唯一の標本。overshootが使えない場所の気持ちよさを
+   「受け渡しの重なり」「速度由来の誇張」「跡と受け皿」の3つで作る。モノクロ・自己完結。
+   フォルダ単体で他プロジェクトへコピーしても動く。prefers-reduced-motion は
+   グローバルCSSが面倒を見るので、ここでは個別対応しない（企画書のまま）。 */
+
+.mz-scroll-baton {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.mz-scroll-baton * {
+  box-sizing: border-box;
+}
+
+/* ---------- ステージ：スクロール容器 + 自作レール + 非スクロール層 ---------- */
+
+.mz-scroll-baton-stage {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.mz-scroll-baton-viewport {
+  width: 300px;
+  height: 260px; /* 訂正: 320→260。下の補助ボタン・レールぶんを含めて560×360のステージに収める */
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #eaeae8;
+  border-radius: 4px;
+  /* ブラウザ既定のスクロールバーは自作レールに置き換えるので消す */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.mz-scroll-baton-viewport::-webkit-scrollbar {
+  display: none;
+}
+/* scroll-snap は使わない。スナップは再生ヘッドを機械が奪い返すことになり、
+   「ヘッドはユーザーの手にある」というこの標本の主題が消える（企画書のまま）。 */
+
+.mz-scroll-baton-track {
+  position: relative;
+  width: 300px;
+}
+
+.mz-scroll-baton-panel {
+  position: relative;
+  width: 100%;
+}
+
+/* ---------- パネル中身 ----------
+   ここから下のy方向オフセットは、パネル高を300→260に詰めたのに合わせて
+   すべて260/300倍に詰め直してある（xと形状サイズは変更していない）。 */
+
+.mz-scroll-baton-heading {
+  position: absolute;
+  top: 24px; /* 旧28pxを縮尺で詰めた値 */
+  left: 28px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #8c8c8c;
+}
+
+/* panel1: 数値「48」。中心yを WP_PANEL1 の y(170) に合わせてあるので、
+   バトン(正方形)がちょうどこの数値の行頭に立つ位置関係になる */
+.mz-scroll-baton-panel-1 .mz-scroll-baton-number {
+  position: absolute;
+  left: 70px;
+  top: 150px; /* 中心170 - line-height(40)/2 */
+  font-size: 40px;
+  line-height: 40px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #3d3d3d;
+}
+
+/* panel2: 折れ線。右端の点(272,91)は描かない——そこはバトン(円)が担う */
+.mz-scroll-baton-line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.mz-scroll-baton-line polyline {
+  fill: none;
+  stroke: #8c8c8c;
+  stroke-width: 1.5;
+}
+
+/* panel3: 内訳の横棒グラフ。一番上の行(row1)は描かない——そこはバトン(横棒)が担う */
+.mz-scroll-baton-bars {
+  position: absolute;
+  inset: 0;
+}
+.mz-scroll-baton-row {
+  position: absolute;
+  left: 28px;
+  height: 8px;
+  border-radius: 4px;
+}
+/* row1(バトン自身の横棒)の中心yは70。跡・受け皿がビューポート内に収まるよう
+   WP_PANEL3 をパネル上寄りに調整したのに合わせて、row2〜4もここに詰めてある
+   （26px間隔は維持。index.tsx の WP_PANEL3 のコメント参照） */
+.mz-scroll-baton-row-2 {
+  top: 92px; /* 中心y=96 */
+  width: 30px;
+  background: #8c8c8c;
+}
+.mz-scroll-baton-row-3 {
+  top: 118px; /* 中心y=122 */
+  width: 22px;
+  background: #b3b3b3;
+}
+.mz-scroll-baton-row-4 {
+  top: 144px; /* 中心y=148 */
+  width: 16px;
+  background: #dcdcda;
+}
+
+/* ---------- 自作レール（再生ヘッドの明示） ---------- */
+
+.mz-scroll-baton-rail {
+  position: relative;
+  width: 3px;
+  height: 260px; /* 訂正: 320→260。viewportの高さに合わせる */
+  background: #dcdcda;
+  border-radius: 999px;
+  pointer-events: none;
+}
+.mz-scroll-baton-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  border-radius: 999px;
+  background: #6e6e6e;
+  /* 位置(translateY)は再生ヘッドそのものなので transition なし。
+     太さ(scaleY)も速度直結の誇張の一部として同じく transition なし。 */
+}
+
+/* ---------- 非スクロール層：跡・受け皿・バトン ----------
+   .mz-scroll-baton-stage の直下の子として viewport と並ぶ兄弟要素。
+   position: sticky ではなく、容器内の絶対座標 + transform だけで動かす
+   （viewportの内容がスクロールしても、この層自体はスクロールしない）。 */
+
+.mz-scroll-baton-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 300px;
+  height: 260px; /* 訂正: 320→260。viewportの高さに合わせる */
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* 送り手の跡。輪郭のみ・塗りなし。opacityだけがJSで直結（transitionなし） */
+.mz-scroll-baton-trace {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 1px solid #3d3d3d;
+  pointer-events: none;
+}
+
+/* 受け手の受け皿。破線・塗りなし。到着(p>=0.98)で実線に変わり、直後にopacity 0で抜ける */
+.mz-scroll-baton-socket {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 1px dashed #6e6e6e;
+  pointer-events: none;
+}
+.mz-scroll-baton-socket.is-solid {
+  border-style: solid;
+}
+
+/* バトンの外側＝位置・大きさ・角丸を持つ層。ここには transition を一切書かない。
+   指を止めれば止まり、戻せば巻き戻る。これが標本の受け入れ条件そのもの。 */
+.mz-scroll-baton-baton {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* バトンの内側＝速度由来の誇張(skew/stretch)だけを持つ入れ子要素。
+   塗り・角丸(親のborderRadiusをここで実描画)はここに置くが、transitionの対象は
+   transform だけに絞ってある。位置に時間が混ざらないよう、常に親から独立させる。 */
+.mz-scroll-baton-baton-inner {
+  width: 100%;
+  height: 100%;
+  background: #3d3d3d;
+  transition: none;
+}
+/* 止まったときだけ、傾き/伸びを120msで0へ戻す。位置を持つ外側(.mz-scroll-baton-baton)
+   には絶対に書かない——ここを一緒にすると位置に時間が入り、直結が壊れる。 */
+.mz-scroll-baton-baton-inner.is-settling {
+  transition: transform 120ms linear;
+}
+
+/* ---------- 操作 ---------- */
+
+.mz-scroll-baton-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-scroll-baton-actions button {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 11px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.2s ease-out;
+}
+.mz-scroll-baton-actions button:hover {
+  transform: translateY(-2px);
+}
+.mz-scroll-baton-actions button:active {
+  transform: scale(0.96);
+}

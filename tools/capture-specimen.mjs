@@ -12,6 +12,8 @@
    ホバー標本では「どう触るか」が中身そのものなので、
    撮り方を決めることは標本の説明を書くことと同じになる。 */
 import { chromium } from 'playwright'
+/* 環境に置かれている Chromium を直接指す（Playwright 同梱版とビルド番号がずれているため） */
+const CHROME = process.env.CAP_CHROME ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -187,6 +189,78 @@ const CHOREO = {
     await glide(page, row2, px(0.5, 1.3), 400)
     await sleep(1800)
   },
+  /* No.73〜75 は「基本イージングが使えない場所」の3種。
+     どれも“何が起きないか”が中身なので、起きない時間まで含めて撮り方になる。 */
+  'scroll-baton': async (page) => {
+    // 再生ヘッドはユーザーの手にあるので、まず手で回す。ホイールで少しずつ送る
+    const box = await page.locator('.mz-scroll-baton-viewport').boundingBox()
+    const cx = box.x + box.width / 2
+    const cy = box.y + box.height / 2
+    await page.mouse.move(cx, cy)
+    await sleep(700)
+    for (let i = 0; i < 4; i++) {
+      await page.mouse.wheel(0, 60)
+      await sleep(240)
+    }
+    await sleep(700) // 途中で止める。止めれば動きも止まる（この標本の第一の条件）
+    // 逆走。巻き戻して同じ絵に戻ることと、傾きが逆符号になることを見せる
+    for (let i = 0; i < 3; i++) {
+      await page.mouse.wheel(0, -60)
+      await sleep(220)
+    }
+    await sleep(600)
+    // ゆっくり送りきる。受け渡しの窓（送り手と受け手が半分ずつ見える）が読める速さ
+    await page.getByRole('button', { name: 'ゆっくり送る' }).click()
+    await sleep(2400)
+    // 一気に送る。速度由来の傾き・伸びが最大になるところ。同じ動きが速さ違いで見える
+    await page.getByRole('button', { name: '一気に送る' }).click()
+    await sleep(1600)
+  },
+  'estimate-narrowing': async (page) => {
+    await sleep(700)
+    // 6回測る。1本目の広さ→3本目（外れの帯）→そのあと別の場所へ狭まっていくところまで。
+    // 間隔を詰めると「閉じてくる」動きが沈殿に食われるので、1本ごとに静止を挟む
+    for (let i = 0; i < 6; i++) {
+      await page.getByRole('button', { name: '調べる' }).click()
+      await sleep(1250)
+    }
+    await sleep(900) // 狭まった現在の帯と、沈殿した過去の幅を並べて読む時間
+    await page.getByRole('button', { name: '別の市場' }).click()
+    await sleep(1200)
+  },
+  'debt-drag': async (page) => {
+    // 前半: 軽いうちにチップを触っておく。あとの鈍さは、この手ざわりとの差でしか読めない
+    await sleep(600)
+    await page.getByRole('button', { name: 'チップ A' }).click()
+    await sleep(320)
+    await page.getByRole('button', { name: 'チップ B' }).click()
+    await sleep(700)
+    // 急ぐ。報酬（即時・強い）と、180ms遅れて置かれる層（弱い）の分離が見えるよう間を置く
+    for (let i = 0; i < 4; i++) {
+      await page.getByRole('button', { name: '急ぐ' }).click()
+      await sleep(700)
+    }
+    await page.getByRole('button', { name: 'チップ A' }).click()
+    await sleep(320)
+    await page.getByRole('button', { name: 'チップ B' }).click()
+    await sleep(800)
+    // 上限まで積む。層が数えられることと、床が太くなることが見えるところ
+    for (let i = 0; i < 4; i++) {
+      await page.getByRole('button', { name: '急ぐ' }).click()
+      await sleep(520)
+    }
+    await sleep(500)
+    // いちばん鈍い状態で触る。ここが標本の主題（跳ね返らなくなっている）
+    await page.getByRole('button', { name: 'チップ A' }).click()
+    await sleep(400)
+    await page.getByRole('switch', { name: '自動' }).click()
+    await sleep(900)
+    // 返す。鈍いままの速さで走り、返し終わってから軽さが戻る
+    await page.getByRole('button', { name: '返す' }).click()
+    await sleep(1500)
+    await page.getByRole('button', { name: '返す' }).click()
+    await sleep(1500)
+  },
   'sankey-stream': async (page) => {
     // まず何も触らず、常時流れている待機状態を見せる
     await page.mouse.move(...px(0.5, 1.2))
@@ -208,7 +282,7 @@ const CHOREO = {
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
-const browser = await chromium.launch()
+const browser = await chromium.launch({ executablePath: CHROME })
 const ctx = await browser.newContext({
   viewport: { width: W, height: H },
   recordVideo: { dir, size: { width: W, height: H } },
