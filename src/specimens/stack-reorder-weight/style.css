@@ -1,0 +1,107 @@
+/* No.79「積み上げ棒の並び替え」
+   1本の棒を3層に分けて振り付ける:
+     .seat 横滑り（transitionのみ。尺と遅れは距離から index.tsx が計算）
+     .hop  弧（keyframes。同じ尺・遅れで縦に持ち上がる）
+     .bar  着地の潰れ（keyframes。飛行が終わる肩口に間に合うよう遅れを足す）
+   横と縦を層で分けるのは、translateX と translateY を1つの transform に
+   混ぜると弧の形が transition では作れないから。
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。 */
+
+.mz-stack-reorder-weight {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.mz-stack-reorder-weight-stage {
+  position: relative;
+  width: 266px; /* 席6 × 46px − 隙間ぶん */
+  height: 168px;
+  border-bottom: 2px solid #c6c6c4;
+}
+
+/* 席: 横位置だけを持つ。動かない棒は --dur が 0 なので文字どおり1pxも動かない */
+.mz-stack-reorder-weight-seat {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 36px;
+  transition: transform var(--dur) cubic-bezier(0.25, 0.8, 0.3, 1) var(--delay);
+}
+
+/* 弧: 飛んでいる間だけ持ち上がる。ease-in-out で上りと下りが対称になり、
+   横滑りの減速と合成されて放物線に近い軌跡が出る */
+.mz-stack-reorder-weight-hop {
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+}
+.mz-stack-reorder-weight-hop.is-moving {
+  animation: mz-stack-reorder-weight-hop var(--dur) ease-in-out var(--delay) both;
+}
+@keyframes mz-stack-reorder-weight-hop {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(calc(var(--arc) * -1));
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* 棒。着地の潰れは飛行が終わる80ms手前から始めて、接地の瞬間に最深になる */
+.mz-stack-reorder-weight-bar {
+  position: relative;
+  width: 36px;
+  border-radius: 6px 6px 0 0;
+  background: #b8b8b6;
+  transform-origin: 50% 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.mz-stack-reorder-weight-hop.is-moving .mz-stack-reorder-weight-bar {
+  animation: mz-stack-reorder-weight-land 0.26s ease-out both;
+  animation-delay: calc(var(--delay) + var(--dur) - 80ms);
+}
+@keyframes mz-stack-reorder-weight-land {
+  0% {
+    transform: scaleY(1);
+  }
+  40% {
+    transform: scaleY(calc(1 - var(--squash))) scaleX(calc(1 + var(--squash) * 0.8));
+  }
+  75% {
+    transform: scaleY(calc(1 + var(--squash) * 0.35));
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+.mz-stack-reorder-weight-label {
+  padding-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* ---------- 操作 ---------- */
+
+.mz-stack-reorder-weight-sort {
+  padding: 10px 26px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  font-size: 13px;
+  font-weight: 700;
+  color: #5c5c5c;
+  cursor: pointer;
+  transition: transform 0.15s ease-out;
+}
+.mz-stack-reorder-weight-sort:active {
+  transform: scale(0.96);
+}

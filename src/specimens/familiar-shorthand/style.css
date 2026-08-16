@@ -1,0 +1,222 @@
+/* No.76「見飽きたぶんだけ短くなる」
+   尺は index.tsx の SCHEDULE が正本。CSS は --windup / --tease / --land / --glow を
+   受け取って動くだけで、秒数をここに直書きしない（拍のビートバーと実演出が
+   同じ値から出ていることが、この標本の誠実さの担保になる）。
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。 */
+
+.mz-familiar-shorthand {
+  --ease-boing: cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 300px;
+}
+
+/* ---------- 舞台 ---------- */
+
+.mz-familiar-shorthand-stage {
+  position: relative;
+  width: 170px;
+  height: 130px;
+}
+
+.mz-familiar-shorthand-pedestal {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  width: 92px;
+  height: 10px;
+  border-radius: 5px;
+  background: #c6c6c4;
+  transform: translateX(-50%);
+}
+/* 溜め: 台座がぐっと沈んで身構える。予備動作は結果と逆方向へ */
+[data-phase='windup'] .mz-familiar-shorthand-pedestal {
+  animation: mz-familiar-shorthand-crouch var(--windup) ease-in-out;
+}
+@keyframes mz-familiar-shorthand-crouch {
+  0% {
+    transform: translateX(-50%) scale(1, 1);
+  }
+  60% {
+    transform: translateX(-50%) scale(1.12, 0.62);
+  }
+  100% {
+    transform: translateX(-50%) scale(1, 1);
+  }
+}
+
+/* じらしの影: 着地点の上空で輪郭だけが迷う。実体はまだ来ない */
+.mz-familiar-shorthand-ghost {
+  position: absolute;
+  bottom: 62px;
+  left: 50%;
+  width: 46px;
+  height: 46px;
+  margin-left: -23px;
+  border: 2px dashed #b3b3b1;
+  border-radius: 50%;
+  opacity: 0;
+}
+[data-phase='tease'] .mz-familiar-shorthand-ghost {
+  opacity: 1;
+  animation: mz-familiar-shorthand-hesitate 0.5s ease-in-out infinite;
+}
+@keyframes mz-familiar-shorthand-hesitate {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(-4deg);
+  }
+  30% {
+    transform: translate(3px, -4px) rotate(3deg);
+  }
+  65% {
+    transform: translate(-3px, -2px) rotate(-2deg);
+  }
+}
+
+/* メダル: 着地の340msだけは、何回目でも同じ緩急・同じ重みで落ちる */
+.mz-familiar-shorthand-medal {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  width: 46px;
+  height: 46px;
+  margin-left: -23px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.16);
+  display: grid;
+  place-items: center;
+  opacity: 0;
+}
+.mz-familiar-shorthand-medal.is-landed {
+  opacity: 1;
+}
+.mz-familiar-shorthand-medal-core {
+  width: 26px;
+  height: 26px;
+  border: 3px solid #7a7a78;
+  border-radius: 50%;
+}
+[data-phase='land'] .mz-familiar-shorthand-medal {
+  animation: mz-familiar-shorthand-drop var(--land) var(--ease-boing);
+}
+@keyframes mz-familiar-shorthand-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-44px) scale(0.72);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(3px) scale(1.1, 0.88);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 余韻: 輪がひと巡り広がる。慣れると短くなるが、消えはしない */
+.mz-familiar-shorthand-ring {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  width: 46px;
+  height: 46px;
+  margin-left: -23px;
+  border: 2px solid #9a9a98;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+[data-phase='glow'] .mz-familiar-shorthand-ring {
+  animation: mz-familiar-shorthand-ripple var(--glow) ease-out;
+}
+@keyframes mz-familiar-shorthand-ripple {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2);
+  }
+}
+
+/* ---------- 拍の物差し ---------- */
+
+.mz-familiar-shorthand-beats {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  height: 26px;
+}
+
+.mz-familiar-shorthand-beat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* 初回の長さ＝輪郭。ここは縮まない（削られた量の物差しになる） */
+.mz-familiar-shorthand-beat-was {
+  height: 8px;
+  border: 1px dashed #c0c0be;
+  border-radius: 4px;
+}
+
+/* いまの長さ＝実体。段が変わると 0.3s かけて縮む——削られる瞬間まで見せる */
+.mz-familiar-shorthand-beat-now {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 8px;
+  border-radius: 4px;
+  background: #8c8c8a;
+  transition: width 0.3s ease-out;
+}
+/* 着の拍だけ濃い。縮まないことがひと目で分かる */
+.mz-familiar-shorthand-beat[data-beat='land'] .mz-familiar-shorthand-beat-now {
+  background: #3d3d3d;
+}
+
+.mz-familiar-shorthand-beat-label {
+  font-size: 9px;
+  line-height: 1;
+  color: #a0a09e;
+  text-align: left;
+}
+
+/* ---------- 回数と操作 ---------- */
+
+.mz-familiar-shorthand-count {
+  font-size: 11px;
+  color: #8c8c8c;
+}
+
+.mz-familiar-shorthand-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.mz-familiar-shorthand-actions button {
+  padding: 9px 20px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+  font-size: 12px;
+  font-weight: 700;
+  color: #5c5c5c;
+  cursor: pointer;
+  transition: transform 0.15s ease-out;
+}
+.mz-familiar-shorthand-actions button:active {
+  transform: scale(0.96);
+}
+.mz-familiar-shorthand-actions button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}

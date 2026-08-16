@@ -1,0 +1,90 @@
+/* No.80「紙の押し込み」
+   標本本体（右の紙ボタン）はJSなし。:active と、押すとき／離すときで
+   長さの違う transition だけでできている。
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。 */
+
+.mz-paper-press {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mz-paper-press-pair {
+  display: flex;
+  gap: 28px;
+}
+
+.mz-paper-press-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.mz-paper-press-caption {
+  font-size: 10px;
+  color: #a0a09e;
+}
+
+/* ---------- 対照: 図鑑の看板ぷるん ---------- */
+
+.mz-paper-press-jelly {
+  padding: 14px 30px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  font-size: 13px;
+  font-weight: 700;
+  color: #5c5c5c;
+  cursor: pointer;
+}
+.mz-paper-press-jelly span {
+  display: inline-block;
+}
+.mz-paper-press-jelly span.is-boing {
+  animation: mz-paper-press-boing 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-paper-press-boing {
+  30% {
+    transform: scale(1.25, 0.75);
+  }
+  60% {
+    transform: scale(0.88, 1.12);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* ---------- 標本本体: 紙 ---------- */
+
+.mz-paper-press-paper {
+  padding: 14px 30px;
+  border-radius: 10px;
+  background: #fdfdfc;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 8px 18px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  font-weight: 700;
+  color: #4a4a48;
+  cursor: pointer;
+  /* 復路（離したとき）: 繊維が戻る320ms。跳ねない。影は60ms遅れて開く */
+  transform: none;
+  transition:
+    transform 0.32s cubic-bezier(0.22, 0.6, 0.3, 1),
+    box-shadow 0.36s ease-out 0.06s,
+    color 0.32s ease-out;
+}
+.mz-paper-press-paper:active {
+  /* 往路（押すとき）: 90msで沈む。潰すのは一瞬 */
+  transform: translateY(1px) scale(0.985);
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.12),
+    0 3px 7px rgba(0, 0, 0, 0.1);
+  color: #2e2e2c; /* 押している間だけ、インクがわずかに濃い（繊維が詰まる） */
+  transition:
+    transform 0.09s ease-out,
+    box-shadow 0.09s ease-out,
+    color 0.09s ease-out;
+}
