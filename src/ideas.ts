@@ -619,7 +619,8 @@ export const ideas: Idea[] = [
     title: '積み上げ棒の並び替え',
     motion: 'ソートすると棒たちが重さを持ってどさどさと入れ替わり、着地でわずかに潰れて戻る。移動距離が長い棒ほど大きく弧を描いて飛ぶ',
     tags: ['アナリティクス', 'グラフ', 'ソート'],
-    status: 'seed',
+    status: 'captured',
+    specimenId: 'stack-reorder-weight',
   },
   {
     id: 'annotation-stamp',
@@ -721,7 +722,8 @@ export const ideas: Idea[] = [
     motion:
       '回転も拡大もせず、1px沈んで0.985倍に締まるだけ。跳ね返さず、離すと紙の繊維が戻るようにゆっくり浮く',
     tags: ['入力', 'ボタン', '静かな演出'],
-    status: 'seed',
+    status: 'captured',
+    specimenId: 'paper-press',
   },
   {
     id: 'compound-snowball',
@@ -729,7 +731,8 @@ export const ideas: Idea[] = [
     motion:
       '同じ操作でも回を追うごとに増分の厚みが増していく。転がるほど加速し、止めた瞬間に自重でわずかに沈む',
     tags: ['アナリティクス', '成長', '数値'],
-    status: 'seed',
+    status: 'captured',
+    specimenId: 'compound-snowball',
   },
   {
     id: 'probability-band',
@@ -875,11 +878,15 @@ export const ideas: Idea[] = [
     specimenId: 'debt-drag',
   },
 
-  /* ---------- 次に育てる2種（No.73〜75 を作ってみて見えた穴） ----------
+  /* ---------- No.76〜80 で埋めた2つの穴（No.73〜75 を作ってみて見えていたもの） ----------
      3種は「図鑑の基本イージング（ぷるん）が意味の側から使えない場所」で揃えた回だった。
      作ってみて分かったのは、そのうち No.75 だけが別の壁を破っていたこと——
      図鑑の75種は No.75 を除いて全部「その場の1回」で閉じており、しかも
-     「画面に標本が1つだけ」で成立している。持ち越しと同居の2つが、まだ空いている。 */
+     「画面に標本が1つだけ」で成立している。持ち越しと同居の2つが空いていた。
+     この回は下の sprout 2種でその穴を1つずつ塞ぎ、さらに既存の種から
+     持ち越しの明るい側（複利の雪だるま）と同居の群れ版（積み上げ棒の並び替え）を
+     引き上げて2列にした。締めの5種目は逆に、いちばん小さい種（紙の押し込み）——
+     概念を重ねた回の最後に、JSゼロ・跳ねゼロの最小標本を置いた。 */
   {
     id: 'familiar-shorthand',
     title: '見飽きたぶんだけ短くなる',
@@ -891,7 +898,8 @@ export const ideas: Idea[] = [
        前置きだけを削って結果を削らない、が仮説。何回目でどこまで削り切るか（そして
        間が空いたら戻るのか）まで決めないと、ただの雑な短縮に落ちる。 */
     tags: ['汎用', '長期', '導入', '反復'],
-    status: 'sprout',
+    status: 'captured',
+    specimenId: 'familiar-shorthand',
   },
   {
     id: 'motion-triage',
@@ -903,6 +911,7 @@ export const ideas: Idea[] = [
        難所は遅らせる量——120msでは同時に見え、400msでは無関係な2つの出来事に割れる。
        図鑑がこれまで避けてきた「動き同士の衝突」を正面から扱う最初の標本になる。 */
     tags: ['汎用', '通知', '優先順位', '同時性'],
-    status: 'sprout',
+    status: 'captured',
+    specimenId: 'motion-triage',
   },
 ]

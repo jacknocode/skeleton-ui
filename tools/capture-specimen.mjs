@@ -261,6 +261,88 @@ const CHOREO = {
     await page.getByRole('button', { name: '返す' }).click()
     await sleep(1500)
   },
+  /* No.76〜80。76と78は「回を重ねること」自体が中身なので、
+     待ち時間の縮み方まで含めて撮り方になる（詰めると慣れ・加速が写らない） */
+  'familiar-shorthand': async (page) => {
+    // 4回受け取る。1回ごとの尺が縮み、ビートバーの実体が輪郭から離れていくところ
+    await sleep(700)
+    await page.getByRole('button', { name: '受け取る' }).click()
+    await sleep(2500) // 初回はフル尺(約2s)。ここを詰めると「初回は長い」が消える
+    await page.getByRole('button', { name: '受け取る' }).click()
+    await sleep(1900)
+    await page.getByRole('button', { name: '受け取る' }).click()
+    await sleep(1300)
+    await page.getByRole('button', { name: '受け取る' }).click()
+    await sleep(1100) // 4回目: 着地だけ。直前との差がいちばん読める並び
+    // 間を置くと2段冷める。前置きが少し帰ってくるところまで見せる
+    await page.getByRole('button', { name: '間を置く' }).click()
+    await sleep(700)
+    await page.getByRole('button', { name: '受け取る' }).click()
+    await sleep(1700)
+  },
+  'motion-triage': async (page) => {
+    // 主役=通知のまま2回。玉突きのリズム（0/260/440ms）を先に覚えてもらう
+    await sleep(700)
+    await page.getByRole('button', { name: '届く' }).click()
+    await sleep(1500)
+    await page.getByRole('button', { name: '届く' }).click()
+    await sleep(1400)
+    // 主役を替える。切り替え自体では何も鳴らない——次に届いたとき順番だけが変わる
+    await page.getByRole('radio', { name: '数値' }).click()
+    await sleep(600)
+    await page.getByRole('button', { name: '届く' }).click()
+    await sleep(1500)
+    await page.getByRole('radio', { name: 'リスト' }).click()
+    await sleep(600)
+    await page.getByRole('button', { name: '届く' }).click()
+    await sleep(1800)
+  },
+  'compound-snowball': async (page) => {
+    // 手で3枚。最初の増分が誤差にしか見えないことを、間を置いて見せる
+    await sleep(700)
+    for (let i = 0; i < 3; i++) {
+      await page.getByRole('button', { name: '積む' }).click()
+      await sleep(650)
+    }
+    // 転がす。間隔が縮んで加速し、増分が育ち、上限で自重の沈みまで一続き
+    await page.getByRole('button', { name: '転がす' }).click()
+    await sleep(6200)
+    await sleep(800) // 沈んだまま動かない山を見る余韻
+  },
+  'stack-reorder-weight': async (page) => {
+    await sleep(900) // 名前順の静止をまず見せる（動かない棒の基準になる）
+    await page.getByRole('button', { name: '値順に並べる' }).click()
+    await sleep(2000) // 最遠の棒の飛行+着地の潰れが終わるまで
+    await page.getByRole('button', { name: '名前順に戻す' }).click()
+    await sleep(2000)
+    // もう一往復。弧の高さと潰れの深さが棒ごとに違うことは2周目で読める
+    await page.getByRole('button', { name: '値順に並べる' }).click()
+    await sleep(2200)
+  },
+  'paper-press': async (page) => {
+    // 対照(ぷるん)を2回。図鑑の平常運転を先に見せる
+    await sleep(700)
+    await page.getByRole('button', { name: 'ぷるん' }).click()
+    await sleep(900)
+    await page.getByRole('button', { name: 'ぷるん' }).click()
+    await sleep(1000)
+    // 紙: 速いタップ2回（沈みは一瞬、浮きはゆっくり）
+    const b = await page.getByRole('button', { name: '承認する' }).boundingBox()
+    const cx = b.x + b.width / 2
+    const cy = b.y + b.height / 2
+    await page.mouse.move(cx, cy)
+    for (let i = 0; i < 2; i++) {
+      await page.mouse.down()
+      await sleep(140)
+      await page.mouse.up()
+      await sleep(800) // 320msの浮き + 影が60ms遅れて開くのを見る間
+    }
+    // 長押し。押している間は沈んだままで、何も跳ねないことがこの標本の中身
+    await page.mouse.down()
+    await sleep(1300)
+    await page.mouse.up()
+    await sleep(1100)
+  },
   'sankey-stream': async (page) => {
     // まず何も触らず、常時流れている待機状態を見せる
     await page.mouse.move(...px(0.5, 1.2))
