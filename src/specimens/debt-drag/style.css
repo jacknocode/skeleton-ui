@@ -300,24 +300,54 @@
 
 /* ---- reduced motion ----
    標本フォルダ単体で他プロジェクトへ移しても機能するよう、自前でも面倒を見る。
-   drag による重さの表現・層の増減・進捗の値はすべて React の state が持っていて、
-   JS の setTimeout が刻む時間割（180ms遅れて層が入る・層が消えてからdragが戻る 等）は
-   CSSの尺に依存していない。よって尺を縮めても「何が起きたか」は最終状態として
-   正しく残る＝装飾側だけを縮めて安全。 */
+
+   ここは一度「全部 0.01ms に潰して、状態は React が持っているから安全」と書いていたが、
+   **この標本に限ってそれは成り立たない**。負債の残高は数字で出しておらず、
+   「動きが鈍くなること」そのものが残高だからで、尺を潰すと 0枚 と 8枚 が同じ速さになり
+   標本の芯が丸ごと消える（実測・進捗バーの尺 0枚→8枚: 通常 0.26s→0.4467s に対し、
+   潰すと 1e-05s→1e-05s で比が 1.000 になる）。
+   尺が装飾なのか中身なのかは標本ごとに違い、ここでは中身のほうだった。
+
+   なので「消す」ではなく **比率を保ったまま全体を縮める**（No.61 で確立した
+   「止めるのではなく、情報が消えない形に落とす」の適用）。
+   drag 倍が乗っている尺だけ --rm-scale を掛け直し、drag が乗っていない装飾
+   （光・パネルの浮き・ボタン）は従来どおり潰す。
+
+   グローバルCSS（styles/global.css）の `* { transition-duration: 0.01ms !important }` は
+   詳細度 (0,0,0) なので、クラス指定 (0,1,0) + !important のこちらが勝つ。 */
 @media (prefers-reduced-motion: reduce) {
-  .mz-debt-drag-panel,
-  .mz-debt-drag-bar-fill,
+  .mz-debt-drag {
+    /* 通常の 1/4 まで詰める。8枚時でも bar は 260*1.718*0.25 ≒ 112ms で収まりつつ、
+       0枚(65ms)との差は残る——「重くなった」が手に残る最小限の尺 */
+    --rm-scale: 0.25;
+  }
+
+  /* drag が乗っている＝負債を語っている尺。潰さずに比率だけ保って縮める */
+  .mz-debt-drag-bar-fill {
+    transition-duration: calc(var(--base-bar) * var(--drag) * var(--rm-scale)) !important;
+  }
   .mz-debt-drag-toggle-knob,
-  .mz-debt-drag-toggle-knob::after,
+  .mz-debt-drag-toggle-knob::after {
+    transition-duration: calc(var(--base-toggle) * var(--drag) * var(--rm-scale)) !important;
+  }
+  .mz-debt-drag-chip-inner.is-bouncing {
+    animation-duration: calc(var(--base-chip) * var(--drag) * var(--rm-scale)) !important;
+  }
+  .mz-debt-drag-layer,
+  .mz-debt-drag-layer.is-leaving {
+    animation-duration: calc(var(--base-layer) * var(--drag) * var(--rm-scale)) !important;
+  }
+  .mz-debt-drag-bar-fill.is-glow {
+    animation-duration: calc(var(--base-complete) * var(--drag) * var(--rm-scale)) !important;
+  }
+
+  /* drag が乗っていない＝純粋な装飾。ここは従来どおり潰してよい */
+  .mz-debt-drag-panel,
   .mz-debt-drag-actions button {
     transition-duration: 0.01ms !important;
   }
   .mz-debt-drag-panel.is-floating,
-  .mz-debt-drag-spark,
-  .mz-debt-drag-bar-fill.is-glow,
-  .mz-debt-drag-chip-inner.is-bouncing,
-  .mz-debt-drag-layer,
-  .mz-debt-drag-layer.is-leaving {
+  .mz-debt-drag-spark {
     animation-duration: 0.01ms !important;
   }
 }
