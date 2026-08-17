@@ -1,0 +1,154 @@
+/* No.81「行きかけて、やめる」
+   上段=対照（keyframesを打ち直すだけの素朴な実装）、下段=標本（transitionを
+   張り直す実装）。動くのは.mz-reverse-midflight-panelのtranslateXだけ。
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。 */
+
+.mz-reverse-midflight {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 300px;
+}
+
+.mz-reverse-midflight-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  align-self: stretch;
+}
+
+.mz-reverse-midflight-caption {
+  width: 22px;
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  color: #a0a09e;
+  text-align: right;
+}
+
+/* ---------- 軌道 ---------- */
+
+.mz-reverse-midflight-track {
+  position: relative;
+  flex: 1;
+  height: 56px;
+  padding: 4px 32px 4px 4px; /* 右に余白: ぷるんの行き過ぎ分を軌道の外へ逃がして見せる */
+  border-radius: 12px;
+  background: #eaeae8;
+}
+
+/* 閉(左端)・開(右端)の位置に薄い目盛り。読み取りの補助でしかないので主張しない */
+.mz-reverse-midflight-mark {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 1px;
+  background: #d6d6d4;
+}
+.mz-reverse-midflight-mark-start {
+  left: 4px;
+}
+.mz-reverse-midflight-mark-end {
+  left: calc(4px + 240px);
+}
+
+/* 軌道を滑るパネル本体（引き出し）。x:0=閉, x:240=開 */
+.mz-reverse-midflight-panel {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 48px;
+  height: 48px;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  transform: translateX(0);
+}
+
+/* ---------- 対照: keyframesを打ち直すだけの素朴な実装 ----------
+   中断のたびにReactのkeyでこの要素ごと打ち直す。フレッシュな要素は
+   keyframesの0%を即座に適用するので、いま居た場所から新しい0%（＝反対の端）へ
+   瞬間移動してから走り出す——これがワープの正体で、対照が対照である証拠になる。
+   標本側と違って「中断されたか」を判定しないので、緩急も尺も毎回同じ。 */
+.mz-reverse-midflight-panel.is-baseline.is-open {
+  animation: mz-reverse-midflight-baseline-open 0.96s cubic-bezier(0.45, 0.05, 0.25, 1.35) both;
+}
+.mz-reverse-midflight-panel.is-baseline.is-close {
+  animation: mz-reverse-midflight-baseline-close 0.96s cubic-bezier(0.45, 0.05, 0.25, 1.35) both;
+}
+@keyframes mz-reverse-midflight-baseline-open {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(240px);
+  }
+}
+@keyframes mz-reverse-midflight-baseline-close {
+  from {
+    transform: translateX(240px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* ---------- 標本 ----------
+   見た目は対照と完全に同一にする（差は動きだけ、が主張の本体）。
+   transitionのdurationとtiming-functionはJS(index.tsx)が張り直すので、
+   ここには何も書かない——.mz-reverse-midflight-panelの基本スタイルをそのまま使う。 */
+
+/* ---------- 尺の物差し ----------
+   破線=全尺960ms（変わらない基準）、実体=今回張られた尺。
+   240px = 960msの縮尺で描く。標本側の軌道の長さと視覚的に対応させている。
+   幅にtransitionは付けない——尺は「なめらかに変わる量」ではなく「いま決まった事実」。 */
+.mz-reverse-midflight-ruler-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  align-self: stretch;
+}
+
+.mz-reverse-midflight-ruler {
+  position: relative;
+  flex: 1;
+  height: 8px;
+}
+.mz-reverse-midflight-ruler-full {
+  position: absolute;
+  inset: 0;
+  width: 240px;
+  border: 1px dashed #c0c0be;
+  border-radius: 4px;
+}
+.mz-reverse-midflight-ruler-now {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  border-radius: 4px;
+  background: #3d3d3d;
+  /* 幅にtransitionは付けない。尺は「いま決まった事実」で、なめらかに変わる量ではない */
+}
+
+/* ---------- 操作 ---------- */
+
+.mz-reverse-midflight-btn {
+  padding: 10px 26px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #4a4a48;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-reverse-midflight-btn:hover {
+  transform: translateY(-2px);
+}
+.mz-reverse-midflight-btn:active {
+  transform: scale(1.06, 0.9);
+}

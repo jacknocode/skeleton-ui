@@ -1,0 +1,183 @@
+/* No.82「同じ返事は束ねる」
+   標本側の肝は --amp という1本のカスタムプロパティ。@property で
+   <length> として型登録してあるので、この変数自体に transition が効く
+   ——書き換えるたびに animation を打ち直さなくても、いま育っている
+   途中の高さから滑らかに次の高さへ伸びる。
+   イージングは減速のみ（行き過ぎない）で統一。オーバーシュートさせると
+   「育っている途中に次のクリックが割り込む」場面で跳ね返りの向きが
+   一瞬逆転し得るため、この標本ではあえて使わない。
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。 */
+
+@property --amp {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+.mz-coalesce-repeat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+
+.mz-coalesce-repeat-pair {
+  display: flex;
+  align-items: flex-end;
+  gap: 40px;
+}
+
+.mz-coalesce-repeat-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.mz-coalesce-repeat-caption {
+  font-size: 10px;
+  color: #a0a09e;
+}
+
+/* ---------- 舞台（バッジ＋台） ---------- */
+
+.mz-coalesce-repeat-stage {
+  --amp: 0px;
+  position: relative;
+  width: 72px;
+  height: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.mz-coalesce-repeat-stand {
+  width: 56px;
+  height: 14px;
+  border-radius: 999px;
+  background: #dedede;
+}
+
+/* 台の下の影。寸法・濃さは対照/標本で完全に同じ——この標本が主張するのは
+   「束ねるか束ねないか」の一点だけなので、それ以外の見た目に差を作らない。
+   バッジが高く跳ねるほど影は薄く小さくなる（離れるほど光が回り込む、
+   という物理のふり）。標本は --amp の calc() で、対照は同じ関係を
+   keyframes に焼き直して、追従のしかたの手段だけを変えている */
+.mz-coalesce-repeat-shadow {
+  position: absolute;
+  bottom: 4px;
+  width: 44px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.14);
+  filter: blur(2px);
+  transform: scale(1);
+  opacity: 1;
+}
+.mz-coalesce-repeat-shadow.is-specimen {
+  transform: scale(calc(1 - var(--amp) / 46));
+  opacity: calc(1 - var(--amp) / 26);
+}
+
+.mz-coalesce-repeat-badge {
+  position: absolute;
+  bottom: 18px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.14);
+}
+.mz-coalesce-repeat-badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #6e6e6c;
+}
+
+/* ---------- 対照: keyframes を毎回打ち直す ----------
+   1回だけ押したときの高さは標本の先頭の跳ね（6px・340ms）と揃えてある。
+   左右の差は「2回目以降が来たときにどうなるか」だけに絞るため、
+   単発の返事そのものは左右で同一でなければならない */
+
+.mz-coalesce-repeat-badge.is-control.is-hit {
+  animation: mz-coalesce-repeat-control-bounce 340ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-coalesce-repeat-control-bounce {
+  0% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-6px) scale(1.03, 0.97);
+  }
+  62% {
+    transform: translateY(0.8px) scale(0.98, 1.02);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* 影も同じ拍で追従させる。数値は標本の calc(1 - amp/46) / calc(1 - amp/26)
+   を amp=6px（先頭の跳ね）と amp=-0.8px（62%の戻り過ぎ）に代入しただけ——
+   手段はkeyframesだが、影が語っている量は標本とまったく同じ関係式 */
+.mz-coalesce-repeat-shadow.is-control.is-hit {
+  animation: mz-coalesce-repeat-control-shadow 340ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-coalesce-repeat-control-shadow {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  30% {
+    transform: scale(0.8696);
+    opacity: 0.7692;
+  }
+  62% {
+    transform: scale(1.0174);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ---------- 標本: --amp を書き換えるだけ。animationは無い ---------- */
+
+.mz-coalesce-repeat-badge.is-specimen {
+  /* transform 自身には transition を付けない。--amp が親（stage）で
+     連続的に補間されているので、calc() で参照するだけで毎フレーム
+     追従する。ここにも transition を足すと二重に緩衝がかかって遅れる */
+  transform: translateY(calc(-1 * var(--amp)));
+}
+.mz-coalesce-repeat-stage.is-specimen {
+  /* 先頭の1回はここで340ms・遅延ゼロの跳ねになる。以後の育ちも同じ式を使う */
+  transition: --amp 340ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+/* 窓が閉じたときだけ着地用の尺に差し替える。跳ね返さない・260msでゆっくり */
+.mz-coalesce-repeat-stage.is-specimen.is-landing {
+  transition: --amp 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ---------- 発火ボタン ---------- */
+
+.mz-coalesce-repeat-fire {
+  padding: 10px 30px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  font-size: 13px;
+  font-weight: 700;
+  color: #5c5c5c;
+  cursor: pointer;
+  transition: transform 0.15s ease-out;
+}
+.mz-coalesce-repeat-fire:active {
+  transform: scale(0.96);
+}
