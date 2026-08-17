@@ -343,6 +343,100 @@ const CHOREO = {
     await page.mouse.up()
     await sleep(1100)
   },
+  /* No.81〜83 は「動きが終わる前に、次の入力が来る」の3種。
+     どれも中断した瞬間の1〜2フレームが中身なので、撮り方は
+     「中断していない回」を先に見せてから中断する、の順で固定する。
+     比較対象が無いと、中断が中断として読めない。 */
+  'reverse-midflight': async (page) => {
+    const btn = page.getByRole('button')
+    // 1回目: 中断しない全走行。到着のぷるんと、物差しが全尺であることを先に見せる
+    await sleep(700)
+    await btn.click()
+    await sleep(1500)
+    await btn.click()
+    await sleep(1500)
+    // 2回目: 道半ば(約300ms)で中断。対照が右端へワープし、標本はその場から引き返す
+    await btn.click()
+    await sleep(300)
+    await btn.click()
+    await sleep(1600)
+    // 3回目: もっと早く(160ms)中断。戻る距離が短いぶん、物差しの実体も短くなる
+    await btn.click()
+    await sleep(160)
+    await btn.click()
+    await sleep(1400)
+    // 4回目: 引き返している途中でもう一度気が変わる（中断の中断）
+    await btn.click()
+    await sleep(420)
+    await btn.click()
+    await sleep(300)
+    await btn.click()
+    await sleep(1800)
+  },
+  'coalesce-repeat': async (page) => {
+    const fire = page.getByRole('button', { name: '更新' })
+    // 単発を2回。左右がまったく同じ返事をすることを先に見せる（差は連打でしか出ない）
+    await sleep(700)
+    await fire.click()
+    await sleep(1000)
+    await fire.click()
+    await sleep(1300)
+    // 8連打。対照は8回ぴくつき、標本は1つの拍のまま高さだけ育つ
+    for (let i = 0; i < 8; i++) {
+      await fire.click()
+      await sleep(120)
+    }
+    await sleep(1500) // 窓が閉じてから着地しきるまで
+    // 3連打。頭打ちに届かない中間の高さも見せる
+    for (let i = 0; i < 3; i++) {
+      await fire.click()
+      await sleep(140)
+    }
+    await sleep(1600)
+  },
+  'catch-inertia': async (page) => {
+    const box = await page.locator('.mz-catch-inertia-viewport').boundingBox()
+    const cy = box.y + box.height / 2
+    const right = box.x + box.width - 40
+    /** 指で投げる。一気に飛ばすと速度が出ないので、細かく刻んで動かす */
+    const fling = async (steps, dx) => {
+      await page.mouse.move(right, cy)
+      await page.mouse.down()
+      for (let i = 1; i <= steps; i++) {
+        await page.mouse.move(right - i * dx, cy)
+        await sleep(8)
+      }
+      await page.mouse.up()
+    }
+    await sleep(600)
+    // 1回目: 投げて、掴まずに滑り切らせる（惰性の全長を先に見せる）
+    await fling(12, 16)
+    await sleep(1600)
+    // 2回目: 滑走中に掴む。ここが主題——止まりに尺が無いこと
+    await page.mouse.move(right, cy)
+    await page.mouse.down()
+    for (let i = 1; i <= 10; i++) {
+      await page.mouse.move(right - i * 14, cy)
+      await sleep(8)
+    }
+    await page.mouse.up()
+    await sleep(260) // 滑っている最中
+    await page.mouse.down() // 掴む
+    await sleep(900) // 掴んだまま動かさない。止まったことだけを見せる時間
+    await page.mouse.move(right - 60, cy)
+    await sleep(120)
+    await page.mouse.up()
+    await sleep(1400)
+    // 3回目: 「掴めない」に切り替えて、同じことをする
+    await page.getByRole('switch').click()
+    await sleep(500)
+    await fling(12, 16)
+    await sleep(260)
+    await page.mouse.down() // 触っても止まらない
+    await sleep(700)
+    await page.mouse.up()
+    await sleep(1500)
+  },
   'sankey-stream': async (page) => {
     // まず何も触らず、常時流れている待機状態を見せる
     await page.mouse.move(...px(0.5, 1.2))
