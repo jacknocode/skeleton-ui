@@ -1,26 +1,258 @@
+/* No.84「同じものが場所を変える」
+   一覧の6枚のカードは常に同じDOMノードとしてstage内に存在し続ける(unmount/remountしない)。
+   位置・寸法(left/top/width/height)はReactが即座に書き換える(=ワープ)。それを隠すのが
+   index.tsx側のFLIP(主役だけに掛かるtransform)で、CSSにここの遷移は書かない。
+   周りの5枚の退場だけがCSS側の責務(opacity + scaleのみ。translateは一切使わない)。
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。 */
+
 .mz-shared-element-carry {
-  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ---------- 対照トグル(引き継ぐ/引き継がない) ---------- */
+
+.mz-shared-element-carry-topbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mz-shared-element-carry-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px 7px 10px;
   border-radius: 999px;
+  background: #e6e6e4;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.25s,
+    color 0.25s,
+    opacity 0.2s;
+}
+.mz-shared-element-carry-toggle.is-on {
+  background: #4c4c4c;
+  color: #f5f5f3;
+}
+.mz-shared-element-carry-toggle:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.mz-shared-element-carry-toggle-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #b3b3b3;
+  transition: background-color 0.25s;
+}
+.mz-shared-element-carry-toggle.is-on .mz-shared-element-carry-toggle-dot {
+  background: #f5f5f3;
+}
+
+/* ---------- 舞台。カードと本文パネルはここに絶対配置される ---------- */
+
+.mz-shared-element-carry-stage {
+  position: relative;
+}
+
+/* ---------- カード(一覧の6枚 = 詳細の見出し1枚) ----------
+   left/top/width/heightはJS(index.tsx)が毎レンダー書き換える即時値(=ワープ)。
+   ここで担うのは主役ではないカードの退場(opacity + scale)だけ。
+   主役(is-away が付かないカード)にはopacity/transformのCSS遷移ルールを一切持たせない
+   ——主役の不透明度は常に1、その動きはJSが張るtransition一本だけが担う。 */
+.mz-shared-element-carry-card {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 14px;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  cursor: default;
+  /* FLIPのscaleはleft/topから計算した差分transformなので、原点は必ず左上に固定する。
+     center(既定値)のままだと拡縮の中心がズレて主役が余計な距離をまわり道してしまう。 */
+  transform-origin: top left;
+  /* 戻る方向(is-awayが外れてこのスタイルへ向かう遷移): 詳細の調度品(本文パネル、
+     120msで消える)が消えきってから追いかける。一覧カードが先に戻ってしまうと、
+     消えかけの調度品と復帰中のカードが重なって見え、開くときと同じ3層問題が
+     逆向きに起きる。 */
+  transition:
+    opacity 220ms ease-out 130ms,
+    transform 220ms ease-out 130ms;
+}
+.mz-shared-element-carry-card[role='button'] {
+  cursor: pointer;
+}
+.mz-shared-element-carry-card[role='button']:hover {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.14);
+}
+
+/* 周りの5枚の退場: 同じ場所で薄れて少し縮むだけ。translateは絶対に足さない
+   (足した瞬間、退場が主役の移動と混ざって「どれが昇格したか」が読めなくなる)。
+   退場方向(このスタイルへ向かう遷移)は遅らせない——足場を空けるのは早いほうがいい。
+   遅らせるのは戻る方向(上のベース側で130ms delayを持つ)だけでいい。 */
+.mz-shared-element-carry-card.is-away {
+  opacity: 0;
+  transform: scale(0.96);
+  pointer-events: none;
+  transition:
+    opacity 220ms ease-out,
+    transform 220ms ease-out;
+}
+
+/* 詳細の見出しになっている間は角を少し弱める程度の差異のみ。位置形状はJSの矩形任せ */
+.mz-shared-element-carry-card.is-detail {
+  cursor: default;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* ---------- カードの中身: 一覧用/詳細用の2レイヤーを重ねてクロスフェード ----------
+   器(.mz-shared-element-carry-card)が先に着き、中身は260ms地点から180msかけて
+   遅れて名乗る(移動の尺420msより20ms長く、器の到着に少し遅れて中身の announcement が終わる)。 */
+.mz-shared-element-carry-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 180ms ease-out 260ms;
+}
+.mz-shared-element-carry-content-list {
+  padding: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  opacity: 1;
+}
+.mz-shared-element-carry-content-detail {
+  padding: 0 20px;
+  gap: 14px;
+}
+.mz-shared-element-carry-card.is-detail .mz-shared-element-carry-content-list {
+  opacity: 0;
+}
+.mz-shared-element-carry-card.is-detail .mz-shared-element-carry-content-detail {
+  opacity: 1;
+}
+
+.mz-shared-element-carry-chip {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: #d6d6d4;
+  flex: none;
+}
+.mz-shared-element-carry-chip-lg {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: #3d3d3d;
+}
+
+.mz-shared-element-carry-label {
   font-size: 13px;
   font-weight: 800;
-  color: #5c5c5c;
+  color: #4a4a48;
+}
+.mz-shared-element-carry-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: #b3b3b3;
+}
+.mz-shared-element-carry-heading {
+  font-size: 19px;
+  font-weight: 800;
+  color: #3d3d3d;
+  letter-spacing: 0.01em;
+}
+
+/* ---------- 対照(クロスフェード): 主役のopacityを直接1→0→1で揺らす ----------
+   位置・寸法はFLIPと同じ最終形へ即座にワープしたまま(=見た目にワープが残る)、
+   不透明度だけをこのkeyframesで揺らす。中間点(45〜55%)でopacityが0になる区間を
+   意図的に確保してある——「消えて生まれ直した」ことが指で(数字で)確かめられるように。 */
+@keyframes mz-shared-element-carry-crossfade {
+  0% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 0;
+  }
+  55% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ---------- 詳細の本文パネル。主役ではない、ただの付随情報 ---------- */
+
+/* 詳細の調度品(本文パネル + 「一覧へ戻る」)は、主役より先に名乗ってはいけない。
+   カード内側の中身クロスフェード(260ms delay, 180ms)と同じく「器が先、中身はあと」を
+   画面全体にも適用する: 開くときは主役の移動(420ms)が実質着地したあとの300ms地点から
+   180msかけて現れる(カード内の中身と同じ尺で揃える)。閉じるときは逆——一覧が主役の
+   帰還で埋まる前に、詳細の調度品を遅らせず(delay 0)120msで先に消しておく。
+   遷移方向で違う値を使うため、"退出時に適用される transition" はベース(非is-visible)側に、
+   "入場時に適用される transition" は.is-visible側に書く(CSSは変化後の状態のtransition値を
+   使うので、この書き分けだけで往路/復路の尺・delayを別々にできる)。 */
+.mz-shared-element-carry-body {
+  position: absolute;
+  left: 0;
+  box-sizing: border-box;
+  padding: 14px 20px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  /* 閉じる方向(このスタイルへ向かう遷移): 遅らせず120msで先に消える */
+  transition:
+    opacity 120ms ease-out,
+    transform 120ms ease-out;
+}
+.mz-shared-element-carry-body.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  /* 開く方向(このスタイルへ向かう遷移): 主役の着地後(300ms)から180msで現れる */
+  transition:
+    opacity 180ms ease-out 300ms,
+    transform 180ms ease-out 300ms;
+}
+
+.mz-shared-element-carry-body-text {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #6b6b69;
+}
+
+.mz-shared-element-carry-close {
+  align-self: flex-start;
+  margin-bottom: 14px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #6b6b69;
   cursor: pointer;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-shared-element-carry.is-active {
-  animation: mz-shared-element-carry-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-@keyframes mz-shared-element-carry-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+/* ---------- ヒント ---------- */
+
+.mz-shared-element-carry-hint {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #b3b3b3;
 }
