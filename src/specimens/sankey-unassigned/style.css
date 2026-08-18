@@ -1,0 +1,141 @@
+.mz-sankey-unassigned {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.mz-sankey-unassigned-chart {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* ---- 帯（流路） ----
+   満ちる動きは「見えたときに一度だけ」。原資の側から行き先へ、左端から右端へ拭き上がる。
+   粒は持たない（No.64 との違い）——常設の観測面で鳴り続ける合図は2度目からノイズなので、
+   一度満ちたらそこで止まり、量は幅だけが語る */
+.mz-sankey-unassigned-ribbon {
+  cursor: pointer;
+  stroke: #eaeae8; /* 隣の帯との境目を地色の細線で切る。左側は隙間なく接するので、これが唯一の区切り */
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  animation: mz-sankey-unassigned-fill 0.52s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* すきまの開け閉めは節点の補間で見せる。ここだけ「行き過ぎて戻る」を使い、
+     外へ開くときに帯が一度ふくらんでから収まる（量が動いたのではなく、並びが開いた合図） */
+  transition:
+    d 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-sankey-unassigned-fill {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* なぞった流路だけが残り、ほかは薄まる。止めるものが無いので、ここは濃さだけの話になる */
+.mz-sankey-unassigned-ribbon.is-faded {
+  opacity: 0.28;
+  transition:
+    d 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---- 原資の柱 ----
+   行き先が何本あっても1本。中の積みだけが「収入 / 取り崩し」に分かれる */
+.mz-sankey-unassigned-node {
+  fill: #3d3d3d;
+}
+.mz-sankey-unassigned-node.is-income {
+  fill: #6e6e6e;
+}
+.mz-sankey-unassigned-node.is-drawdown {
+  fill: #3d3d3d;
+}
+
+/* ---- 名前 ---- */
+.mz-sankey-unassigned-label {
+  font-size: 9px;
+  font-weight: 700;
+  fill: #6e6e6e;
+  transition: fill 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.mz-sankey-unassigned-label.is-lit {
+  fill: #3d3d3d;
+}
+.mz-sankey-unassigned-label.is-faded {
+  fill: #b3b3b3;
+}
+/* 行き先の名前は帯と同じ段差で遅れて現れる（遅れは JS が inline で配る） */
+.mz-sankey-unassigned-label.is-dest {
+  animation: mz-sankey-unassigned-name 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mz-sankey-unassigned-name {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.mz-sankey-unassigned-axis {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  fill: #b3b3b3;
+}
+
+/* ---- 操作 ---- */
+.mz-sankey-unassigned-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mz-sankey-unassigned-seg {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #dededc;
+}
+.mz-sankey-unassigned-seg button {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.25s,
+    color 0.25s,
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-sankey-unassigned-seg button.is-on {
+  background: #4c4c4c;
+  color: #f5f5f3;
+  transform: scale(1.04);
+}
+
+.mz-sankey-unassigned-replay {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  color: #5c5c5c;
+  cursor: pointer;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-sankey-unassigned-replay:active {
+  transform: scale(0.94);
+}
+
+.mz-sankey-unassigned-hint {
+  font-size: 11px;
+  color: #9a9a9a;
+}
