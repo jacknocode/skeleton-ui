@@ -82,6 +82,9 @@ import PaperPress from './specimens/paper-press'
 import ReverseMidflight from './specimens/reverse-midflight'
 import CoalesceRepeat from './specimens/coalesce-repeat'
 import CatchInertia from './specimens/catch-inertia'
+import SharedElementCarry from './specimens/shared-element-carry'
+import SkeletonHandoff from './specimens/skeleton-handoff'
+import MovedOrReplaced from './specimens/moved-or-replaced'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -1098,6 +1101,41 @@ export const specimens: Specimen[] = [
     ecology:
       '投げた帯が惰性で滑っている、その途中に指が触れる。正しい答えは「その場で、即、止まる」——尺ゼロ。この標本でいちばん誘惑が強いのは、止まりに 120〜150ms の減速をひと匙足すことで、単体で見るとそのほうが上品に見える。しかし指を置いた側から見ると、押さえた物がまだ 3〜4px 動いてから止まるので、掴み損ねた感触になる。止まりに尺を与えるとは「あなたの手より、いま走っている演出のほうが偉い」と言うことで、そこだけは譲ってはいけない。だから合図も動きでは出さない：影のオフセットが 1px 縮むだけ（90ms）で、止まったという事実そのものを返事にしている。実装は No.81 と同じ3手——`getComputedStyle` の transform を `DOMMatrixReadOnly` で読み、`transition: none` で固定し、強制リフローで確定させる。惰性そのものは rAF ループではなく transition 1本で書いてある：放した瞬間の速度 v(px/ms) から距離を v×260 で出し、尺を |距離|×1.6ms（上限1100ms）、緩急は減速のみの cubic-bezier(0.16, 0.84, 0.44, 1)。摩擦を毎フレーム計算しなくても、速度から「どこまで・どれだけかけて」を1回決めれば惰性は成立する——そして transition で書いてあるからこそ、途中で掴める。掴んだあと離すときは、掴む前の速度を引き継がない。手が触れた時点で前の投擲は終わった出来事になっていて、そこから先は新しい指の話だから。端は跳ねない：越えた分は 0.35 倍に圧縮して指について来させ、離すと 420ms で吸い戻る。ここでぷるんを使うと端が二度鳴り、「行き止まり」ではなく「弾かれた」に読める。右上の「掴める／掴めない」は、対照を横に並べる代わりに同じ帯で切り替えるかたち。「掴めない」に倒すと、滑走中の指を丸ごと無視する——図鑑が80種を通して前提にしてきた「動きは最後まで再生される」が、実は特別扱いだったことを、この一手で指から確かめられる。',
     Component: CatchInertia,
+  },
+
+  /* ---------- No.84〜86「置き換わるとき、何を引き継ぐか」 ---------- */
+  {
+    id: 'shared-element-carry',
+    no: 84,
+    nameJa: '同じものが場所を変える',
+    nameEn: 'Shared Element Carry',
+    category: '遷移',
+    trigger: 'カードをクリックして開く／閉じる（上部トグルで対照）',
+    principles: ['同じものは一度も消さない', '移動に行き過ぎを入れない', '周りは退くが移動しない'],
+    ecology: 'TODO',
+    Component: SharedElementCarry,
+  },
+  {
+    id: 'skeleton-handoff',
+    no: 85,
+    nameJa: '骨から身へ',
+    nameEn: 'Skeleton Handoff',
+    category: '読み込み',
+    trigger: '「読み込む」を押す（回線と閾値を切り替えられる）',
+    principles: ['骨は実体の型', '届いた行から順に', '速い到着では骨を出さない'],
+    ecology: 'TODO',
+    Component: SkeletonHandoff,
+  },
+  {
+    id: 'moved-or-replaced',
+    no: 86,
+    nameJa: '動いたか、入れ替わったか',
+    nameEn: 'Moved or Replaced',
+    category: 'リスト',
+    trigger: '「並べ替え」と「次のページ」（上部トグルで語彙を混ぜる）',
+    principles: ['引き継ぐなら消さない', '引き継がないなら動かさない', '席番号は席に属する'],
+    ecology: 'TODO',
+    Component: MovedOrReplaced,
   },
 ]
 
