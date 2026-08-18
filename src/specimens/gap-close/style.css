@@ -1,0 +1,263 @@
+/* No.86「抜けたあとの席」
+   抜けることと、席が詰まることは別々の出来事。行は「席」（.mz-gap-close-seat、
+   高さを持つ外側）と「中身」（.mz-gap-close-content、横滑りと透明度を持つ内側）の
+   2層に分けてある。1層でやると height と transform が同じ transition に乗って
+   しまい、「先に抜く、それから詰める」の2拍を分離できない。
+
+   時間の骨格はCSSのtransition-delayに全部乗せてある:
+   中身は delay 0 で 240ms（減速のみ・跳ねない）滑って消える。席の高さは
+   delay 300ms のあとに 280ms（加速して減速・行き過ぎない）で 0 へ。
+   delay 300ms のあいだ、席は高さ44pxのまま——ここが「下の行は1pxも動かない」
+   240〜300msの区間を作っている。JS(index.tsx)はこの数値を書き換えない。
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。 */
+
+.mz-gap-close {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+}
+
+/* ---------- ヘッダー: 対照トグル ---------- */
+
+.mz-gap-close-head {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.mz-gap-close-mode {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+
+.mz-gap-close-mode-btn {
+  padding: 6px 13px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-gap-close-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-gap-close-mode-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+/* ---------- リスト ---------- */
+
+/* 5行ぶん(44px+8pxのgap)×5 = 260pxで固定。行が減っても、消えて空になっても、
+   この枠の高さは変わらない。capture.htmlのステージは place-items:center なので、
+   枠が縮むと標本全体（右上のトグルまで）が再センタリングで動いてしまい、
+   「席が閉じたぶんだけ下の行だけが上がる」という主題が「全体がずれた」に
+   化けて半分打ち消される——枠の上辺を動かない基準点として固定するのがここの要点 */
+.mz-gap-close-list-area {
+  height: 260px;
+}
+
+.mz-gap-close-list {
+  list-style: none;
+}
+
+.mz-gap-close-row {
+  position: relative;
+}
+
+/* 席: 中身を収める箱そのもの。高さ固定(44px)。height:auto は補間できないので
+   固定値からの transition で通す。overflow:hidden を忘れると、詰まる最中に
+   中身がはみ出す（削除中は中身の横滑りも同時に走っているため特に目立つ） */
+.mz-gap-close-seat {
+  height: 44px;
+  overflow: hidden;
+  border-radius: 10px;
+  transition: height 280ms cubic-bezier(0.4, 0, 0.2, 1) 300ms;
+}
+
+/* 中身: 席の中でラベルと×を持つ本体。動くのはこれだけ(横滑り+透明度) */
+.mz-gap-close-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 0 14px;
+  background: #fff;
+  transition:
+    transform 240ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 240ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.mz-gap-close-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3d3d3d;
+}
+
+.mz-gap-close-x {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  line-height: 1;
+  color: #b3b3b3;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-gap-close-x:hover:not(:disabled) {
+  background: #eaeae8;
+  color: #6e6e6e;
+}
+.mz-gap-close-x:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+/* margin-bottom の代わりに置いた実体div(8px)。marginにはboxが無く、詰まった
+   直後の新しい境界に繋がりの合図(線)を描く場所として使えないため、この形にした。
+   席と同じ delay/duration で 0 へ縮む＝視覚的には margin-bottom のtransitionと同じ */
+.mz-gap-close-gap {
+  height: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  transition: height 280ms cubic-bezier(0.4, 0, 0.2, 1) 300ms;
+}
+
+.mz-gap-close-connector {
+  width: 100%;
+  height: 1px;
+  background: transparent;
+}
+/* 繋がりの合図: 詰まり切った直後、新しい境界に灯る1本の線。派手には鳴らさない。
+   #d6d6d4 → #b3b3b3 と一段だけ濃くなって、また消える。「ここが繋がった」とだけ言う */
+.mz-gap-close-connector.is-signal {
+  animation: mz-gap-close-signal 220ms ease-out;
+}
+@keyframes mz-gap-close-signal {
+  0% {
+    background: transparent;
+  }
+  35% {
+    background: #d6d6d4;
+  }
+  65% {
+    background: #b3b3b3;
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+/* ---------- 削除中: 既定(順に) ----------
+   中身は delay 0 のまま即座に抜け始める。席とgapは delay 300ms を持っているので
+   0〜300msのあいだ高さは動かない——「抜ける」と「詰まる」を2拍に割る本体はここ */
+.mz-gap-close-row.is-removing .mz-gap-close-content,
+.mz-gap-close-row.is-emptying .mz-gap-close-content {
+  transform: translateX(22px);
+  opacity: 0;
+}
+.mz-gap-close-row.is-removing .mz-gap-close-seat,
+.mz-gap-close-row.is-removing .mz-gap-close-gap {
+  height: 0;
+}
+
+/* 最後の1行(is-emptying): 中身は抜けるが、席とgapの高さは縮めない。
+   詰める相手の行が存在しないので、詰めるという出来事自体が起きない
+   （下の空の器はJS側でrows.length===0になった時点で丸ごと置き換える） */
+
+/* ---------- 削除中: 対照(同時に) ----------
+   違いは開始のタイミングだけ。delayを外し、中身の尺も280msへ揃えて
+   「抜け」と「詰まる」を同時に走らせる。下の行が消えかけの行に乗り上げて見える。
+   束の間の潰れが目的なので、繋がりの合図(is-signal)はこのモードでは灯さない
+   （index.tsx側で分岐して灯さないようにしてある） */
+.mz-gap-close.is-simultaneous .mz-gap-close-seat,
+.mz-gap-close.is-simultaneous .mz-gap-close-gap {
+  transition-duration: 280ms;
+  transition-delay: 0s;
+}
+.mz-gap-close.is-simultaneous .mz-gap-close-content {
+  transition-duration: 280ms;
+}
+
+/* ---------- 戻す: 復帰した行の一瞬の収まり ----------
+   企画の主題（先に抜く/それから詰める/束ねない）とは別の、装飾に近い演出。
+   減速のみのイージングで、跳ねずにふわっと収まる */
+@keyframes mz-gap-close-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.mz-gap-close-row.is-entering .mz-gap-close-content {
+  animation: mz-gap-close-enter 220ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* ---------- 空の器 ----------
+   1行ぶんと同じ高さ(44px)+gap(8px)を保つ。器ごと畳むと周りのレイアウトが
+   飛ぶので、空であることも1つの状態として同じ場所に留める */
+.mz-gap-close-empty {
+  height: 44px;
+  margin-bottom: 8px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed #d6d6d4;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #b3b3b3;
+}
+
+/* ---------- 操作: 戻す ---------- */
+
+.mz-gap-close-undo {
+  align-self: center;
+  margin-top: 14px;
+  padding: 9px 22px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 800;
+  color: #4a4a48;
+  cursor: pointer;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s;
+}
+.mz-gap-close-undo:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.mz-gap-close-undo:active:not(:disabled) {
+  transform: scale(1.06, 0.9);
+}
+.mz-gap-close-undo:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+/* ---------- 動きを控えたい人へ ----------
+   グローバル側(src/styles/global.css)が transition-duration / animation-duration を
+   一律 0.01ms に潰す。ここではあえて transition-delay に手を出さない——
+   「抜けと詰まりの尺は詰めてよいが、先に抜く→それから詰めるという順序は残す」が
+   企画の要求で、delayが順序そのものを担っているため。詰まりが一瞬になっても
+   「まず中身が消え、一拍おいて席が閉じる」という構造は保たれる。 */
+@media (prefers-reduced-motion: reduce) {
+  .mz-gap-close-row.is-entering .mz-gap-close-content {
+    animation: none;
+  }
+}

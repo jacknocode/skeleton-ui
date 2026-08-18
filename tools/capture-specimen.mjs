@@ -437,6 +437,63 @@ const CHOREO = {
     await page.mouse.up()
     await sleep(1500)
   },
+  /* No.84〜86「置き換わるとき、何を引き継ぐか」の3種。
+     どれも対照が同居しているので、撮り方は「標本 → 対照」の2周が基本になる。
+     同じ操作を2回するので、間の取り方だけで差が見えるかどうかが決まる */
+  'shared-element-carry': async (page) => {
+    await sleep(700)
+    // 1周目: 引き継ぐ実装。開いて、本文が出そろうまで見せてから戻る
+    await page.getByRole('button', { name: '議事録 #128' }).click()
+    await sleep(1600)
+    await page.getByRole('button', { name: '戻る' }).click()
+    await sleep(1200)
+    // 2周目: 対照のクロスフェード。同じ1枚を同じ順で開く
+    await page.getByRole('button', { name: 'そのまま' }).click()
+    await sleep(600)
+    await page.getByRole('button', { name: '議事録 #128' }).click()
+    await sleep(1600)
+    await page.getByRole('button', { name: '戻る' }).click()
+    await sleep(1400)
+  },
+  'skeleton-handoff': async (page) => {
+    await sleep(600)
+    // 1周目: 骨が並び、届いた行から順に身へ変わる（行は1pxも動かない）
+    await page.getByRole('button', { name: '読み込む' }).click()
+    await sleep(2200)
+    // 2周目: 対照——骨の寸法が実体と違うと、置き換わるたび下の行が飛ぶ
+    await page.getByRole('switch').first().click()
+    await sleep(400)
+    await page.getByRole('button', { name: '読み込む' }).click()
+    await sleep(2200)
+    await page.getByRole('switch').first().click()
+    await sleep(500)
+    // 3周目: 速い応答（60ms）。閾値があるので骨は出ない
+    await page.getByRole('button', { name: '速い応答' }).click()
+    await sleep(1200)
+    // 4周目: 閾値なし。同じ60msでも骨がちらつく
+    await page.getByRole('switch').nth(1).click()
+    await sleep(400)
+    await page.getByRole('button', { name: '速い応答' }).click()
+    await sleep(1600)
+  },
+  'gap-close': async (page) => {
+    await sleep(700)
+    // 1件目: 3拍（抜ける→間→詰まる）がはっきり見える尺で置く
+    await page.getByRole('button', { name: '行 Cを消す' }).click()
+    await sleep(1500)
+    // 2件目: 束ねないことを見せる。1件目が落ち着いてから、もう1件
+    await page.getByRole('button', { name: '行 Bを消す' }).click()
+    await sleep(1500)
+    await page.getByRole('button', { name: '戻す' }).click()
+    await sleep(700)
+    await page.getByRole('button', { name: '戻す' }).click()
+    await sleep(1100)
+    // 対照: 同時に走らせると、下の行が消えかけの行に乗り上げる
+    await page.getByRole('button', { name: '同時に' }).click()
+    await sleep(500)
+    await page.getByRole('button', { name: '行 Cを消す' }).click()
+    await sleep(1400)
+  },
   'sankey-stream': async (page) => {
     // まず何も触らず、常時流れている待機状態を見せる
     await page.mouse.move(...px(0.5, 1.2))
