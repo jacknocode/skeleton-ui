@@ -437,6 +437,60 @@ const CHOREO = {
     await page.mouse.up()
     await sleep(1500)
   },
+  /* No.84: 引き継ぐ側を先に2往復見せてから、対照（引き継がない）で同じことをする。
+     この標本は「同じ操作をして最終形も同じなのに、読み方だけが変わる」ことが中身なので、
+     撮り方も同じ手順を2度なぞる形に固定する */
+  'shared-element-carry': async (page) => {
+    const card = page.locator('.mz-shared-element-carry-card').nth(2)
+    await sleep(900)
+    await card.click()
+    await sleep(1600)
+    await page.getByRole('button', { name: '一覧へ戻る' }).click()
+    await sleep(1500)
+    await card.click() // もう一度。引き継がれる1枚を目で追える回を2回作る
+    await sleep(1500)
+    await page.getByRole('button', { name: '一覧へ戻る' }).click()
+    await sleep(1300)
+    await page.getByRole('switch').click() // 引き継がない（クロスフェード）へ
+    await sleep(700)
+    await card.click()
+    await sleep(1600)
+    await page.getByRole('button', { name: '一覧へ戻る' }).click()
+    await sleep(1400)
+  },
+  /* No.85: 遅い回線で「届いた行から順に」を見せ、速い回線で骨が出ないことを見せ、
+     最後に閾値なしで骨がちらつくところまで撮る。3モードの順番が説明そのもの */
+  'skeleton-handoff': async (page) => {
+    const load = page.getByRole('button', { name: '読み込む' })
+    await sleep(700)
+    await load.click() // 遅い回線: 骨が並び、行ごとに違う時刻で身へ変わる
+    await sleep(2600)
+    await page.getByRole('radio', { name: '速い回線' }).click()
+    await sleep(600)
+    await load.click() // 骨を経由せず、空欄から直接身になる（ちらつきが無い）
+    await sleep(1600)
+    await page.getByRole('radio', { name: '閾値なし' }).click()
+    await sleep(600)
+    await load.click() // 同じ速さで骨が一瞬だけ出る＝速いのに壊れて見える
+    await sleep(1800)
+  },
+  /* No.86: 正しい語彙で「並べ替え → ページ送り」を見せてから、
+     「語彙を混ぜる」で同じ2操作を繰り返す。4回の操作が2×2の対照表になる */
+  'moved-or-replaced': async (page) => {
+    const sort = page.getByRole('button', { name: '並べ替え' })
+    const next = page.getByRole('button', { name: '次のページ' })
+    await sleep(900)
+    await sort.click() // 同じ5件が動く（消えない）
+    await sleep(1500)
+    await next.click() // 別の5件が来る（動かない）
+    await sleep(1500)
+    await page.getByRole('switch').click() // 語彙を混ぜる
+    await sleep(700)
+    await sort.click() // 並べ替えがクロスフェードになる＝値が書き換わったように見える
+    await sleep(1500)
+    await next.click() // ページ送りがスライドになる＝同じ行が並び替わったように見える
+    await sleep(1700)
+  },
   'sankey-stream': async (page) => {
     // まず何も触らず、常時流れている待機状態を見せる
     await page.mouse.move(...px(0.5, 1.2))
