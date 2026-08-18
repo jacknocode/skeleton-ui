@@ -1,26 +1,157 @@
 .mz-skeleton-handoff {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-skeleton-handoff.is-active {
-  animation: mz-skeleton-handoff-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 3択トグル（遅い回線 / 速い回線 / 閾値なし） ---------- */
+
+.mz-skeleton-handoff-modes {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #e6e6e4;
 }
-@keyframes mz-skeleton-handoff-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
+
+.mz-skeleton-handoff-mode-btn {
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-skeleton-handoff-mode-btn.is-active {
+  background: #4c4c4c;
+  color: #f5f5f3;
+}
+
+/* ---------- リスト本体 ---------- */
+
+.mz-skeleton-handoff-list {
+  width: 300px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f2f2f0;
+}
+
+.mz-skeleton-handoff-row {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+.mz-skeleton-handoff-row + .mz-skeleton-handoff-row {
+  border-top: 1px solid rgba(61, 61, 61, 0.08);
+}
+
+.mz-skeleton-handoff-cell {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.mz-skeleton-handoff-cell.is-value {
+  flex: none;
+  justify-content: flex-end;
+}
+
+/* 骨レイヤーと身レイヤーは同じセルに絶対配置で重なる。
+   セル・行そのものは一度もアンマウントされないので、置き換わっても行は動かない */
+.mz-skeleton-handoff-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+}
+.mz-skeleton-handoff-cell.is-value .mz-skeleton-handoff-layer {
+  justify-content: flex-end;
+}
+
+/* ---------- 骨 ---------- */
+
+.mz-skeleton-handoff-bone-layer {
+  opacity: 0;
+  transition: opacity 160ms ease-out;
+}
+.mz-skeleton-handoff-row[data-phase='skeleton'] .mz-skeleton-handoff-bone-layer {
+  opacity: 1;
+}
+
+.mz-skeleton-handoff-bone {
+  height: 13px;
+  border-radius: 7px;
+  background: #b3b3b3;
+  opacity: 0.5;
+}
+/* 呼吸は骨が実際に見えている間だけ。shimmerは使わない——進捗を騙らないため */
+.mz-skeleton-handoff-row[data-phase='skeleton'] .mz-skeleton-handoff-bone {
+  animation: mz-skeleton-handoff-breathe 1.4s ease-in-out infinite;
+}
+@keyframes mz-skeleton-handoff-breathe {
+  0%,
   100% {
-    transform: none;
+    opacity: 0.5;
   }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+/* ---------- 身 ---------- */
+
+.mz-skeleton-handoff-data-layer {
+  opacity: 0;
+  transform: translateY(2px);
+  transition:
+    opacity 200ms ease-out,
+    transform 200ms ease-out;
+  font-size: 14px;
+  font-weight: 700;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+.mz-skeleton-handoff-cell.is-value .mz-skeleton-handoff-data-layer {
+  font-weight: 800;
+}
+.mz-skeleton-handoff-data-layer.is-placeholder {
+  color: #b3b3b3;
+}
+.mz-skeleton-handoff-row[data-phase='data'] .mz-skeleton-handoff-data-layer {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* 空欄（届くと見込んで骨を出さずに待っている間）は骨も身も見えない */
+.mz-skeleton-handoff-row[data-phase='empty'] .mz-skeleton-handoff-data-layer {
+  opacity: 0;
+}
+
+/* ---------- 操作 ---------- */
+
+.mz-skeleton-handoff-load {
+  padding: 10px 26px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  font-size: 13px;
+  font-weight: 800;
+  color: #eaeae8;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.mz-skeleton-handoff-load:hover {
+  background: #545454;
+}
+
+.mz-skeleton-handoff-hint {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #b3b3b3;
 }
