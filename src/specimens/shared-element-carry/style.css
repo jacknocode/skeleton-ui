@@ -1,0 +1,245 @@
+/* No.84「同じものが場所を変える」
+   位置/寸法・transitionのdurationはJS(index.tsx)が直接張る。ここでは見た目(色・形)と、
+   「一覧⇄詳細のどちらが今表に出ているか」を決めるレイヤーの重ね方だけを定義する。
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。 */
+
+.mz-shared-element-carry {
+  width: 300px;
+  padding: 16px;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---------- 右上のスイッチ（対照との切り替え） ---------- */
+
+.mz-shared-element-carry-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mz-shared-element-carry-toggle {
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: #f0f0ee;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+.mz-shared-element-carry-toggle:hover {
+  background: #e6e6e4;
+  color: #5c5c5c;
+}
+.mz-shared-element-carry-toggle[aria-pressed='true'] {
+  /* フェード対照が選ばれている間: 標本(通常運転)ではないことを控えめに示す */
+  background: #3d3d3d;
+  color: #f0f0ee;
+}
+
+/* ---------- 舞台: 一覧層・詳細層・主役(star)を重ねて常設する ---------- */
+
+.mz-shared-element-carry-stage {
+  position: relative;
+  width: 268px;
+  height: 222px;
+}
+
+.mz-shared-element-carry-list,
+.mz-shared-element-carry-detail {
+  position: absolute;
+  inset: 0;
+}
+
+.mz-shared-element-carry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+}
+.mz-shared-element-carry-stage[data-mode='detail'] .mz-shared-element-carry-list {
+  pointer-events: none;
+}
+
+.mz-shared-element-carry-detail {
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+}
+.mz-shared-element-carry-stage[data-mode='detail'] .mz-shared-element-carry-detail {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ---------- 対照(フェードで繋ぐ): 層ごとまるごとクロスフェード ----------
+   主役の特別扱いを一切しない。位置とサイズは最終値へ瞬間移動（このCSSでは何もしない＝
+   list行・detail見出しはもとから自分の本来位置にレイアウトされているので「動かさない」が
+   自然に実現される）。opacityの往復だけで一覧→詳細を表現する。 */
+.mz-shared-element-carry-stage[data-link='fade'] .mz-shared-element-carry-list,
+.mz-shared-element-carry-stage[data-link='fade'] .mz-shared-element-carry-detail {
+  transition: opacity 180ms ease-out;
+}
+.mz-shared-element-carry-stage[data-link='fade'][data-mode='detail'] .mz-shared-element-carry-list {
+  opacity: 0;
+}
+/* detail層のopacity:0(list時)/1(detail時)は下のmode共通ルールがすでに面倒を見る。
+   フェード側で足すのはtransitionだけ */
+/* フェード側は見出し・本文・戻るを個別に演出しない。親レイヤーのopacityにそのまま乗る */
+.mz-shared-element-carry-stage[data-link='fade'] .mz-shared-element-carry-heading,
+.mz-shared-element-carry-stage[data-link='fade'] .mz-shared-element-carry-bar,
+.mz-shared-element-carry-stage[data-link='fade'] .mz-shared-element-carry-back {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- 一覧の行 ---------- */
+
+.mz-shared-element-carry-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 64px;
+  padding: 0 6px;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s;
+}
+.mz-shared-element-carry-row:hover {
+  background: #f4f4f2;
+}
+
+.mz-shared-element-carry-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.mz-shared-element-carry-row-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #3d3d3d;
+}
+.mz-shared-element-carry-row-sub {
+  font-size: 11px;
+  color: #b3b3b3;
+}
+
+/* ---------- 詳細 ---------- */
+
+.mz-shared-element-carry-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.mz-shared-element-carry-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  opacity: 0;
+  transform: translateY(6px);
+  /* durationとdelayはJSが張る。ここは初期(未入場)状態の値だけ */
+}
+.mz-shared-element-carry-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #3d3d3d;
+}
+.mz-shared-element-carry-subtitle {
+  font-size: 11px;
+  color: #b3b3b3;
+}
+
+.mz-shared-element-carry-body {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mz-shared-element-carry-bar {
+  height: 10px;
+  border-radius: 5px;
+  background: #eaeae8;
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.mz-shared-element-carry-back {
+  align-self: flex-start;
+  margin-top: 18px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: #f0f0ee;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: background-color 0.15s, color 0.15s;
+}
+.mz-shared-element-carry-back:hover {
+  background: #e6e6e4;
+  color: #5c5c5c;
+}
+
+/* ---------- サムネの箱（一覧40×40 / 詳細88×88 / 主役はJSが直接寸法を書く） ---------- */
+
+.mz-shared-element-carry-slot {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+}
+.mz-shared-element-carry-slot-list {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}
+.mz-shared-element-carry-slot-detail {
+  width: 88px;
+  height: 88px;
+  border-radius: 18px;
+}
+
+/* サムネの中身: 無地＋対角線1本。scaleで運んでも潰れて滲まない最小限の柄 */
+.mz-shared-element-carry-face {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #dcdcda;
+}
+.mz-shared-element-carry-face::after {
+  content: '';
+  position: absolute;
+  left: -20%;
+  top: 46%;
+  width: 140%;
+  height: 8%;
+  background: #fff;
+  opacity: 0.55;
+  transform: rotate(-28deg);
+}
+
+/* ---------- 主役: 一度も消えない1つのノード ----------
+   位置(top/left)・寸法(width/height)・transform・transitionはすべてJSが直接書く。
+   ここでは初期値と、レイヤーの上に重ねるための土台だけを決める。 */
+.mz-shared-element-carry-star {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  transform-origin: top left;
+  pointer-events: none;
+  z-index: 5;
+}

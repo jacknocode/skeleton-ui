@@ -1,0 +1,279 @@
+/* No.85「骨から身へ」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+
+   行の高さ(56px / 対照時44px)はindex.tsxのROW_H/MISMATCH_ROW_Hから来る。ここのpx値は
+   その数値をそのままCSSに書き写したもの——数字がズレたら両方直す（同じ値を二重管理している
+   ことの唯一の弱点。JSがstyle={{height}}で毎フレーム上書きするので、実際に効くのはJS側の値）。
+   骨(.mz-skeleton-handoff-skeleton)と身(.mz-skeleton-handoff-real)は同じ
+   .mz-skeleton-handoff-cell の中でinset:0の絶対配置に重ねる。これで「同じ矩形」が
+   構造として保証される——片方だけ幅や余白をいじって型が崩れる、という事故が起きない。 */
+
+.mz-skeleton-handoff {
+  width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---------- 上段: 操作 ---------- */
+
+.mz-skeleton-handoff-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mz-skeleton-handoff-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.mz-skeleton-handoff-btn {
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+.mz-skeleton-handoff-btn.is-primary {
+  color: #3d3d3d;
+}
+.mz-skeleton-handoff-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+.mz-skeleton-handoff-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.mz-skeleton-handoff-toggles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.mz-skeleton-handoff-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.mz-skeleton-handoff-toggle span {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+
+/* 小さなスイッチ。onで地が濃くなり、丸がスライドする */
+.mz-skeleton-handoff-switch {
+  position: relative;
+  flex: none;
+  width: 30px;
+  height: 16px;
+  border-radius: 999px;
+  background: #d6d6d4;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.mz-skeleton-handoff-switch.is-on {
+  background: #8c8c8c;
+}
+.mz-skeleton-handoff-switch i {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+}
+.mz-skeleton-handoff-switch.is-on i {
+  transform: translateX(14px);
+}
+
+/* ---------- リスト ---------- */
+
+.mz-skeleton-handoff-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* index.tsxの行間コメント参照。ROW_GAP相当 */
+}
+
+/* 1行。heightはindex.tsxがstyleで直接指定する（対照が倒れていない限り常にROW_H=56で不変）。
+   heightに transition は付けない——「行が飛ぶ」のはtransitionで滑らかに動くのではなく、
+   置き換わった瞬間に高さの数値そのものが変わる、という瞬間的な事故だから。 */
+.mz-skeleton-handoff-row {
+  position: relative;
+  width: 100%;
+}
+
+/* 右端の物差し: 行の上端の高さに、行の右端(＝リストの右端)まで届く1px線。
+   骨/身の切り替えで行が動けば、この線に対するズレとして目に見える。 */
+.mz-skeleton-handoff-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #d6d6d4;
+}
+
+/* 骨と身の重なり先。ここに inset:0 で2枚重ねる＝同じ矩形の保証 */
+.mz-skeleton-handoff-cell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.mz-skeleton-handoff-skeleton,
+.mz-skeleton-handoff-real {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ---------- 骨 ---------- */
+
+.mz-skeleton-handoff-skeleton {
+  opacity: 0;
+  /* 骨の消える速さ。企画: opacity 1→0 を120ms linear、身より少し短く終わらせて
+     入れ替わりの瞬間に地が透けないようにする */
+  transition: opacity 0.12s linear;
+}
+.mz-skeleton-handoff-skeleton.is-visible {
+  opacity: 1;
+}
+
+.mz-skeleton-handoff-sk-avatar,
+.mz-skeleton-handoff-sk-line {
+  border-radius: 999px;
+  background: linear-gradient(90deg, #dedede 0%, #dedede 38%, #f0f0ee 50%, #dedede 62%, #dedede 100%);
+  background-size: 260% 100%;
+}
+/* シマーは骨が実際に見えているときだけ回す。opacity:0の間も動かし続けると
+   「戻ってきたら急に進捗していた」という無意味なノイズになる */
+.mz-skeleton-handoff-skeleton.is-visible .mz-skeleton-handoff-sk-avatar,
+.mz-skeleton-handoff-skeleton.is-visible .mz-skeleton-handoff-sk-line {
+  /* 到着が近づいても加速させない＝終始1.6s linearの一定速度。進捗を騙らない */
+  animation: mz-skeleton-handoff-shimmer 1.6s linear infinite;
+}
+@keyframes mz-skeleton-handoff-shimmer {
+  from {
+    background-position: 140% 0;
+  }
+  to {
+    background-position: -140% 0;
+  }
+}
+
+.mz-skeleton-handoff-sk-avatar {
+  width: 32px; /* 実体のアバターと同径。ここが骨と身の「同寸」の最初の担保 */
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+}
+
+.mz-skeleton-handoff-sk-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.mz-skeleton-handoff-sk-line-title {
+  width: 132px; /* 実体の.mz-skeleton-handoff-title と同じ箱の大きさ */
+  height: 13px;
+}
+.mz-skeleton-handoff-sk-line-subtitle {
+  width: 92px; /* 実体の.mz-skeleton-handoff-subtitle と同じ箱の大きさ */
+  height: 11px;
+}
+
+/* ---------- 身 ---------- */
+
+.mz-skeleton-handoff-real {
+  opacity: 0;
+  transform: translateY(2px);
+  /* 骨→身の受け渡し。企画: opacity 0→1 / translateY(2px)→0 を160ms ease-out。
+     2pxより大きく動かすと「新しく登場した」に見えてしまうので、ごく浅い沈みだけ残す */
+  transition:
+    opacity 0.16s ease-out,
+    transform 0.16s ease-out;
+}
+.mz-skeleton-handoff-real.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* 対照ではなく既定の一部: 骨を一度も出さずに届いた行(=200ms未満で返った行)は
+   位置も動かさず、opacityだけ120msでふわりと置く。骨が出ていないので「受け渡し」の
+   演出をする理由が無い——ここでtranslateYを付けると、無かったはずの骨との対比が
+   嘘っぽく残ってしまう */
+.mz-skeleton-handoff-real.is-instant {
+  transform: none;
+  transition: opacity 0.12s ease-out;
+}
+
+.mz-skeleton-handoff-avatar {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  background: #cfcfcd;
+}
+
+.mz-skeleton-handoff-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.mz-skeleton-handoff-title {
+  width: 132px; /* 骨のtitleバーと同じ幅で固定し、はみ出しは省略——文字数で箱が動かないように */
+  height: 13px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 13px;
+  color: #3d3d3d;
+}
+.mz-skeleton-handoff-subtitle {
+  width: 92px;
+  height: 11px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 11px;
+  color: #b3b3b3;
+}
+
+/* ---------- 動きを控えたい人へ ----------
+   グローバルCSSの`*`ルールでも潰れるが、この標本フォルダ単体でコピーされたとき
+   （グローバルCSSを持ち込まないとき）にも同じ挙動になるよう、ここでも明示しておく。
+   シマーは完全に止めてよい（進捗の演出でしかない）。骨→身の受け渡しはopacity/transformの
+   transitionを0.01msにして「動きは無いが切り替わりは残す」——受け渡し自体は情報だから消さない。 */
+@media (prefers-reduced-motion: reduce) {
+  .mz-skeleton-handoff-sk-avatar,
+  .mz-skeleton-handoff-sk-line,
+  .mz-skeleton-handoff-skeleton,
+  .mz-skeleton-handoff-real,
+  .mz-skeleton-handoff-btn,
+  .mz-skeleton-handoff-switch,
+  .mz-skeleton-handoff-switch i {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
