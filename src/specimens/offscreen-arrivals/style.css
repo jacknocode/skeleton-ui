@@ -1,0 +1,286 @@
+/* No.88「まだ見えていないところで増える」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+
+   行は「席」(.mz-offscreen-arrivals-seat: 高さを持つ外側、0→52pxへ開く)と
+   「中身」(.mz-offscreen-arrivals-content: 44px固定、opacity/translateYを持つ内側)の2層。
+   gap-close(No.86)と同じ理由——height と transform/opacity を同じtransitionに乗せると
+   「開きながら滲む」の2つの動きを分離できない。52px = 行44px + 間8pxをこの1つの席に
+   まとめてある（間を別divにしていないのは、挿入のたびに足すscrollTop量(52px)と
+   席の目標高さを同じ数字で持ちたいため。数字が二重管理でズレる余地を減らしてある）。
+
+   気配(.mz-offscreen-arrivals-pill)はリストの外・.list-wrap の子として絶対配置で重ねる。
+   リストの内側（スクロールする側）に置くと、スクロールと一緒に流れていって
+   「縁に居続ける」が成立しない。 */
+
+.mz-offscreen-arrivals {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 300px;
+}
+
+/* ---------- ヘッダー: 対照トグル ---------- */
+
+.mz-offscreen-arrivals-head {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.mz-offscreen-arrivals-mode {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+
+.mz-offscreen-arrivals-mode-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-offscreen-arrivals-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-offscreen-arrivals-mode-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+/* ---------- リスト枠 ----------
+   幅300×高さ220で固定。状態によって伸縮しない——ステージがplace-items:centerで
+   中央寄せのため、枠が動くと標本全体が再センタリングでずれ「読んでいる行は動かない」が
+   「全体が動いた」に化けて主題が壊れる。中に何行積んでも、この外形は変わらない。 */
+
+.mz-offscreen-arrivals-list-wrap {
+  position: relative;
+  width: 300px;
+}
+
+.mz-offscreen-arrivals-list {
+  height: 220px;
+  overflow-y: auto;
+  /* 必須: これが無いとブラウザのscroll anchoringが「上に要素が増えたぶん」を勝手に
+     scrollTop側で補正してしまい、対照(そのまま挿し込む)モードでも既定モードと同じ
+     見え方になってしまう（=対照の意味が消える）。補正は必ずJS側(useLayoutEffect)で
+     明示的に行い、ブラウザの自動補正には一切頼らない。 */
+  overflow-anchor: none;
+  list-style: none;
+  border-radius: 14px;
+}
+
+.mz-offscreen-arrivals-seat {
+  height: 52px; /* 行44px + 間8px */
+  overflow: hidden;
+  transition: height 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+/* 挿入直後の1フレーム目はここで高さ0（=閉じた状態）。JS側が2フレーム後にこのクラスを
+   外すことで、通常状態の height:52px へtransitionが発火し「開く」動きになる */
+.mz-offscreen-arrivals-seat.is-entering {
+  height: 0;
+}
+
+.mz-offscreen-arrivals-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 0 14px 0 20px;
+  background: #fff;
+  border-radius: 10px;
+  transition:
+    opacity 160ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 160ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+/* 中身のにじみ出し: 席が開くのと同じ瞬間に開始、席より短い160msでopacity/位置を戻す。
+   「席の開き(200ms)」と「中身の滲み(160ms)」を別尺にしているのは、開き切る直前に
+   中身がすでに定位置へ収まっていた方が「硬く出た」感じが薄れるため */
+.mz-offscreen-arrivals-seat.is-entering .mz-offscreen-arrivals-content {
+  opacity: 0;
+  transform: translateY(2px);
+}
+
+.mz-offscreen-arrivals-label-group {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.mz-offscreen-arrivals-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #3d3d3d;
+}
+
+/* 「読みかけ」の印。地の色（カードの白）は変えない——変えると未読の縦線・fading の語彙と
+   衝突するため、印は控えめな添え字1つに留める。この印を持つ行は常に固定（READING_ROW_ID）で、
+   届いても増えても動かない「読み手の現在地」の代役になる */
+.mz-offscreen-arrivals-marker {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+
+.mz-offscreen-arrivals-time {
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #b3b3b3;
+}
+
+/* 未読の縦線。行の左端、高さは行(44px)の60%≒26px。外の出来事(新着)が「まだ読んでいない」を
+   持ち続けるための唯一の見た目——気配(pill)が消えたあと、この線に情報が引き継がれる */
+.mz-offscreen-arrivals-bar {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  width: 2px;
+  height: 26px;
+  border-radius: 1px;
+  background: #3d3d3d;
+  transform: translateY(-50%);
+  opacity: 0;
+}
+.mz-offscreen-arrivals-content.is-unread .mz-offscreen-arrivals-bar {
+  opacity: 1;
+}
+/* 「気配が消えた」ではなく「気配が行に移って、読まれて消えた」——薄れる開始位置を
+   transition-delayに持たせてあるので、reduced-motionで尺そのものが潰れても
+   「上から順に」という順序だけは残る（No.86の帰結をそのまま踏襲） */
+.mz-offscreen-arrivals-content.is-fading .mz-offscreen-arrivals-bar {
+  opacity: 0;
+  transition: opacity 900ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition-delay: var(--mz-oa-fade-delay, 0ms);
+}
+
+/* ---------- 気配(pill) ----------
+   リスト枠の上端に重ねて置く絶対配置。外の出来事は「いま・ここ」より弱く鳴らす
+   （共通設計則1）——だから跳ねる緩急(cubic-bezier(0.34,1.56,0.64,1))は使わず、
+   減速のみのcubic-bezier(0.22,0.61,0.36,1)に統一してある。 */
+
+.mz-offscreen-arrivals-pill {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transform: translate(-50%, 0) scale(1);
+  opacity: 1;
+  /* 初出時だけ再生される登場アニメーション。件数だけが増える2件目以降は、この要素自体が
+     DOMに留まり続けるので再発火しない＝「pill自体は上下に動かさない」が構造上そのまま保証される */
+  animation: mz-offscreen-arrivals-pill-in 160ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  transition:
+    transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 140ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes mz-offscreen-arrivals-pill-in {
+  from {
+    transform: translate(-50%, -6px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+/* 気配→行への受け渡しの前半: 縮んで消える。跳ねない・弱く鳴らす、の両方を守るため
+   scaleの終端は0.92どまり（0へ潰すと「消滅」に見えて、行への受け渡しに見えなくなる） */
+.mz-offscreen-arrivals-pill.is-dismissing {
+  transform: translate(-50%, 0) scale(0.92);
+  opacity: 0;
+}
+
+.mz-offscreen-arrivals-pill-slot {
+  position: relative;
+  display: inline-block;
+  width: 16px;
+  height: 14px;
+  overflow: hidden;
+  text-align: center;
+  vertical-align: middle;
+}
+.mz-offscreen-arrivals-pill-digit {
+  position: absolute;
+  inset: 0;
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
+}
+/* 件数だけのスロット送り。拍を増やさない(pillは動かない)ぶん、情報そのものである件数は
+   数字で運ぶ——共通設計則3の実装そのもの */
+.mz-offscreen-arrivals-pill-digit.is-out {
+  animation: mz-offscreen-arrivals-digit-out 120ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.mz-offscreen-arrivals-pill-digit.is-in {
+  animation: mz-offscreen-arrivals-digit-in 120ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes mz-offscreen-arrivals-digit-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-3px);
+    opacity: 0;
+  }
+}
+@keyframes mz-offscreen-arrivals-digit-in {
+  from {
+    transform: translateY(3px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ---------- 操作: 届く ---------- */
+
+.mz-offscreen-arrivals-arrive {
+  margin-top: 14px;
+  padding: 9px 26px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 800;
+  color: #4a4a48;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+.mz-offscreen-arrivals-arrive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+}
+.mz-offscreen-arrivals-arrive:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* ---------- 動きを控えたい人へ ----------
+   グローバル側(src/styles/global.css)がtransition-duration/animation-durationを一律
+   0.01msに潰す。ここではtransition-delayに一切触れない——「pillが消えてから縦線が
+   薄れ始める」「上から順に薄れる」という順序そのものがdelayに乗っているため、
+   尺が一瞬になっても「気配→行への受け渡し」という構造上の順序は保たれる。 */
