@@ -91,6 +91,9 @@ import MissedWhileAway from './specimens/missed-while-away'
 import OffscreenArrivals from './specimens/offscreen-arrivals'
 import TraceOverflow from './specimens/trace-overflow'
 import FocusTravel from './specimens/focus-travel'
+import PlaceLost from './specimens/place-lost'
+import TakenThere from './specimens/taken-there'
+import TwoCursors from './specimens/two-cursors'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -1215,6 +1218,39 @@ export const specimens: Specimen[] = [
     ecology:
       '図鑑の91種はぜんぶポインタか指で触られる前提で、**キーボードで動かされる標本が1つも無かった**。入口を「部品 × 動きの性格」ではなく入力デバイスに変えると出てくる穴で、埋めてみると3つの決めごとが出た。ひとつめ、**飛べる距離には上限がある**。輪郭が隣のセルへ移る（中心間116px）ときは飛んで経路を見せる——尺は距離に比例（120ms + 距離×0.5ms）、減速のみで行き過ぎない。だが行の折り返し（239px）・格子から出る（148px）・一周して戻る（242px）では飛ばさず、瞬間移動して到着側で 1.06→1 の締まりを120msだけ鳴らす。長い距離を飛ばすと、目が輪郭を追っているあいだに読み手のほうが行き先を見失う。No.85 の閾値、No.89 の「再生しない」に続く、図鑑で3例目の**動きを出さない判断**になる。ふたつめ、**連打は掴めない**。No.83（滑っているものを掴む）は「触れた瞬間その場で止める」が答えだったが、キーボードには掴む手が無い。代わりに入力の間隔で判定する——前回の移動から180ms以内に次が来たら、距離によらず尺ゼロ。実測でも連打中の輪郭は毎回いきなり次の席にいて（50ms時点で移動量が満額の116px）、手が止まったあとの1回だけが軌跡を持つ。判定に使うのは「前回からの間隔」だけで、次を待たない。未来を待って「これが最後かどうか」を決めようとすると、その待ち時間ぶん返事が遅れる——**最後の1回だけが飛ぶ**という見え方は、待った結果ではなく、待たなかった結果として出てくる。みっつめが芯で、**フォーカスは装飾ではなく一次情報**だということ。だからどちらのモードでも、Tabを押した瞬間（+0ms、transition なし）に到着先のセルの地が変わる。輪郭がまだ空中にあっても、いまどこに居るかはもう読める。輪郭が足しているのは「どこから来たか」だけで、「どこに居るか」を輪郭に預けない——No.88（動かさずに同じことを言う）が言う「情報は別の担体へ移す」を、動きを消さないまま先回りで適用したかたち。対照「いつも飛ぶ」は距離も間隔も見ずに常に220msで飛ぶ。連打すると輪郭は一度も席に着かないまま次の目的地へ向かい続け（実測で60ms時点の位置が毎回バラバラの中間座標）、輪郭でフォーカスを読もうとすると原理的に読めなくなる。それでも現在地が分かるのは、地の変化を対照でも殺していないからで、ここを対照でも同じにしてあるのは「動きの善し悪し」ではなく「情報を動きに預けるな」がこの標本の主張だからになる。企画は一度直している。初稿の閾値は240pxで、根拠を「格子の中心から遠いボタンまでの距離」に置いていたが、板が400×260に固定されている以上その距離は最大156pxにしかならず、そもそもコードが見ているのは**直前にフォーカスしていた要素から次の要素まで**の距離だった。比較する量が間違っていたので、閾値を実測の分布（116 / 148 / 239 / 242px）に合わせて130pxへ直した。**距離の閾値は絶対値では企画できず、部品の配置からしか決まらない**——机上で数値を決めてから並べるのではなく、並べてから測るしかない種類の設計がある。',
     Component: FocusTravel,
+  },
+  {
+    id: 'place-lost',
+    no: 93,
+    nameJa: '読んでいたものが消える',
+    nameEn: 'Place Lost',
+    category: 'フィードバック',
+    trigger: 'TODO',
+    principles: ['TODO'],
+    ecology: 'TODO',
+    Component: PlaceLost,
+  },
+  {
+    id: 'taken-there',
+    no: 94,
+    nameJa: '連れて行かれる',
+    nameEn: 'Taken There',
+    category: 'ナビゲーション',
+    trigger: 'TODO',
+    principles: ['TODO'],
+    ecology: 'TODO',
+    Component: TakenThere,
+  },
+  {
+    id: 'two-cursors',
+    no: 95,
+    nameJa: '現在地が2つあるとき',
+    nameEn: 'Two Cursors',
+    category: 'ナビゲーション',
+    trigger: 'TODO',
+    principles: ['TODO'],
+    ecology: 'TODO',
+    Component: TwoCursors,
   },
 ]
 
