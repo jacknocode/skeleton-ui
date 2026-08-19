@@ -7,12 +7,13 @@
    共通設計則どおり、ここで起きることは「過去に溜まったこと」の畳み直しであって
    「いま・ここ」の合図ではないため、すべて減速のみ`cubic-bezier(0.22,0.61,0.36,1)`。
 
-   10行×28pxのリストだけで280pxあり、見出し・トグル・操作ボタンを足すと
-   ステージの目安(高さ300px)にはどうしても収まらない（試算で400px超）。
-   件数を1件も落とさない・行高28pxを変えない、はどちらも仕様の核なので、
-   ここは同じ回のNo.90(offscreen-arrivals)が使っている「リストだけを固定高で
-   スクロールさせる」を踏襲して解決した。5行ぶん(140px)を可視領域にして残りは
-   縦スクロール。外形(340×だいたい270px程度)は跡の増減で一切変わらない。 */
+   「10件あっても縦線は10本とも見える」がこの標本の主張そのものなので、
+   10行を常時表示にすることを最優先にした（スクロールでは主張が確かめられない）。
+   行高を28pxから22pxへ、フォントも一段小さく詰め、見出し・トグル・操作ボタンの
+   余白も切り詰めることで、10×22=220pxのリストを含めて外形の高さを約324px
+   （幅340×高さ約324、実測は index.tsx 側のコメント/報告を参照）に収めてある。
+   段の色・尺・緩急（260ms/220ms/200ms/60ms刻み/cubic-bezier(0.22,0.61,0.36,1)）は
+   一切変えていない——詰めたのはあくまで寸法（padding/margin/font-size）だけ。 */
 
 .mz-trace-overflow {
   display: flex;
@@ -27,7 +28,7 @@
   display: flex;
   justify-content: flex-end;
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .mz-trace-overflow-mode {
@@ -36,10 +37,16 @@
   border-radius: 999px;
   background: #eaeae8;
 }
+/* 高さを明示(22px)しておくことで、フォントの行間差に左右されず外形の合計が
+   数値どおりに決まる（パディング+font-sizeの目算に頼らない） */
 .mz-trace-overflow-mode-btn {
-  padding: 6px 12px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 11px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   color: #8c8c8c;
   white-space: nowrap;
@@ -64,18 +71,19 @@
   background: #fff;
   border-radius: 14px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
-  padding: 16px 18px 14px;
+  padding: 8px 16px 8px;
 }
 
 .mz-trace-overflow-card-head {
+  height: 16px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: baseline;
   padding: 0 2px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 .mz-trace-overflow-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   color: #3d3d3d;
   letter-spacing: 0.03em;
@@ -86,7 +94,7 @@
   gap: 4px;
 }
 .mz-trace-overflow-unread-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #8c8c8c;
 }
@@ -94,7 +102,7 @@
    例外は「まとめて読む」で0になる瞬間だけ: 色が200msで沈む(#3d3d3d→#b3b3b3)。
    数字そのものは常に読めるままで、これは確認の合図にすぎない */
 .mz-trace-overflow-unread-num {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: #3d3d3d;
@@ -105,12 +113,11 @@
 }
 
 /* ---------- リスト ----------
-   5行(140px)だけ可視、残りは縦スクロール。行の物理的な並び(A-01〜A-10)は
-   常に固定——並び替えは一切しない。段(跡の詳しさ)だけが行の中で変わる */
+   10行すべてを常時表示（スクロールしない）。行の物理的な並び(A-01〜A-10)は
+   常に固定——並び替えは一切しない。段(跡の詳しさ)だけが行の中で変わる。
+   10行×22px=220pxちょうど（box-sizing:border-boxなのでborder-bottomの1pxは
+   この22pxに含まれ、はみ出さない） */
 .mz-trace-overflow-list {
-  height: 140px;
-  overflow-y: auto;
-  overflow-x: hidden;
   list-style: none;
   border-radius: 8px;
   background: #fff;
@@ -118,11 +125,11 @@
 
 .mz-trace-overflow-row {
   width: 100%;
-  height: 28px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px 0 20px;
+  padding: 0 12px 0 16px;
   position: relative;
   background: transparent;
   cursor: pointer;
@@ -138,9 +145,9 @@
 /* 縦線。段3(下限)でもこれだけは必ず残る＝「跡が付いている行」の位置情報そのもの */
 .mz-trace-overflow-strip {
   position: absolute;
-  left: 6px;
-  top: 5px;
-  bottom: 5px;
+  left: 5px;
+  top: 4px;
+  bottom: 4px;
   width: 2px;
   border-radius: 1px;
   background: #b3b3b3;
@@ -151,7 +158,7 @@
 }
 
 .mz-trace-overflow-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: #6e6e6e;
 }
@@ -167,8 +174,8 @@
    文字が0幅→実幅へ変わり、隣の現在値の位置が動いてしまう(=1pxも動かない、に反する) */
 .mz-trace-overflow-old {
   display: inline-block;
-  min-width: 2.2em;
-  font-size: 11px;
+  min-width: 2em;
+  font-size: 10px;
   font-weight: 600;
   color: #8c8c8c;
   text-decoration: line-through;
@@ -179,8 +186,8 @@
 }
 
 .mz-trace-overflow-current {
-  min-width: 2.4em;
-  font-size: 13px;
+  min-width: 2.2em;
+  font-size: 12.5px;
   font-weight: 700;
   color: #3d3d3d;
   text-align: right;
@@ -261,15 +268,19 @@
 .mz-trace-overflow-actions {
   display: flex;
   gap: 10px;
-  margin-top: 14px;
+  margin-top: 6px;
 }
 
 .mz-trace-overflow-act-change {
-  padding: 9px 18px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
   border-radius: 999px;
   background: #3d3d3d;
   color: #f5f5f3;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   cursor: pointer;
   transition:
@@ -282,11 +293,15 @@
 }
 
 .mz-trace-overflow-act-readall {
-  padding: 9px 18px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
   border-radius: 999px;
   background: #fff;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   color: #4a4a48;
   cursor: pointer;

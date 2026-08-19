@@ -579,6 +579,63 @@ const CHOREO = {
     await page.getByRole('button', { name: '届く' }).click()
     await sleep(1500)
   },
+  'trace-overflow': async (page) => {
+    await sleep(600)
+    // 跡ゼロの台帳から10件溜める。古い跡が段を下げていくところがこの標本の中身なので、
+    // 溜まる過程を最後まで写す（途中で切ると「最初からこう表示している」に見える）
+    for (let i = 0; i < 10; i++) {
+      await page.getByRole('button', { name: '変化が起きる' }).click()
+      await sleep(260)
+    }
+    await sleep(1000)
+    // 1行だけ読む: 他の行の段は繰り上がらない（既読は自分の行にしか効かない）
+    await page.locator('.mz-trace-overflow-row.is-tier1').first().click()
+    await sleep(1100)
+    // まとめて読む: 上から60msずつ、順に消える
+    await page.getByRole('button', { name: 'まとめて読む' }).click()
+    await sleep(1600)
+    // 対照: 段を作らないと、10件で台帳そのものが読めなくなる
+    await page.getByRole('button', { name: '全部そのまま' }).click()
+    await sleep(400)
+    for (let i = 0; i < 7; i++) {
+      await page.getByRole('button', { name: '変化が起きる' }).click()
+      await sleep(190)
+    }
+    await sleep(1200)
+  },
+  'focus-travel': async (page) => {
+    await sleep(600)
+    await page.getByRole('button', { name: 'A1', exact: true }).click()
+    await sleep(800)
+    // 隣へ2回（飛ぶ）→ 行の折り返し（飛ばない）。飛ぶ・飛ばないが交互に出るのが見どころ
+    for (let i = 0; i < 2; i++) {
+      await page.keyboard.press('Tab')
+      await sleep(650)
+    }
+    await page.keyboard.press('Tab') // A3→B1 の折り返し
+    await sleep(900)
+    await page.keyboard.press('Tab')
+    await sleep(650)
+    // 連打（100ms間隔）: 1つも飛ばない。輪郭は毎回いきなり次の席にいる
+    for (let i = 0; i < 5; i++) {
+      await page.keyboard.press('Tab')
+      await sleep(100)
+    }
+    await sleep(1100)
+    // 指が止まったあとの1回だけが軌跡を持つ
+    await page.keyboard.press('Tab')
+    await sleep(1000)
+    // 対照: 同じ連打を「いつも飛ぶ」で受けると、輪郭は一度も席に着かない
+    await page.getByRole('button', { name: 'いつも飛ぶ' }).click()
+    await sleep(400)
+    await page.getByRole('button', { name: 'A1', exact: true }).click()
+    await sleep(700)
+    for (let i = 0; i < 6; i++) {
+      await page.keyboard.press('Tab')
+      await sleep(100)
+    }
+    await sleep(1400)
+  },
   'sankey-stream': async (page) => {
     // まず何も触らず、常時流れている待機状態を見せる
     await page.mouse.move(...px(0.5, 1.2))

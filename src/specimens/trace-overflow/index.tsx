@@ -53,9 +53,9 @@ const ROWS: RowDef[] = Array.from({ length: 10 }, (_, i) => ({
   label: `A-${String(i + 1).padStart(2, '0')}`,
 }))
 
-// 初期値。r1〜r8にはあらかじめ跡が付いた状態から始める（仕様書の見た目「未読 8」に合わせる）。
-// r9・r10だけ未跡のまま残しておくと、「変化が起きる」をちょうど2回押せば
-// 10行すべてに跡が付き、受け入れ条件1（段1=3行/段2=2行/段3=5行）を最短で再現できる。
+// 初期値は跡ゼロ・数値だけ埋めた台帳から始める。跡が溜まっていく過程そのものが主題なので、
+// 最初から跡が付いた状態を見せてしまうと「4件目・6件目で段が下がる」という見せ場が
+// 収録の1回目で再現できなくなる（「変化が起きる」を実際に10回押して積み上げる）。
 const INITIAL_VALUES: Record<string, number> = {
   r1: 128,
   r2: 305,
@@ -68,20 +68,6 @@ const INITIAL_VALUES: Record<string, number> = {
   r9: 178,
   r10: 623,
 }
-const INITIAL_OLD_VALUES: Record<string, number> = {
-  r1: 112,
-  r2: 320,
-  r3: 410,
-  r4: 235,
-  r5: 540,
-  r6: 400,
-  r7: 275,
-  r8: 470,
-}
-// 新しい順（rank0が最新）。段は rank<3→1, rank<5→2, else→3 で決まるので、
-// この並びだけで 段1=[r4,r7,r1] 段2=[r8,r3] 段3=[r6,r2,r5] になる
-const INITIAL_ORDER = ['r4', 'r7', 'r1', 'r8', 'r3', 'r6', 'r2', 'r5']
-const INITIAL_HITS: Record<string, number> = Object.fromEntries(INITIAL_ORDER.map((id) => [id, 1]))
 
 const APPEAR_MS = 220 // 跡の出現（新規のみ）
 const READ_MS = 200 // 既読（単体・まとめて共通）
@@ -99,13 +85,11 @@ function assignTiers(order: string[]): Record<string, 1 | 2 | 3> {
 /** 跡が溜まりすぎたとき。古い跡ほど段を落として畳む。件数は落とさず、詳しさだけを落とす。 */
 export default function TraceOverflow() {
   const [values, setValues] = useState<Record<string, number>>(INITIAL_VALUES)
-  const [oldValues, setOldValues] = useState<Record<string, number>>(INITIAL_OLD_VALUES)
-  const [traceOrder, setTraceOrder] = useState<string[]>(INITIAL_ORDER) // 新しい順。段の作り直しにしか使わない
-  const [tierMap, setTierMap] = useState<Record<string, 1 | 2 | 3>>(() => assignTiers(INITIAL_ORDER))
-  const [hits, setHits] = useState<Record<string, number>>(INITIAL_HITS) // 行ごとの未読イベント数（未読件数の内訳）
-  const [unreadCount, setUnreadCount] = useState(() =>
-    Object.values(INITIAL_HITS).reduce((a, b) => a + b, 0),
-  )
+  const [oldValues, setOldValues] = useState<Record<string, number>>({}) // 跡が最初に付いた時点の値だけを焼く台帳
+  const [traceOrder, setTraceOrder] = useState<string[]>([]) // 新しい順。段の作り直しにしか使わない。初期は空
+  const [tierMap, setTierMap] = useState<Record<string, 1 | 2 | 3>>({})
+  const [hits, setHits] = useState<Record<string, number>>({}) // 行ごとの未読イベント数（未読件数の内訳）
+  const [unreadCount, setUnreadCount] = useState(0)
   const [appearing, setAppearing] = useState<Set<string>>(new Set()) // 出現220msの間だけ乗る行
   const [leavingRows, setLeavingRows] = useState<Set<string>>(new Set()) // 既読で消えている最中の行
   const [clearingAll, setClearingAll] = useState(false) // まとめて読む、進行中かどうか
