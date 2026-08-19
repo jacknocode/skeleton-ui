@@ -1,0 +1,267 @@
+/* No.93「読んでいたものが消える」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+
+   席(.mz-place-lost-seat)と中身(.mz-place-lost-content)の2層構造は、この図鑑の
+   既存標本(gap-close/offscreen-arrivals)と同じ理由——高さ(席)と不透明度(中身)を
+   同じtransitionに乗せると「席は残したまま中身だけ薄れる」が作れない。ここでは
+   さらに、席の高さを閉じるときだけJS(index.tsx)がinline styleで直接書き換える
+   経路があるため、CSSのtransition: heightは「読みかけ行より下の席」にしか
+   効かせていない（上の席はtransition:noneでrAFに明け渡す。index.tsx冒頭コメント
+   参照）。 */
+
+.mz-place-lost {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 340px;
+}
+
+/* ---------- ヘッダー: モード切替 ---------- */
+
+.mz-place-lost-head {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.mz-place-lost-mode {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+
+.mz-place-lost-mode-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-place-lost-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-place-lost-mode-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+/* ---------- リスト枠 ----------
+   幅340×高さ260で固定。中の行が空席になろうが閉じようが、この外形は変わらない。
+   capture.htmlのステージはplace-items:centerなので、枠が動くと標本全体が
+   再センタリングでずれ「読みかけの行は動かない」が「全体が動いた」に化ける。 */
+
+.mz-place-lost-list-wrap {
+  position: relative;
+  width: 340px;
+}
+
+.mz-place-lost-list {
+  height: 260px;
+  overflow-y: auto;
+  /* 必須: ブラウザのscroll anchoringに仕事を取られると、対照(すぐ詰める)モードの
+     「読みかけ行が52pxずれる」がブラウザ側で勝手に打ち消され、標本の差が消える。
+     補正は必ずindex.tsx側で明示的に行う */
+  overflow-anchor: none;
+  list-style: none;
+  border-radius: 14px;
+  background: #f5f5f3;
+}
+
+.mz-place-lost-row {
+  position: relative;
+}
+
+/* 席: 高さ52px固定の箱。overflow:hiddenが無いと、閉じる最中に中身がはみ出す。
+   全幅ボタンとして実装してあるのは、空席になったときにそのままクリック対象に
+   できるようにするため（非空席のときはdisabledで見た目上も押せない） */
+.mz-place-lost-seat {
+  display: block;
+  width: 100%;
+  height: 52px;
+  overflow: hidden;
+  text-align: left;
+  cursor: default;
+  background: #fff;
+  border-bottom: 1px solid #eaeae8;
+  /* 読みかけ行より下の席はここのtransitionだけで閉じる。上の席はindex.tsxが
+     transition: noneを直接当てて上書きし、rAFでheightとscrollTopを同期させる */
+  transition: height 240ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.mz-place-lost-row:last-child .mz-place-lost-seat {
+  border-bottom: none;
+}
+/* 空席・薄れている最中は地を一段沈める。#e6e6e4は「そこに何かがあった痕跡」の色 */
+.mz-place-lost-seat.is-sunken {
+  background: #e6e6e4;
+  transition:
+    height 240ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    background-color 180ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.mz-place-lost-seat:disabled {
+  cursor: default;
+}
+.mz-place-lost-seat.is-vacant:not(:disabled) {
+  cursor: pointer;
+}
+
+/* 中身: 通常時の品名+残数。中身だけがopacityで薄れる（席の高さには一切触れない） */
+.mz-place-lost-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 16px;
+  transition: opacity 180ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.mz-place-lost-content.is-fading {
+  opacity: 0;
+}
+
+.mz-place-lost-marker {
+  flex: none;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.mz-place-lost-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #3d3d3d;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mz-place-lost-remaining {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #b3b3b3;
+}
+
+/* 空席のプレースホルダ。消えた品名はここに残す——何が消えたかは情報なので、
+   跡形もなく消してしまわない */
+.mz-place-lost-vacant {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  height: 100%;
+  padding: 0 16px;
+}
+.mz-place-lost-vacant-note {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+.mz-place-lost-vacant-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- 物差し ----------
+   「読みかけの行は動かない」は実測できてもGIF越しには読めない——比較の基準が
+   無いと「リストが少しスクロールしただけ」にしか見えない、という
+   No.90/No.91が踏んだ轍をここでも踏まないための仕掛け。.list-wrapの子として
+   絶対配置し、リストのスクロール量やモードの影響を受けない座標系に固定する
+   （topはJS側(index.tsxのRULER_TOP)が算出）。計測器であって装飾ではないので
+   破線・薄い灰に留める */
+.mz-place-lost-ruler {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed #b3b3b3;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ---------- 対照(すぐ詰める): 抜ける→間→詰まる ----------
+   No.86の作法をそのまま流用。違うのはscrollTop補正を一切しないことだけ
+   （index.tsx側に補正コードそのものが存在しない）。 */
+.mz-place-lost.is-collapse-mode .mz-place-lost-content.is-fading {
+  transform: translateX(18px);
+}
+.mz-place-lost-row.is-closing .mz-place-lost-seat {
+  height: 0;
+}
+
+/* ---------- 操作 ---------- */
+
+.mz-place-lost-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.mz-place-lost-vanish-btn,
+.mz-place-lost-cleanup-btn,
+.mz-place-lost-reset-btn {
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #4a4a48;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s,
+    opacity 0.2s;
+}
+.mz-place-lost-vanish-btn:hover,
+.mz-place-lost-cleanup-btn:hover:not(:disabled),
+.mz-place-lost-reset-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+}
+.mz-place-lost-vanish-btn:active,
+.mz-place-lost-cleanup-btn:active:not(:disabled),
+.mz-place-lost-reset-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+.mz-place-lost-cleanup-btn:disabled {
+  cursor: default;
+  opacity: 0.4;
+  transform: none;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+.mz-place-lost-reset-btn {
+  background: transparent;
+  box-shadow: none;
+  color: #8c8c8c;
+}
+.mz-place-lost-reset-btn:hover {
+  box-shadow: none;
+  color: #3d3d3d;
+}
+
+/* ---------- 動きを控えたい人へ ----------
+   グローバル側(src/styles/global.css)がtransition-duration/animation-durationを
+   一律0.01msに潰す。この標本にtransition-delayは無い（No.86と違い、拍を
+   delayで作っていない）ので、reduced-motionでも「席は残る/上は補正される」
+   という構造そのものはそのまま保たれる。rAFで手書きしているscrollTop同期は
+   CSSのdurationとは独立(JS側のCLOSE_MS定数)だが、reduced-motionは「速く
+   終わる」だけを要求するものではなく、この標本の主題（席を残す/補正する）は
+   速さに依存しないため個別対応は不要 */

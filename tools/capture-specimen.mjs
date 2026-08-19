@@ -603,6 +603,80 @@ const CHOREO = {
     }
     await sleep(1200)
   },
+  /* No.93: 見せ場は2つ。(1) 席が閉じても読みかけの行が1pxも動かない
+     (2) 対照では上で消えたときだけ52pxずれる。既定を先に、対照を後ろに置く
+     （初期状態でだけ読みかけの行が破線に載っているので、動かないほうを先に撮る。
+     No.90 の台本と同じ理由） */
+  'place-lost': async (page) => {
+    await sleep(1400) // 読みかけの印・破線・行の位置を読ませる間
+    await page.getByRole('button', { name: '向こうで消える' }).click()
+    await sleep(1500) // 上(+0ms)と下(+900ms)が順に空席になるところまで見せる
+    // 空席をクリックして閉じる。席が縮むあいだ読みかけの行が微動だにしないのが要点
+    await page.locator('.mz-place-lost-seat.is-vacant').first().click()
+    await sleep(1100)
+    await page.getByRole('button', { name: '向こうで消える' }).click()
+    await sleep(1600)
+    await page.getByRole('button', { name: '片付ける' }).click()
+    await sleep(1300)
+    // 対照: 同じ操作で、上で消えたぶんだけ読みかけの行が破線から離れて落ちる
+    await page.getByRole('button', { name: '戻す' }).click()
+    await sleep(600)
+    await page.getByRole('button', { name: 'すぐ詰める' }).click()
+    await sleep(700)
+    await page.getByRole('button', { name: '向こうで消える' }).click()
+    await sleep(2000)
+  },
+  /* No.94: 既定は「+0msでもう着いていて、出発地に印が残る」。
+     対照は「数百msかけて流れ、印も戻り道も残らない」。差が出るのは着いたあとなので、
+     着地後の静止を長めに取る */
+  'taken-there': async (page) => {
+    await sleep(1100)
+    await page.getByRole('button', { name: '送信' }).click()
+    await sleep(1800) // 到着・エラー欄の変化・戻り帯（他2件）を読ませる
+    await page.getByRole('button', { name: /元の位置へ戻る/ }).click()
+    await sleep(1600) // 出発地へ戻り、しおりが200msで消えるところまで
+    // 対照: 同じ送信が、滑らかに流れて、何も残さない
+    await page.getByRole('button', { name: 'ただ飛ぶ' }).click()
+    await sleep(600)
+    await page.getByRole('button', { name: '送信' }).click()
+    await sleep(2200)
+  },
+  /* No.95: マウスとキーボードを交互に使い、主役が入れ替わっても
+     選択の濃さだけは変わらないことを見せる。最後に対照で3階調が潰れるところ */
+  'two-cursors': async (page) => {
+    await sleep(900)
+    // まずキーボード側を主役にする（Tabボタンは板に実フォーカスを渡す）
+    await page.getByRole('button', { name: 'Tab', exact: true }).click()
+    await sleep(700)
+    await page.getByRole('button', { name: 'Tab', exact: true }).click()
+    await sleep(700)
+    // マウスを列の上へ滑らせる。▸ が乗り移り、輪郭が1pxへ退く
+    const rows = page.locator('.mz-two-cursors-row')
+    const first = await rows.nth(0).boundingBox()
+    const last = await rows.nth(7).boundingBox()
+    let cur = [first.x + first.width / 2, first.y + first.height / 2]
+    await page.mouse.move(...cur)
+    await sleep(500)
+    const down = [last.x + last.width / 2, last.y + last.height / 2]
+    await glide(page, cur, down, 1100)
+    cur = down
+    await sleep(700)
+    // 物理キーで主役をキーボードへ戻す（マウスは列の上に置いたまま）。
+    // ここが要点で、▸ は消えずに0.35で残る——「弱い」と「無い」の撃ち分け
+    await page.keyboard.press('ArrowUp')
+    await sleep(650)
+    await page.keyboard.press('ArrowUp')
+    await sleep(650)
+    // Enter で選択を動かす。輪郭の強弱が変わっても選択の濃さは変わらない
+    await page.keyboard.press('Enter')
+    await sleep(1000)
+    // マウスをわずかに動かして主役を戻す（選択の濃さは変わらないままのはず）
+    await glide(page, cur, [cur[0] - 60, cur[1] - 68], 500)
+    await sleep(1200)
+    // 対照: 3階調の灰色が隣り合うと見分けがつかない
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1800)
+  },
   'focus-travel': async (page) => {
     await sleep(600)
     await page.getByRole('button', { name: 'A1', exact: true }).click()

@@ -1,0 +1,220 @@
+/* No.95「現在地が2つあるとき」
+   外形340px。ヘッダ(対照トグル) + 板(8行×34px=272px) + 操作ボタン、縦はflexでgap 6pxずつ
+   （実測して330px以内に収まることを確認済み。tools/measure等は触らずscratchpadで検証した）。
+
+   3つの担体はレイヤーを分けて重ねる:
+   ・選択（塗る）は各行のbackground-color/border-left-colorを直接遷移させるだけ
+     （行のDOM要素はレンダーごとに作り直されないので、これだけでも滑らかに変わる。
+     単一要素をtranslateYで運ぶ工夫が要るのは輪郭と▸だけ）
+   ・フォーカス（囲む）は.mz-two-cursors-ring。outline-offset:-1pxを固定し、
+     outline-widthとoutline-colorだけを主役状態で切り替える（index.tsxの設計判断2）
+   ・ポインタ（指す）は.mz-two-cursors-pointer。▸の三角形はborderで作る
+
+   この回の緩急の約束: 減速のみ cubic-bezier(0.22, 0.61, 0.36, 1)。跳ねる方
+   cubic-bezier(0.34, 1.56, 0.64, 1)（ぷるん）はこの標本では一度も使わない——
+   ここが提示するのは「どこに居るか」であって「いま起きた」の合図ではないため。 */
+
+.mz-two-cursors {
+  --mz-two-cursors-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 340px;
+}
+
+/* ---------- ヘッダ: 既定 / 対照 ---------- */
+
+.mz-two-cursors-topbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mz-two-cursors-mode {
+  display: flex;
+  padding: 2px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+
+.mz-two-cursors-mode-btn {
+  padding: 2px 11px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.18s var(--mz-two-cursors-ease),
+    color 0.18s var(--mz-two-cursors-ease);
+}
+.mz-two-cursors-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 板 ---------- */
+
+.mz-two-cursors-board {
+  position: relative;
+  width: 340px;
+  height: 272px; /* 34px × 8行 */
+  background: #f5f5f3;
+  border: 1px solid #e0e0dd;
+  border-radius: 8px;
+  overflow: hidden; /* outlineはoffset:-1pxで内側に収めてあるので角丸を割らない */
+  outline: none; /* 板自体のブラウザ既定フォーカスリングは消す。板の「いまどこ」は.ringが語る */
+}
+
+/* ---------- 行 ---------- */
+
+.mz-two-cursors-row {
+  position: relative;
+  height: 34px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 34px 0 13px; /* 右側は▸の置き場所ぶん空けておく */
+  border-bottom: 1px solid #e5e5e2;
+  border-left: 3px solid transparent; /* 選択時に色だけ差し替える。幅は最初から確保しレイアウトを動かさない */
+  cursor: pointer;
+  transition:
+    background-color 0.2s var(--mz-two-cursors-ease),
+    border-left-color 0.2s var(--mz-two-cursors-ease);
+}
+.mz-two-cursors-row:last-child {
+  border-bottom: none;
+}
+.mz-two-cursors-row:hover:not(.is-selected):not(.is-c-selected):not(.is-c-focus):not(.is-c-pointer) {
+  background: #f0f0ee;
+}
+
+.mz-two-cursors-row-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #3d3d3d;
+}
+
+/* 選択（塗る）: 地 + 左端の太い縦線。actorを一切参照しない＝入力デバイスで濃さが変わらない */
+.mz-two-cursors-row.is-selected {
+  background: #e2e2de;
+  border-left-color: #3d3d3d;
+}
+
+/* ---------- 対照モード: 3つとも地の濃さだけで表す ---------- */
+/* 1行に複数が重なったら選択 > フォーカス > ポインタの優先順位で1色だけが勝つ
+   （index.tsxのcontrastWinner。負けた情報はこのモードでは本当に消える） */
+.mz-two-cursors-row.is-c-selected {
+  background: #e2e2de;
+}
+.mz-two-cursors-row.is-c-focus {
+  background: #eeeeec;
+}
+.mz-two-cursors-row.is-c-pointer {
+  background: #f1f1ef;
+}
+
+/* ---------- 輪郭（フォーカス。囲む） ---------- */
+
+.mz-two-cursors-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 340px;
+  height: 34px;
+  outline-style: solid;
+  outline-offset: -1px; /* 板の外周からはみ出させず、行の内側にアンカーを固定する */
+  outline-width: 1px;
+  outline-color: #b3b3b3; /* 主役でないときの既定値 */
+  opacity: 0; /* 「無い」の既定値。is-shownでだけ1になる */
+  pointer-events: none;
+  transition:
+    transform 140ms var(--mz-two-cursors-ease),
+    outline-width 180ms var(--mz-two-cursors-ease),
+    outline-color 180ms var(--mz-two-cursors-ease),
+    opacity 180ms var(--mz-two-cursors-ease);
+}
+.mz-two-cursors-ring.is-shown {
+  opacity: 1;
+}
+.mz-two-cursors-ring.is-primary {
+  outline-width: 2px;
+  outline-color: #2b2b2b;
+}
+
+/* ---------- ▸（ポインタ。指す） ---------- */
+
+.mz-two-cursors-pointer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 340px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 12px;
+  opacity: 0; /* 「無い」の既定値 */
+  pointer-events: none;
+  transition:
+    transform 120ms var(--mz-two-cursors-ease),
+    opacity 180ms var(--mz-two-cursors-ease);
+}
+.mz-two-cursors-pointer::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid #3d3d3d;
+}
+/* 「弱い」(0.35)と「無い」(0)を混同しない: is-shownが無ければ常に0、
+   is-shownの中でだけ主役(1)/非主役(0.35)が分かれる */
+.mz-two-cursors-pointer.is-shown {
+  opacity: 0.35;
+}
+.mz-two-cursors-pointer.is-shown.is-primary {
+  opacity: 1;
+}
+
+/* 対照モードでは輪郭も▸も出さない（JSでis-shownを外すだけ。ここでのCSSは不要） */
+
+/* ---------- 操作: Tab / Enter（収録用）/ 戻す ---------- */
+
+.mz-two-cursors-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.mz-two-cursors-ctrl-btn {
+  padding: 5px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #4a4a48;
+  cursor: pointer;
+  transition:
+    transform 0.18s var(--mz-two-cursors-ease),
+    background-color 0.18s var(--mz-two-cursors-ease);
+}
+.mz-two-cursors-ctrl-btn:hover {
+  background: #f5f5f3;
+}
+.mz-two-cursors-ctrl-btn:active {
+  transform: scale(0.96);
+}
+.mz-two-cursors-ctrl-btn.is-ghost {
+  background: #eaeae8;
+  box-shadow: none;
+  color: #8c8c8c;
+}
+.mz-two-cursors-ctrl-btn.is-ghost:hover {
+  background: #e2e2de;
+}
+
+/* ---------- 動きを控えたい人へ ----------
+   グローバル側(src/styles/global.css)がtransition-duration/animation-durationを
+   一律0.01msに潰す。この標本の分岐（主役の切り替え・輪郭と▸の出現位置）はReact state
+   とmousemoveの実座標比較だけで決まり、CSSの実際の尺（setTimeoutで頃合いを待つ処理）
+   には依存しないので、個別対応は不要。 */
