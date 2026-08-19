@@ -18,7 +18,7 @@
   --mz-two-cursors-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   width: 340px;
 }
 
@@ -37,7 +37,7 @@
 }
 
 .mz-two-cursors-mode-btn {
-  padding: 4px 11px;
+  padding: 2px 11px;
   border-radius: 999px;
   font-size: 10.5px;
   font-weight: 700;
@@ -84,7 +84,7 @@
 .mz-two-cursors-row:last-child {
   border-bottom: none;
 }
-.mz-two-cursors-row:hover:not(.is-selected) {
+.mz-two-cursors-row:hover:not(.is-selected):not(.is-c-selected):not(.is-c-focus):not(.is-c-pointer) {
   background: #f0f0ee;
 }
 
@@ -186,7 +186,7 @@
 }
 
 .mz-two-cursors-ctrl-btn {
-  padding: 7px 16px;
+  padding: 5px 16px;
   border-radius: 999px;
   background: #fff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);

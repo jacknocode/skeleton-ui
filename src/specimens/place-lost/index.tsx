@@ -238,12 +238,19 @@ export default function PlaceLost() {
 
       if (id < READING_INDEX) {
         // 上の席: rAFドライバに登録。席の高さとscrollTopを同じtから同期して動かす。
-        // CSS側の transition: height をここで明示的に殺しておかないと、rAFが
-        // 毎フレーム書き込むinline style自体がCSS transitionの新しい目標値として
-        // 扱われ、実際の高さが計算値に追従せず遅れて振動する（実測で発見。
-        // ファイル冒頭コメント参照）
+        // ここで transition:none と height:52px(=現状維持) を同期的に(setRowsの
+        // Reactコミットより前に)書いておかないと、次のフレームで rAF が最初の
+        // el.style.height を書き込むまでの数msの隙間で、Reactが後から適用する
+        // .is-closing クラス(→CSSの height:0)がtransition無しのまま一瞬だけ
+        // 反映されてしまい、席が0pxへ瞬間スナップ→rAFが追いつき52px近くへ
+        // 引き戻す、という1〜2フレームだけの跳ねが実際に発生する（フレーム単位の
+        // 実測で発見。Node側20msポーリングでは見落としていた）。「rAFの初回tickを
+        // 待たず、閉じ始める瞬間そのもので高さを確定させる」のがこの対策
         const el = seatElRefs.current.get(id)
-        if (el) el.style.transition = 'none'
+        if (el) {
+          el.style.transition = 'none'
+          el.style.height = `${ROW_H}px`
+        }
         activeAboveClosingRef.current.set(id, performance.now())
         ensureDriverRunning()
       } else {

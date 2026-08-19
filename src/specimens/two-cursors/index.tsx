@@ -29,10 +29,21 @@ import './style.css'
       を持っているかどうか」ではなく focusIndex !== null だけを見て描く。この分離のおかげで、
       マウント直後から見た目上は3行目にフォーカスがある状態を安全に描けて、なおかつ
       実際にTabキーで板に入るまでページの他の要素からフォーカスを奪わない。
-      副作用として、行のクリックが実フォーカスを一切動かさなくなった（button要素の
-      mousedown→focus窃取を防ぐ preventDefault のようなハックが丸ごと不要になった）。
-      Enter/行のクリックは選択だけを動かし、フォーカスの現在地には触れない——これは
-      むしろ仕様の「選択とフォーカスは別の現在地」という主張そのものと一致する。
+      ここで一度読みを外した。「行はtabIndexを持たない非フォーカス要素だから、行を
+      クリックしても祖先のmousedown→focus窃取を防ぐpreventDefaultは要らないはず」と
+      考えて省いたが、実測すると誤りだった——クリックされた要素自身がフォーカス不可能
+      でも、ブラウザは「クリックされた要素から最も近い、実際にフォーカス可能な祖先」
+      （＝tabIndex=0を持つ板そのもの）へ既定でフォーカスを移す（mousedownのfocusing
+      stepsの仕様どおりの挙動で、Chromeに限らず標準）。これに気づかず実装した最初の版は、
+      行をクリックするたびに板が実フォーカスを持ち、それが onFocus を発火させて
+      actor を強制的に'keyboard'へ倒していた——マウスでクリックしただけなのに主役が
+      キーボード側に奪われるという、仕様が禁じている経路（clickはactorを変えない）を
+      踏んでいた。実測（同じ行をmousemoveで指してからクリックし、輪郭のoutline-width
+      が1px→2pxに変わってしまうこと）で発見し、板のonMouseDownにe.preventDefault()を
+      足して塞いだ。Tabボタンはこの制約を受けない（クリックの既定動作ではなく
+      boardRef.current?.focus()を明示的に呼んでいるので、以後の物理キー操作にも
+      問題なくつながる）。Enter/行のクリックは選択だけを動かし、フォーカスの現在地には
+      触れない——これは仕様の「選択とフォーカスは別の現在地」という主張そのものと一致する。
 
    2. 輪郭の 2px⇔1px は outline（border でも box-shadow: inset でもない）で作った。
       理由: この標本の輪郭は行の上に重ねる絶対配置の単一要素（.mz-two-cursors-ring）で、
@@ -290,6 +301,7 @@ export default function TwoCursors() {
         aria-activedescendant={focusIndex !== null ? `mz-two-cursors-row-${focusIndex}` : undefined}
         onKeyDown={handleKeyDown}
         onFocus={handleBoardFocus}
+        onMouseDown={(e) => e.preventDefault()}
         onMouseLeave={handleListMouseLeave}
       >
         {ROWS.map((row, idx) => {
