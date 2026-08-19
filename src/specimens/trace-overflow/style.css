@@ -1,0 +1,321 @@
+/* No.91「跡が溜まりすぎたとき」
+   段（tier1〜3）はJS側で行ごとに tierMap から作られる。ここでは
+   is-tier1 / is-tier2 / is-tier3 の3クラスに対して「地の濃さ・縦線の色・旧値の
+   可視性」をそれぞれ260msの減速のみで transition させるだけに徹する。
+
+   跳ねる`cubic-bezier(0.34,1.56,0.64,1)`はこの標本では一度も使わない——
+   共通設計則どおり、ここで起きることは「過去に溜まったこと」の畳み直しであって
+   「いま・ここ」の合図ではないため、すべて減速のみ`cubic-bezier(0.22,0.61,0.36,1)`。
+
+   「10件あっても縦線は10本とも見える」がこの標本の主張そのものなので、
+   10行を常時表示にすることを最優先にした（スクロールでは主張が確かめられない）。
+   行高を28pxから22pxへ、フォントも一段小さく詰め、見出し・トグル・操作ボタンの
+   余白も切り詰めることで、10×22=220pxのリストを含めて外形の高さを約324px
+   （幅340×高さ約324、実測は index.tsx 側のコメント/報告を参照）に収めてある。
+   段の色・尺・緩急（260ms/220ms/200ms/60ms刻み/cubic-bezier(0.22,0.61,0.36,1)）は
+   一切変えていない——詰めたのはあくまで寸法（padding/margin/font-size）だけ。 */
+
+.mz-trace-overflow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 340px;
+}
+
+/* ---------- ヘッダー: 対照トグル ---------- */
+
+.mz-trace-overflow-head {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.mz-trace-overflow-mode {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+/* 高さを明示(22px)しておくことで、フォントの行間差に左右されず外形の合計が
+   数値どおりに決まる（パディング+font-sizeの目算に頼らない） */
+.mz-trace-overflow-mode-btn {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-trace-overflow-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-trace-overflow-mode-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+/* ---------- 板 ---------- */
+
+.mz-trace-overflow-card {
+  width: 340px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
+  padding: 8px 16px 8px;
+}
+
+.mz-trace-overflow-card-head {
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
+  margin-bottom: 6px;
+}
+.mz-trace-overflow-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #3d3d3d;
+  letter-spacing: 0.03em;
+}
+.mz-trace-overflow-unread {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.mz-trace-overflow-unread-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+/* 未読件数は原則すぐに正しい値へ切り替わる(現在地は動きの完了を待たない)。
+   例外は「まとめて読む」で0になる瞬間だけ: 色が200msで沈む(#3d3d3d→#b3b3b3)。
+   数字そのものは常に読めるままで、これは確認の合図にすぎない */
+.mz-trace-overflow-unread-num {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #3d3d3d;
+  transition: color 200ms ease-out;
+}
+.mz-trace-overflow-unread-num.is-zero {
+  color: #b3b3b3;
+}
+
+/* ---------- リスト ----------
+   10行すべてを常時表示（スクロールしない）。行の物理的な並び(A-01〜A-10)は
+   常に固定——並び替えは一切しない。段(跡の詳しさ)だけが行の中で変わる。
+   10行×22px=220pxちょうど（box-sizing:border-boxなのでborder-bottomの1pxは
+   この22pxに含まれ、はみ出さない） */
+.mz-trace-overflow-list {
+  list-style: none;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.mz-trace-overflow-row {
+  width: 100%;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px 0 16px;
+  position: relative;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.mz-trace-overflow-row:not(:last-child) {
+  border-bottom: 1px solid #eaeae8;
+}
+.mz-trace-overflow-row:disabled {
+  cursor: default;
+}
+
+/* 縦線。段3(下限)でもこれだけは必ず残る＝「跡が付いている行」の位置情報そのもの */
+.mz-trace-overflow-strip {
+  position: absolute;
+  left: 5px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 1px;
+  background: #b3b3b3;
+  opacity: 0;
+  transition:
+    background-color 260ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.mz-trace-overflow-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6e6e6e;
+}
+
+.mz-trace-overflow-values {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+/* 旧値。opacityだけで出し入れし、幅(min-width)は常に確保しておく。
+   未跡の行(空文字)でも同じ幅を占めるようにしないと、跡が初めて付いた瞬間に
+   文字が0幅→実幅へ変わり、隣の現在値の位置が動いてしまう(=1pxも動かない、に反する) */
+.mz-trace-overflow-old {
+  display: inline-block;
+  min-width: 2em;
+  font-size: 10px;
+  font-weight: 600;
+  color: #8c8c8c;
+  text-decoration: line-through;
+  text-align: right;
+  opacity: 0;
+  font-variant-numeric: tabular-nums;
+  transition: opacity 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.mz-trace-overflow-current {
+  min-width: 2.2em;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #3d3d3d;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 段1〜3 ---------- */
+
+.mz-trace-overflow-row.is-tier1 {
+  background: #e6e6e3;
+}
+.mz-trace-overflow-row.is-tier1 .mz-trace-overflow-strip {
+  background: #3d3d3d;
+  opacity: 1;
+}
+.mz-trace-overflow-row.is-tier1 .mz-trace-overflow-old {
+  opacity: 1;
+}
+
+.mz-trace-overflow-row.is-tier2 {
+  background: #efefec;
+}
+.mz-trace-overflow-row.is-tier2 .mz-trace-overflow-strip {
+  background: #8c8c8c;
+  opacity: 1;
+}
+/* 段2は旧値を落とす。is-tier1の直後に置いているので、tier2のときはこちらが効く */
+.mz-trace-overflow-row.is-tier2 .mz-trace-overflow-old {
+  opacity: 0;
+}
+
+/* 段3(下限)。地は白のまま、縦線だけが薄い色で残り続ける。これ以上は薄くしない */
+.mz-trace-overflow-row.is-tier3 {
+  background: #fff;
+}
+.mz-trace-overflow-row.is-tier3 .mz-trace-overflow-strip {
+  background: #b3b3b3;
+  opacity: 1;
+}
+.mz-trace-overflow-row.is-tier3 .mz-trace-overflow-old {
+  opacity: 0;
+}
+
+/* ---------- 出現(新規の跡だけ) ----------
+   跡が初めて付いた瞬間だけ220msに短縮する。以後この行が段を上下しても
+   このクラスはすぐ外れるので、通常の260msに戻る＝「出現」と「段の上下」を
+   別の動きとして分けるための唯一の仕掛け */
+.mz-trace-overflow-row.is-appearing,
+.mz-trace-overflow-row.is-appearing .mz-trace-overflow-strip,
+.mz-trace-overflow-row.is-appearing .mz-trace-overflow-old {
+  transition-duration: 220ms;
+}
+
+/* ---------- 既読(単体・まとめて共通) ----------
+   is-tier系のクラスより後ろに置いてあるので、地の色・縦線・旧値のどれも
+   ここでベースライン(白・非表示)へ強制的に上書きされる。tierMapが残っていても
+   見た目はここが勝つ——「まとめて読む」の間、データの後片付けを最後まで
+   遅らせられるのはこの仕掛けのおかげ。--mz-to-delay はJS側(index.tsx)が
+   「まとめて読む」のときだけ60ms刻みで入れる。単体で読むときは未指定=0ms */
+.mz-trace-overflow-row.is-leaving {
+  background: #fff;
+  transition-duration: 200ms;
+  transition-delay: var(--mz-to-delay, 0ms);
+}
+.mz-trace-overflow-row.is-leaving .mz-trace-overflow-strip {
+  opacity: 0;
+  transition-duration: 200ms;
+  transition-delay: var(--mz-to-delay, 0ms);
+}
+.mz-trace-overflow-row.is-leaving .mz-trace-overflow-old {
+  opacity: 0;
+  transition-duration: 200ms;
+  transition-delay: var(--mz-to-delay, 0ms);
+}
+
+/* ---------- 操作 ---------- */
+
+.mz-trace-overflow-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.mz-trace-overflow-act-change {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    opacity 0.2s;
+}
+.mz-trace-overflow-act-change:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.mz-trace-overflow-act-readall {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  font-size: 11px;
+  font-weight: 800;
+  color: #4a4a48;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s,
+    opacity 0.2s;
+}
+.mz-trace-overflow-act-readall:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+}
+.mz-trace-overflow-act-readall:disabled {
+  cursor: default;
+  opacity: 0.45;
+  transform: none;
+}

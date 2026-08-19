@@ -1,0 +1,198 @@
+/* No.92「フォーカスはどこから来たか」
+   板(400×260)は状態によらず外形固定。中に3×3の格子(336×168、セル104×48・間12px)を
+   最上段に、遠いボタン(160×40)を48px空けて最下段に置く。板のpaddingは上下2pxずつ
+   （2 + 168 + 48 + 40 + 2 = 260）——このpaddingは格子と遠いボタンの間隔(48px)には
+   影響しない（両方が同じ分だけ動くだけ）ので、動きの距離判定には関与しない、
+   純粋に見た目の余白。横方向はどちらもflexで中央寄せ。
+
+   輪郭(.mz-focus-travel-ring)は板の直下に置いたposition:absoluteの1個だけの要素。
+   位置はJS(index.tsx)がtransform:translateとwidth/heightで直接書き換える。
+   内側の.ring-frameは到着パルス(scale)専用の層——translateとscaleを同じtransformの
+   中で合成すると「移動」と「到着の合図」が干渉するので、層を分けて別々に動かす。 */
+
+.mz-focus-travel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ---------- 右上のトグル: 距離で決める / いつも飛ぶ ---------- */
+
+.mz-focus-travel-topbar {
+  width: 400px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mz-focus-travel-mode {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+
+.mz-focus-travel-mode-btn {
+  padding: 6px 13px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-focus-travel-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 板 ---------- */
+
+.mz-focus-travel-board {
+  position: relative;
+  width: 400px;
+  height: 260px;
+  box-sizing: border-box;
+  padding: 2px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 14px;
+  border: 1px solid #e0e0dd;
+  background: #f5f5f3;
+}
+
+/* ---------- 3×3の格子 ---------- */
+
+.mz-focus-travel-grid {
+  width: 336px; /* 104*3 + 12*2 */
+  height: 168px; /* 48*3 + 12*2 */
+  display: grid;
+  grid-template-columns: repeat(3, 104px);
+  grid-template-rows: repeat(3, 48px);
+  gap: 12px;
+}
+
+.mz-focus-travel-cell,
+.mz-focus-travel-far {
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #8c8c8c;
+  background: #fff;
+  cursor: pointer;
+  /* 本物のフォーカスを使うのでブラウザ既定の輪郭は消すが、代わりに.mz-focus-travel-ring
+     を必ず出す（消しっぱなしにしない）。地の色(background)には意図的にtransitionを
+     持たせない——現在地は動きの完了を待たずに読める、が主題の芯だから */
+  outline: none;
+  transition: color 0.2s;
+}
+
+.mz-focus-travel-cell {
+  border-radius: 10px;
+}
+.mz-focus-travel-cell:hover:not(.is-current) {
+  background: #f3f3f1;
+}
+
+/* 到着した瞬間、地が#fff→#eaeae8に変わる。transitionを付けていないので即時反映 */
+.mz-focus-travel-cell.is-current,
+.mz-focus-travel-far.is-current {
+  background: #eaeae8;
+  color: #3d3d3d;
+}
+
+/* ---------- 遠いボタン ---------- */
+
+.mz-focus-travel-far {
+  width: 160px;
+  height: 40px;
+  margin-top: 48px; /* 格子の下、間を48px空けて置く（この数値が距離しきい値の舞台装置） */
+  border-radius: 999px;
+  font-size: 12.5px;
+}
+.mz-focus-travel-far:hover:not(.is-current) {
+  background: #f3f3f1;
+}
+
+/* ---------- 輪郭 ---------- */
+
+.mz-focus-travel-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  opacity: 0; /* 一度もフォーカスが無い初期状態は非表示 */
+  pointer-events: none;
+  will-change: transform, width, height;
+}
+
+.mz-focus-travel-ring-frame {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit; /* 外側(.ring)がJSで書き換えるborder-radiusをそのまま継承 */
+  border: 2px solid #3d3d3d;
+  box-sizing: border-box;
+}
+
+/* 遠距離ジャンプの到着だけに鳴らす合図。経路は語れない距離だから、代わりに
+   「ここに着いた」とだけ言う一度きりのパルス。減速のみで行き過ぎたあと素直に収まる */
+.mz-focus-travel-ring-frame.is-arriving {
+  animation: mz-focus-travel-arrive 120ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes mz-focus-travel-arrive {
+  0% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ---------- 操作: Tab（収録用）/ 戻す ---------- */
+
+.mz-focus-travel-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.mz-focus-travel-ctrl-btn {
+  padding: 9px 22px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 800;
+  color: #4a4a48;
+  cursor: pointer;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s;
+}
+.mz-focus-travel-ctrl-btn:hover {
+  transform: translateY(-2px);
+}
+.mz-focus-travel-ctrl-btn:active {
+  transform: scale(1.06, 0.9);
+}
+.mz-focus-travel-ctrl-btn.is-ghost {
+  background: #eaeae8;
+  box-shadow: none;
+  color: #8c8c8c;
+}
+
+.mz-focus-travel-hint {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #b3b3b3;
+}
+
+/* ---------- 動きを控えたい人へ ----------
+   グローバル側(src/styles/global.css)がtransition-duration/animation-durationを
+   一律0.01msに潰す。このJSの分岐（飛ぶ/飛ばない・遠距離パルスの有無）は実測の
+   px距離とperformance.now()の間隔だけで決まり、CSSの実際の尺には一切依存しない
+   （setTimeoutで「終わった頃合い」を待つ処理がそもそも無い）ので、個別対応は不要。 */
