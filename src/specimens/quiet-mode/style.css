@@ -1,0 +1,270 @@
+/* No.88「動かさずに同じことを言う」
+   潰していいのは尺と反復（装飾）だけ。順序・段階・量（情報）は、動きが使えない
+   なら別の担体へ翻訳する。モノクロ・自己完結。フォルダ単体で他プロジェクトへ
+   コピーしても動く。@media (prefers-reduced-motion) はここには書かない——
+   「潰すだけ」はグローバルCSSの処方箋を .is-flatten として自前で再現している。 */
+
+.mz-quiet-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 440px;
+}
+
+/* ---------- ヘッダー: 3値トグル ---------- */
+
+.mz-quiet-mode-head {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.mz-quiet-mode-mode {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+
+.mz-quiet-mode-mode-btn {
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-quiet-mode-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 舞台: 3つの題材 ----------
+   .is-flatten / .is-translate はここに付く。グローバルCSS
+   (src/styles/global.css の prefers-reduced-motion ブロック)がやっているのと
+   同じ処方箋を、子孫要素全部に !important で当てる。範囲をこの舞台の内側に
+   限っているのは、ヘッダーの3値トグルや「再生」ボタン自身のホバー等の
+   演出まで巻き込まないため。 */
+.mz-quiet-mode-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  padding: 8px 14px;
+  border-radius: 18px;
+  background: #f5f5f3;
+}
+
+.mz-quiet-mode-stage.is-flatten *,
+.mz-quiet-mode-stage.is-translate * {
+  transition-duration: 0.01ms !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+}
+
+.mz-quiet-mode-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+}
+
+.mz-quiet-mode-label {
+  flex: none;
+  width: 26px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- 題材1: 跳ね ---------- */
+
+.mz-quiet-mode-t1 {
+  display: flex;
+  align-items: center;
+}
+
+.mz-quiet-mode-t1-box {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 44px;
+  border-radius: 10px;
+  background: #eaeae8;
+  font-size: 19px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #3d3d3d;
+}
+
+/* 動きあり/潰すだけ: ぷるんと跳ねる。跳ねはここでは唯一のボイン系イージング
+   ——意味と衝突しない(「更新された」という事実を強調するだけの装飾)なので許可される。
+   潰すだけモードでは .is-flatten が animation-duration を 0.01ms に潰し、
+   跳ねが見えなくなる(数字だけは変わる) */
+.mz-quiet-mode-t1-box.is-bump {
+  animation: mz-quiet-mode-bump 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-quiet-mode-bump {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.18, 0.84);
+  }
+  70% {
+    transform: scale(0.94, 1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 翻訳する: 跳ね(動き)を一切使わず、地の濃さという「段階」に置き換える。
+   ここに transition を付けないのが要点——0msで切り替わるからこそ、
+   これは「控えめな動き」ではなく「動きでない語彙」になる。900msの保持は
+   JS(index.tsx)のsetTimeoutが担い、CSSは値の切り替えにしか関与しない */
+.mz-quiet-mode-t1-box.is-emphasis {
+  background: #d6d6d3;
+}
+
+/* ---------- 題材2: 順序 ----------
+   対照が負けない題材。transition-duration(尺=装飾)は.is-flattenで潰れるが、
+   transition-delay(順序=情報)には手を出していないので、0/120/240msの
+   タイミングはどのモードでも残る。 */
+
+.mz-quiet-mode-t2 {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mz-quiet-mode-t2-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mz-quiet-mode-t2-letter {
+  flex: none;
+  width: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #b3b3b3;
+}
+
+.mz-quiet-mode-t2-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #eaeae8;
+}
+
+.mz-quiet-mode-t2-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 4px;
+  background: #3d3d3d;
+  transition: width 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* transition-delay はJSXから行ごとに(0/120/240ms)inlineで与える */
+}
+.mz-quiet-mode-t2-fill.is-grown {
+  width: 100%;
+}
+
+/* ---------- 題材3: 速度が量 ----------
+   量は「速さ」と「粒の密度」で語られる。潰すと帯の見分けがつかなくなる
+   ——これが「動きを消すと情報まで消える」の実演。 */
+
+.mz-quiet-mode-t3 {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mz-quiet-mode-t3-lane {
+  position: relative;
+  height: 18px;
+  border-radius: 4px;
+  background: #eaeae8;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+/* 動きあり: 帯幅を横断する。量が多い帯ほど速い(durationはJSXから帯ごとに与える)。
+   量nぶんの粒が duration/n おきに入場するので、常にn個が均等な間隔で流れて見える。
+   潰すだけ: .is-flatten が duration を 0.01ms・iteration を 1 に潰す。delay(入場の
+   タイミング)は生きたままなので、各粒は自分のdelay経過時に「一瞬で流れ切って消える」
+   ことになり、最終的に帯には何も残らない——2本の帯とも空になり見分けがつかなくなる */
+.mz-quiet-mode-t3-particle {
+  position: absolute;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: #3d3d3d;
+  opacity: 1;
+  transform: translateX(0);
+  animation-name: mz-quiet-mode-flow;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-fill-mode: forwards;
+}
+@keyframes mz-quiet-mode-flow {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(var(--mz-flow-distance));
+    opacity: 0;
+  }
+}
+
+/* 翻訳する: 速度をやめて、量ぶんの点を静止して並べる。個数がそのまま量になる */
+.mz-quiet-mode-t3-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3d3d3d;
+  flex: none;
+}
+.mz-quiet-mode-stage.is-translate .mz-quiet-mode-t3-lane {
+  justify-content: space-evenly;
+  padding: 0 10px;
+}
+
+/* ---------- 操作: 再生 ---------- */
+
+.mz-quiet-mode-play {
+  align-self: center;
+  margin-top: 12px;
+  padding: 9px 26px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 800;
+  color: #4a4a48;
+  cursor: pointer;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s;
+}
+.mz-quiet-mode-play:hover {
+  transform: translateY(-2px);
+}
+.mz-quiet-mode-play:active {
+  transform: scale(1.06, 0.9);
+}

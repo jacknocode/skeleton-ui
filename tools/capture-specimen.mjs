@@ -437,6 +437,118 @@ const CHOREO = {
     await page.mouse.up()
     await sleep(1500)
   },
+  /* No.84〜86「置き換わるとき、何を引き継ぐか」の3種。
+     どれも対照が同居しているので、撮り方は「標本 → 対照」の2周が基本になる。
+     同じ操作を2回するので、間の取り方だけで差が見えるかどうかが決まる */
+  'shared-element-carry': async (page) => {
+    await sleep(700)
+    // 1周目: 引き継ぐ実装。開いて、本文が出そろうまで見せてから戻る
+    await page.getByRole('button', { name: '議事録 #128' }).click()
+    await sleep(1600)
+    await page.getByRole('button', { name: '戻る' }).click()
+    await sleep(1200)
+    // 2周目: 対照のクロスフェード。同じ1枚を同じ順で開く
+    await page.getByRole('button', { name: 'そのまま' }).click()
+    await sleep(600)
+    await page.getByRole('button', { name: '議事録 #128' }).click()
+    await sleep(1600)
+    await page.getByRole('button', { name: '戻る' }).click()
+    await sleep(1400)
+  },
+  'skeleton-handoff': async (page) => {
+    await sleep(600)
+    // 1周目: 骨が並び、届いた行から順に身へ変わる（行は1pxも動かない）
+    await page.getByRole('button', { name: '読み込む' }).click()
+    await sleep(2200)
+    // 2周目: 対照——骨の寸法が実体と違うと、置き換わるたび下の行が飛ぶ
+    await page.getByRole('switch').first().click()
+    await sleep(400)
+    await page.getByRole('button', { name: '読み込む' }).click()
+    await sleep(2200)
+    await page.getByRole('switch').first().click()
+    await sleep(500)
+    // 3周目: 速い応答（60ms）。閾値があるので骨は出ない
+    await page.getByRole('button', { name: '速い応答' }).click()
+    await sleep(1200)
+    // 4周目: 閾値なし。同じ60msでも骨がちらつく
+    await page.getByRole('switch').nth(1).click()
+    await sleep(400)
+    await page.getByRole('button', { name: '速い応答' }).click()
+    await sleep(1600)
+  },
+  'gap-close': async (page) => {
+    await sleep(700)
+    // 1件目: 3拍（抜ける→間→詰まる）がはっきり見える尺で置く
+    await page.getByRole('button', { name: '行 Cを消す' }).click()
+    await sleep(1500)
+    // 2件目: 束ねないことを見せる。1件目が落ち着いてから、もう1件
+    await page.getByRole('button', { name: '行 Bを消す' }).click()
+    await sleep(1500)
+    await page.getByRole('button', { name: '戻す' }).click()
+    await sleep(700)
+    await page.getByRole('button', { name: '戻す' }).click()
+    await sleep(1100)
+    // 対照: 同時に走らせると、下の行が消えかけの行に乗り上げる
+    await page.getByRole('button', { name: '同時に' }).click()
+    await sleep(500)
+    await page.getByRole('button', { name: '行 Cを消す' }).click()
+    await sleep(1400)
+  },
+  /* 「動きが届かないところ」の3種（No.87〜89）は、対照との差が主題そのものなので、
+     どれも「既定を回す → 対照へ倒して同じことを回す」を1本の中に入れる。
+     対照を撮り落とすと、この回の標本は半分しか写らない */
+  'offscreen-handoff': async (page) => {
+    await sleep(700)
+    // 1件目: 飛翔(420ms)→消える→縁がたわむ(420-1020ms)の1周をゆっくり見せる
+    await page.getByRole('button', { name: '行 Bを外へ送る' }).click()
+    await sleep(1500)
+    // 2件・3件目: 束ねないこと。重なると縁の2箇所が同時にたわむ
+    await page.getByRole('button', { name: '行 Aを外へ送る' }).click()
+    await sleep(250)
+    await page.getByRole('button', { name: '行 Cを外へ送る' }).click()
+    await sleep(1700)
+    for (let i = 0; i < 3; i++) {
+      await page.getByRole('button', { name: '戻す' }).click()
+      await sleep(i === 2 ? 900 : 350)
+    }
+    // 対照: 減衰せず端で切り取られ、縁もたわまない。「渡した」ではなく「捨てた」に見える
+    await page.getByRole('button', { name: '端で消すだけ' }).click()
+    await sleep(450)
+    await page.getByRole('button', { name: '行 Bを外へ送る' }).click()
+    await sleep(1700)
+  },
+  'quiet-mode': async (page) => {
+    await sleep(600)
+    await page.getByRole('button', { name: '再生' }).click()
+    await sleep(1900)
+    // 潰すだけ: 量の帯が2本とも空に収束する。収束を待たないと「消えた」が写らない
+    await page.getByRole('button', { name: '潰すだけ' }).click()
+    await sleep(500)
+    await page.getByRole('button', { name: '再生' }).click()
+    await sleep(2600)
+    // 翻訳する: 量は点の個数へ、跳ねは地の濃さ1段へ
+    await page.getByRole('button', { name: '翻訳する' }).click()
+    await sleep(500)
+    await page.getByRole('button', { name: '再生' }).click()
+    await sleep(2200)
+  },
+  'missed-while-away': async (page) => {
+    await sleep(700)
+    // 既定: 離席中に裏で2回変わる（+600ms / +1400ms）。戻るは最後の変化まで押せない
+    await page.getByRole('button', { name: '席を外す' }).click()
+    await sleep(2300)
+    await page.getByRole('button', { name: '戻る' }).click()
+    await sleep(2000) // 跡が時間で消えないことは「待っても消えない」でしか写らない
+    await page.getByRole('button', { name: 'Aの変更を読む' }).click()
+    await sleep(900)
+    // 対照: 同じ台本を、戻った瞬間の再生で受ける。再生が終わると跡は残らない
+    await page.getByRole('button', { name: '戻った瞬間に再生する' }).click()
+    await sleep(500)
+    await page.getByRole('button', { name: '席を外す' }).click()
+    await sleep(2300)
+    await page.getByRole('button', { name: '戻る' }).click()
+    await sleep(1800)
+  },
   'sankey-stream': async (page) => {
     // まず何も触らず、常時流れている待機状態を見せる
     await page.mouse.move(...px(0.5, 1.2))
