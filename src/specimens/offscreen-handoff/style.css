@@ -1,0 +1,382 @@
+/* No.87「行き先が画面の外」
+   受け皿は画面の外にあるので、「消える」と「渡る」の区別を証明する場所がない。
+   だから証拠はチップ（飛んでいくもの）ではなく縁（残るもの）に置く。
+   縁のたわみは1本のCSSキーフレーム（押し込み→戻り）で、チップの飛翔も1本の
+   キーフレーム（移動→減衰）で完結させてあり、JS側はDOMの後片付けだけをする。
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。 */
+
+/* --mz-offscreen-handoff-bg: 消しゴム要素(.eraser)が塗る色。標本の背景色と
+   一致している必要がある依存(収録ステージ/.zk-cardの --zk-card と同じ #eaeae8)。
+   別プロジェクトへコピーするときはこの変数だけ上書きすれば足りる */
+.mz-offscreen-handoff {
+  --mz-offscreen-handoff-bg: #eaeae8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 460px;
+}
+
+/* ---------- ヘッダー: 対照トグル ---------- */
+
+.mz-offscreen-handoff-head {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.mz-offscreen-handoff-mode {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+
+.mz-offscreen-handoff-mode-btn {
+  padding: 6px 13px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-offscreen-handoff-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-offscreen-handoff-mode-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+/* ---------- ステージ: リスト・飛翔レイヤー・縁 ----------
+   高さ200px固定(4行ぶん: 44px*4 + 8px*3)。行が減っても縮まない。
+   capture側のステージはplace-items:centerなので、ここが縮むと標本全体
+   （トグルや戻すボタンまで）が再センタリングでずれてしまうため */
+.mz-offscreen-handoff-stage {
+  position: relative;
+  width: 100%;
+  height: 200px;
+}
+
+/* 重なり順(下から上): 縁の直線(1) < 消しゴム(2) < たわみの輪郭(3) < リスト(4) < チップ(5) */
+.mz-offscreen-handoff-list {
+  position: relative;
+  z-index: 4;
+  list-style: none;
+  width: 300px;
+}
+
+.mz-offscreen-handoff-row {
+  position: relative;
+}
+
+/* 席: 高さ固定(44px)。閉じるのは「送った」通知の200ms後、240msかけて。
+   飛翔開始から遅れて始まる＝先に(チップが)抜け、それから(席が)詰まる、を
+   No.86から踏襲した構造 */
+.mz-offscreen-handoff-seat {
+  height: 44px;
+  overflow: hidden;
+  border-radius: 10px;
+  transition: height 240ms cubic-bezier(0.4, 0, 0.2, 1) 200ms;
+}
+.mz-offscreen-handoff-seat.is-collapsing {
+  height: 0;
+}
+
+.mz-offscreen-handoff-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 0 14px;
+  background: #f5f5f3;
+}
+/* 中身は送信と同時に即座に消える(transitionなし)。この場から視覚的な役目を
+   引き継ぐのはチップなので、中身自体をアニメーションさせる必要がない */
+.mz-offscreen-handoff-content.is-hidden {
+  opacity: 0;
+}
+
+.mz-offscreen-handoff-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3d3d3d;
+}
+
+.mz-offscreen-handoff-send {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  line-height: 1;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-offscreen-handoff-send:hover:not(:disabled) {
+  background: #dcdcda;
+  color: #3d3d3d;
+}
+.mz-offscreen-handoff-send:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+/* 8px分のgapを実体divで持つ。席と同じdelay/durationで0へ縮む */
+.mz-offscreen-handoff-gap {
+  height: 8px;
+  transition: height 240ms cubic-bezier(0.4, 0, 0.2, 1) 200ms;
+}
+.mz-offscreen-handoff-gap.is-collapsing {
+  height: 0;
+}
+
+/* ---------- 戻ってきた行の一瞬の収まり(装飾) ---------- */
+@keyframes mz-offscreen-handoff-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.mz-offscreen-handoff-content.is-entering {
+  animation: mz-offscreen-handoff-enter 220ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* ---------- 空の器 ---------- */
+.mz-offscreen-handoff-empty {
+  position: relative;
+  z-index: 4;
+  width: 300px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed #d6d6d4;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #b3b3b3;
+}
+
+/* ---------- 飛翔レイヤー ----------
+   縁の内側(458px = ステージ460px - 縁2px)までで切り取る。既定モードのチップは
+   このラインに届く前に消え終わるので、実際には切り取られない。対照モードだけが
+   ここで文字通り切り取られて消える */
+.mz-offscreen-handoff-flight-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  width: 458px;
+  height: 200px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* チップ: 行の中身の写し。行の位置にぴったり重なって現れ、そのまま右へ飛ぶ。
+   translateXの終点はどちらのモードでも「移動」自体の尺・緩急(420ms・減速のみ)は
+   同じ値を使う。違うのは終点の位置とopacityの振る舞いだけ */
+.mz-offscreen-handoff-chip {
+  position: absolute;
+  left: 0;
+  width: 300px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: #f5f5f3;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  font-weight: 700;
+  color: #3d3d3d;
+  animation-name: mz-offscreen-handoff-fly;
+  animation-duration: 420ms;
+  animation-fill-mode: both;
+}
+/* 既定(渡す): 0-420msを通して移動は減速のみ(跳ねない)。opacityは240ms地点まで
+   1のままで、そこから420msまでの180msだけlinearで0へ落ちる。
+   =「縁の内側28px手前(=this chipの終点)に着く前に、必ず消え終わっている」 */
+@keyframes mz-offscreen-handoff-fly {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  57.143% {
+    /* =240ms/420ms。ここまでopacityは1のまま */
+    opacity: 1;
+    animation-timing-function: linear;
+  }
+  100% {
+    transform: translateX(130px); /* 終点: 縁の内側28px手前 */
+    opacity: 0;
+  }
+}
+/* 対照(端で消すだけ): 移動の尺・緩急は既定と同じcubic-bezier(0.22,0.61,0.36,1)。
+   違いはここだけ — 減衰せず(opacity:1のまま)、チップ自身(幅300px)の左端が
+   縁の内側458pxを追い越すところまで直進する。チップの文字はチップの左寄りに
+   あるので、左端が458pxを越えて初めて文字ごと.flight-layerのoverflow:hidden
+   に切り取られる(縁の位置(458px)ぶんだけ動かすと箱の右側の余白しか切れず、
+   文字だけがいつまでも見えたままになってしまう) */
+.is-discard .mz-offscreen-handoff-chip {
+  animation-name: mz-offscreen-handoff-fly-discard;
+}
+@keyframes mz-offscreen-handoff-fly-discard {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  100% {
+    transform: translateX(480px); /* 左端(=文字の位置)が458pxを追い越し、切り取られる */
+    opacity: 1;
+  }
+}
+
+/* ---------- 縁 ----------
+   上下いっぱいの1本の線。この向こうには何も描かない＝受け皿は見えない */
+.mz-offscreen-handoff-edge {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #b3b3b3;
+}
+
+/* 消しゴム層: ルート幅(460px = 縁の右端)で切り取る。.bowは輪郭線(border-left)
+   だけなので、これを縁に重ねるだけでは元のまっすぐな直線が凹んだ区間もそのまま
+   透けて見えてしまい、「線が凹んだ」ではなく「線の横に弧が生えた」二重の絵に
+   なる(実機の収録ステージで検証して発見)。.edgeより上・.bow-layerより下に
+   置くことで、消しゴムの塗り→たわみの輪郭、の順に重なる */
+.mz-offscreen-handoff-eraser-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 460px;
+  height: 200px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* 消しゴム: .bowと同じ楕円・同じ動きだが、輪郭ではなく背景色(--mz-offscreen-handoff-bg)
+   の塗り。静止位置は楕円の左端(=塗りの最も出っ張る点)がちょうど縁の右端(460px)に
+   来るよう置く——押し込む前は縁に一切かからない。押し込み量は.bowより2px(線幅ぶん)
+   大きい9px。460-9=451と、.bowの静止458px-押し込み7px=451が一致するので、
+   両者の弧の最も出っ張る点はどちらも同じ「縁から7px内側」で揃う */
+.mz-offscreen-handoff-eraser {
+  position: absolute;
+  left: 460px;
+  width: 40px;
+  height: 90px;
+  border-radius: 50%;
+  background: var(--mz-offscreen-handoff-bg);
+  transform: translateY(-50%) translateX(0);
+}
+.mz-offscreen-handoff-eraser.is-pushing {
+  animation: mz-offscreen-handoff-eraser-push 600ms 420ms 1 both;
+}
+@keyframes mz-offscreen-handoff-eraser-push {
+  0% {
+    transform: translateY(-50%) translateX(0);
+    animation-timing-function: cubic-bezier(0.33, 0, 0.67, 1); /* 押し込み: .bowと同じ緩急 */
+  }
+  43.333% {
+    /* =260ms/600ms。.bowの7pxに線幅2pxを足した9px */
+    transform: translateY(-50%) translateX(-9px);
+    animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); /* 戻り: .bowと同じ緩急 */
+  }
+  100% {
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+/* たわみ要素の置き場。border-radius:50%の楕円は「左半分」を描いても、その
+   円弧の上下の極が箱の中心x(=縁から20px内側)まで達してしまうため、押し込む
+   前から常に薄い弓なりが見えてしまう(検証で発見)。縁の内側458pxで切り取る
+   ことで、押し込まれていない間は完全に見えなくする——対照モードで
+   「縁はたわまない」をこの層自身が保証する */
+.mz-offscreen-handoff-bow-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 458px;
+  height: 200px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* たわみ: 幅40px・高さ90pxの円の左辺だけをborder-leftで見せる。静止位置は
+   円の左端(弓なりの最も出っ張る点)がちょうど縁の位置(458px)に来るよう置く。
+   押し込まれていない間は円の残りの弧(458px未満の領域)が無いので
+   上の.bow-layerに切り取られて何も見えない。translateXで左(内側)へ押し込むと
+   円の左側が切り取り線の内側に入り込み、そのぶんだけ弓なりが見える。
+   CSSのtransitionだけで弓なりの凹みが作れる（SVGのd補間はCSSで補間できないので使わない）。
+   中心yは送った行の中心yと一致させる(inline style)。矢印・文字は一切出さない */
+.mz-offscreen-handoff-bow {
+  position: absolute;
+  left: 458px;
+  width: 40px;
+  height: 90px;
+  border-radius: 50%;
+  border-left: 2px solid #b3b3b3;
+  transform: translateY(-50%) translateX(0);
+}
+/* 既定(渡す)だけがこのクラスを持つ。対照(端で消すだけ)ではたわまない —
+   まっすぐな縁のまま。animation-delay(420ms)はチップの着地と同時に始まる印 */
+.mz-offscreen-handoff-bow.is-pushing {
+  animation: mz-offscreen-handoff-bow-push 600ms 420ms 1 both;
+}
+@keyframes mz-offscreen-handoff-bow-push {
+  0% {
+    transform: translateY(-50%) translateX(0);
+    animation-timing-function: cubic-bezier(0.33, 0, 0.67, 1); /* 押し込み: 加速して減速 */
+  }
+  43.333% {
+    /* =260ms/600ms。最大の押し込み量、最大7px */
+    transform: translateY(-50%) translateX(-7px);
+    animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); /* 戻り: 減速のみ・跳ねない */
+  }
+  100% {
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+/* ---------- 操作: 戻す ---------- */
+
+.mz-offscreen-handoff-undo {
+  margin-top: 14px;
+  padding: 9px 22px;
+  border-radius: 999px;
+  background: #f5f5f3;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 800;
+  color: #4a4a48;
+  cursor: pointer;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s;
+}
+.mz-offscreen-handoff-undo:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.mz-offscreen-handoff-undo:active:not(:disabled) {
+  transform: scale(1.06, 0.9);
+}
+.mz-offscreen-handoff-undo:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
