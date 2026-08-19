@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import './style.css'
 
-/* ---- No.88「まだ見えていないところで増える」----
+/* ---- No.90「まだ見えていないところで増える」----
    主題は2つ。(1) 見えない場所（スクロールの外）での変化は、縁の小さな気配だけで言う。
    読んでいる行は1pxも動かさない。(2) 気配は「消える」のではなく、行そのものに受け渡す
    （未読の縦線として）。上端に着いた時点で「なかったこと」にするのではなく、

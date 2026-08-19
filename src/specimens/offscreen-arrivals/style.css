@@ -1,4 +1,4 @@
-/* No.88「まだ見えていないところで増える」
+/* No.90「まだ見えていないところで増える」
    モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
 
    行は「席」(.mz-offscreen-arrivals-seat: 高さを持つ外側、0→52pxへ開く)と
@@ -75,6 +75,24 @@
   overflow-anchor: none;
   list-style: none;
   border-radius: 14px;
+}
+
+/* ---------- 物差し ----------
+   「読んでいる場所は動かない」は実測できても、GIF越しには目で読めない——比較する基準が
+   無いと「リストが1行ぶんスクロールしただけ」にしか見えない、という企画側の見落としを
+   実物のスクリーンショットで直した箇所。.list-wrap の子として絶対配置し、リストの
+   スクロール・モード・到着件数のいずれからも影響を受けない座標系に固定する
+   （top はJS側(index.tsx の RULER_TOP)が算出して inline style で渡す＝読みかけ行の
+   初期中心Yと一致させる計算をここで二重管理しない）。計測器であって装飾ではないので、
+   破線・薄い灰・ラベルなしに留めて目立たせすぎない。 */
+.mz-offscreen-arrivals-ruler {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed #b3b3b3;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .mz-offscreen-arrivals-seat {

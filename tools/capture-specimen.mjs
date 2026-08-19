@@ -549,6 +549,36 @@ const CHOREO = {
     await page.getByRole('button', { name: '戻る' }).click()
     await sleep(1800)
   },
+  /* 「読み手の現在地」の3種（No.90〜92）。No.90 は撮り方そのものが企画の一部で、
+     対照を先に回す——初期位置では「読みかけ」の行がちょうど物差しの破線に載っているので、
+     そこから流されるところを撮るには、まだ何も届いていない状態で対照へ倒すしかない。
+     流されたあとに自分でスクロールして現在地を取り戻すところまで入れて、既定へ戻す */
+  'offscreen-arrivals': async (page) => {
+    await sleep(600)
+    // 既定を先に回す。初期位置では「読みかけ」の行がちょうど物差しの破線に載っているので、
+    // 貼り付いて動かないことを見せるにはこの状態から始めるしかない（順序が撮り方の中身）
+    await page.getByRole('button', { name: '届く' }).click()
+    await sleep(900)
+    for (let i = 0; i < 3; i++) {
+      await page.getByRole('button', { name: '届く' }).click()
+      await sleep(260)
+    }
+    await sleep(1100)
+    // 気配を辿ると上端へ。気配が消え、そのあと未読線が上から順に薄れる
+    await page.locator('.mz-offscreen-arrivals-pill').click()
+    await sleep(2300)
+    // 読みかけの行まで戻る（4件増えたぶん、初期より 4行ぶん下にいる）
+    await page.mouse.move(280, 170)
+    await page.mouse.wheel(0, 328)
+    await sleep(800)
+    // 対照: 1件届くごとに、読みかけの行が破線から 52px ずつ落ちていく
+    await page.getByRole('button', { name: 'そのまま挿し込む' }).click()
+    await sleep(450)
+    await page.getByRole('button', { name: '届く' }).click()
+    await sleep(1000)
+    await page.getByRole('button', { name: '届く' }).click()
+    await sleep(1500)
+  },
   'sankey-stream': async (page) => {
     // まず何も触らず、常時流れている待機状態を見せる
     await page.mouse.move(...px(0.5, 1.2))
