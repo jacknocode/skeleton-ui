@@ -22,27 +22,28 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 10px;
 }
 
 .mz-filtered-out-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
 }
 
 .mz-filtered-out-chip {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 10px;
+  gap: 4px;
+  padding: 5px 8px;
   border-radius: 999px;
   background: #eaeae8;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #5c5c5c;
   cursor: pointer;
+  white-space: nowrap;
   transition:
     background-color 0.2s,
     color 0.2s;
@@ -77,12 +78,13 @@
   background: #eaeae8;
 }
 .mz-filtered-out-mode-btn {
-  padding: 6px 10px;
+  padding: 5px 8px;
   border-radius: 999px;
-  font-size: 10.5px;
+  font-size: 9.5px;
   font-weight: 700;
   color: #8c8c8c;
   cursor: pointer;
+  white-space: nowrap;
   transition:
     background-color 0.2s,
     color 0.2s;

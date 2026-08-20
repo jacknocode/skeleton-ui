@@ -78,7 +78,18 @@
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid #f0f0ee;
+  border-left: 2px solid transparent; /* 「読みかけ」印の場所を最初から確保。色を差すだけで
+    レイアウトが動かない（two-cursorsの選択マーカーと同じ手筋） */
   background: #fff;
+}
+
+/* 「読みかけ」印: id=9の行に常に付く縦線。左端・2px・#5c5c5c。No.90/No.93/two-cursors等
+   図鑑共通の「左端の縦線＝行の位置情報そのもの」語彙をそのまま使う。送信前から出ていて、
+   戻ったあとも消えない——「どこで離れたか」を示すしおり(横線+札。送信のときだけ現れる)
+   とは役割が違う担体で、こちらは「どの行が自分の行か」を送信の有無にかかわらず言う。
+   既定・対照で完全に同一（差分の3箇所には含めない、両方に置く物差し） */
+.mz-return-changed-item.is-current {
+  border-left-color: #5c5c5c;
 }
 
 .mz-return-changed-item-label {
