@@ -728,6 +728,57 @@ const CHOREO = {
     await glide(page, cur, px(0.5, 1.2), 380)
     await sleep(1400)
   },
+  /* No.98: 他人の遅れ（260msの間＋220msの移動）は、押した直後に何も起きない時間そのものが
+     中身なので、押してから次の操作までを詰めない。最後の対照だけは逆で、
+     「他人が自分の輪郭を奪う」瞬間を見せたいので、押したあとの静止を長く取る */
+  'others-place': async (page) => {
+    await sleep(1100) // 自分の3担体（囲む=行06／塗る=行03／指す）と、左の帯に居るK・Rを読ませる
+    await page.getByRole('button', { name: 'Kが動く' }).click()
+    await sleep(1500) // 押しても260msは動かない。遅れて届くことがこの標本の主張
+    await page.getByRole('button', { name: 'Rが動く' }).click()
+    await sleep(1400)
+    // 自分のポインタ（▸）を乗せる。他人が動いても自分の担体は一度も奪われない
+    const rows = page.locator('.mz-others-place-row')
+    const first = await rows.nth(1).boundingBox()
+    const last = await rows.nth(6).boundingBox()
+    let cur = [first.x + first.width / 2, first.y + first.height / 2]
+    await page.mouse.move(...cur)
+    await sleep(700)
+    const down = [last.x + last.width / 2, last.y + last.height / 2]
+    await glide(page, cur, down, 900)
+    await sleep(800)
+    await page.getByRole('button', { name: 'Kが3回続けて動く' }).click()
+    await sleep(1800) // 他人が3回動いても、自分の輪郭は2pxのまま変わらない
+    await page.getByRole('button', { name: '3人が同じ行' }).click()
+    await sleep(1500) // 3人は1本に畳まれて「+2」。落とすのは「誰が」で「何人が」は落とさない
+    await page.getByRole('button', { name: 'Kが離席' }).click()
+    await sleep(1300) // 縦線が薄れて消えるだけ。行は1pxも動かない
+    // 対照: 他人を自分と同じ輪郭で、同じ即応性で描く。輪郭が2つ同時に立ち、主役を奪われる
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await page.getByRole('button', { name: 'Kが3回続けて動く' }).click()
+    await sleep(2200)
+  },
+  /* No.96: 見どころは2つで、順番が要る。まず「読みかけが結果に残る」場合
+     （既定は動かない／対照は枠の先頭まで落ちる）、次に「外に出る」場合
+     （既定は帯とチップ印が行方を言う／対照は何も言わない）。
+     対照を後半にまとめて、同じ2操作を同じ順で繰り返す */
+  'filtered-out': async (page) => {
+    await sleep(1400) // 読みかけの縦線（3番目の行）と並びを読ませる間
+    await page.getByRole('button', { name: /在庫あり/ }).click()
+    await sleep(1900) // 外れる行は上へ抜け、読みかけは枠内 y=68px から動かない
+    await page.getByRole('button', { name: /要発注/ }).click()
+    await sleep(2100) // 読みかけが結果の外へ。帯とチップ印（N件を外した）を読ませる
+    await page.getByRole('button', { name: '条件を戻す' }).click()
+    await sleep(1800) // 外に出ていた行が上から戻り、読みかけが誤差0で元の位置へ
+    // 対照: 同じ2操作。座標を守らないので読みかけが枠の先頭まで落ち、行方も語られない
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(800)
+    await page.getByRole('button', { name: /在庫あり/ }).click()
+    await sleep(2000) // 読みかけ（縦線の行）が枠の先頭へ 68px 落ちる
+    await page.getByRole('button', { name: /要発注/ }).click()
+    await sleep(2200) // 読みかけは消え、帯もチップ印も出ない
+  },
   /* No.97: 見どころは「戻ったのに何も戻っていない」ほうなので、対照の着地後の静止を
      いちばん長く取る。既定は縦線の付いた行（項目09）に着き、対照は縦線がどこにも
      見当たらないまま画面が1pxも動かない——動かないことを見せるには間が要る */

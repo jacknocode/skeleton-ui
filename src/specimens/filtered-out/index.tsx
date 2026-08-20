@@ -82,13 +82,26 @@ import './style.css'
 
 type ChipKey = 'inStock' | 'needOrder' | 'arriving'
 
-// チップが残すid集合。企画書の表そのもの(読みかけ id=6 が在庫あり/今週入荷では残り、
-// 要発注では外れる)。この表を直接ハードコードし、行データ側のフラグから再導出しない
-// ——実測対象の数値(受け入れ条件A〜C)がこの表そのものなので、ズレようがない形にした
+// ---- 台帳(16行)とチップの中身: 企画レビュー後の差し替え ----
+// 初版(12行)は「在庫あり」適用後に残存8件(scrollHeight=272, maxScrollTop=68)となり、
+// 対照モードが何もしないまま残す旧scrollTop(136)がブラウザの自動クランプで偶然68に
+// 落ち、既定の同期結果(68)と静止後に一致してしまっていた——「対照だけ実測でズレる」が
+// GIFはおろか静止画の数値でも見えない状態(No.90が一度作り直した「実測は通るが見て
+// 分からない」と同じ失敗)。原因は行数不足で、絞り込み後もmaxScrollTopが十分大きい
+// (=対照の据え置きscrollTopがクランプされない)台帳に直す必要があった。
+//
+// 直したのはデータだけ(骨格は無変更): 16行にし、「在庫あり」は12件残す
+// (scrollHeight=408, maxScrollTop=204で136はクランプされない)。除外4件のうち
+// 読みかけ(id=6)より上をちょうど2件(id=2,4)に固定した——これで対照は「据え置いた
+// scrollTop(136)」対「上2件ぶん(68px)減った新しいdocumentY」の差がそのまま枠内yの
+// ズレになり、既定との違いが静止後の数値としても現れる(実測は本文末の報告を参照)。
+// 「要発注」「今週入荷」は個数を調整しただけ(要発注は読みかけを含め9件除外、
+// 今週入荷は10件残し、どちらも絞り込み後のmaxScrollTopが136を超えるため同様の
+// クランプ衝突は起きない)。
 const CHIP_IDS: Record<ChipKey, number[]> = {
-  inStock: [0, 1, 3, 4, 6, 8, 9, 11],
-  needOrder: [1, 2, 5, 7, 10],
-  arriving: [0, 2, 3, 6, 7, 9],
+  inStock: [0, 1, 3, 5, 6, 7, 8, 9, 11, 12, 14, 15], // 12件。読みかけ(6)より上は id=2,4 だけを外す
+  needOrder: [1, 2, 5, 7, 9, 10, 12], // 7件残し=9件除外(読みかけ6を含む)。帯・チップ印の実演役
+  arriving: [0, 2, 3, 6, 7, 9, 11, 13, 14, 15], // 10件。読みかけ(6)は残る
 }
 const CHIP_LABEL: Record<ChipKey, string> = {
   inStock: '在庫あり',
@@ -98,7 +111,7 @@ const CHIP_LABEL: Record<ChipKey, string> = {
 const CHIP_ORDER: ChipKey[] = ['inStock', 'needOrder', 'arriving']
 
 interface RowData {
-  id: number // 0〜11固定。上下判定・可視判定はこのidだけで行う(DOM計測に頼らない)
+  id: number // 0〜15固定。上下判定・可視判定はこのidだけで行う(DOM計測に頼らない)
   name: string
   remaining: number
 }
@@ -117,6 +130,10 @@ const ROWS: RowData[] = [
   { id: 9, name: 'ラベルプリンタ', remaining: 2 },
   { id: 10, name: 'バーコードシール', remaining: 8 },
   { id: 11, name: '台車部品', remaining: 13 },
+  { id: 12, name: '名刺入れ', remaining: 16 },
+  { id: 13, name: '蛍光ペン', remaining: 1 },
+  { id: 14, name: 'ゴム手袋', remaining: 10 },
+  { id: 15, name: 'メモ帳', remaining: 19 },
 ]
 
 const DEFAULT_READING_ID = 6
