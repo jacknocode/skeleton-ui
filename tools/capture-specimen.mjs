@@ -728,6 +728,27 @@ const CHOREO = {
     await glide(page, cur, px(0.5, 1.2), 380)
     await sleep(1400)
   },
+  /* No.97: 見どころは「戻ったのに何も戻っていない」ほうなので、対照の着地後の静止を
+     いちばん長く取る。既定は縦線の付いた行（項目09）に着き、対照は縦線がどこにも
+     見当たらないまま画面が1pxも動かない——動かないことを見せるには間が要る */
+  'return-changed': async (page) => {
+    await sleep(1300) // 読みかけの縦線（項目09）と板の並びを読ませる間
+    await page.getByRole('button', { name: '送信' }).click()
+    await sleep(1600) // 尺ゼロの移動・出発地のしおり・戻り帯を読ませる
+    await page.getByRole('button', { name: '上で3件消える' }).click()
+    await sleep(1800) // 帯が「（上で3件消えました）」に変わるのを読ませる。押す前の劣化がこの標本の主張
+    await page.getByRole('button', { name: /元の位置へ戻る/ }).click()
+    await sleep(1900) // 縦線の付いた行に着いたことを確かめる間
+    // 対照: 同じ手順が、座標に誤差0で戻って、別の行に着く
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(800)
+    await page.getByRole('button', { name: '送信' }).click()
+    await sleep(1300)
+    await page.getByRole('button', { name: '上で3件消える' }).click()
+    await sleep(1500) // 帯の文言が変わらないことを見せる間
+    await page.getByRole('button', { name: /元の位置へ戻る/ }).click()
+    await sleep(2400) // 画面が1pxも動かない。縦線は画面外(-34px)に居る
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
