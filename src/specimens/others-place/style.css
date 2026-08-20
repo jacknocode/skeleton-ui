@@ -1,26 +1,291 @@
+/* No.98「自分のじゃない現在地」
+   外形340px。ヘッダ(既定/対照) + 板(8行×32px=256px、左に14pxの余白帯) + 操作ボタン。
+   縦はflexでgap 4pxずつ(実測して330px以内に収まることを確認済み。tools/measure等は
+   触らずscratchpadで検証した)。
+
+   板は「余白帯(14px, 他人専用)」+「行の列(326px, 自分専用の3担体が乗る)」の2列。
+   受け入れ条件A(他人の矩形.rightが行の矩形.left以下)は、この2列を重ねずCSSの
+   position: absoluteでも幅を厳密に14px/326pxに固定していることでそのまま満たされる。
+
+   自分の3担体はNo.95と同じ作り: 選択(塗る)は行のbackground-colorを直接遷移、
+   フォーカス(囲む)は.mz-others-place-ring(outline-offset:-1px固定、
+   outline-widthとoutline-colorだけ主役状態で切替)、ポインタ(指す)は
+   .mz-others-place-pointer(▸はborderで作った三角形)。理由はNo.95のstyle.cssコメント
+   と同じ(outlineはwidthを変えても行に近い側の縁=アンカーが動かない)。
+
+   他人3人(K/R/S)は余白帯の中の浮遊要素(.mz-others-place-mark)。translateYで行へ運ぶ
+   ところまでは自分の担体と同じ技法だが、①行の外にしか存在しない②主役の概念がない
+   (outline-widthのような強弱を持たない)③既定では260ms+220msで遅れて届く、の3点で
+   自分の担体から明確に切り離している。
+
+   緩急の約束: 減速のみ cubic-bezier(0.22, 0.61, 0.36, 1)。跳ねる方は使わない——
+   ここが提示するのは「どこに居るか」であって「いま起きた」の合図ではないため。 */
+
 .mz-others-place {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  --mz-others-place-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 340px;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-others-place.is-active {
-  animation: mz-others-place-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- ヘッダ: 既定 / 対照 ---------- */
+
+.mz-others-place-topbar {
+  display: flex;
+  justify-content: flex-end;
 }
-@keyframes mz-others-place-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+
+.mz-others-place-mode {
+  display: flex;
+  padding: 2px;
+  border-radius: 999px;
+  background: #eaeae8;
 }
+
+.mz-others-place-mode-btn {
+  padding: 2px 11px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.18s var(--mz-others-place-ease),
+    color 0.18s var(--mz-others-place-ease);
+}
+.mz-others-place-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 板 ---------- */
+
+.mz-others-place-board {
+  position: relative;
+  display: flex;
+  width: 340px;
+  height: 256px; /* 32px × 8行 */
+  background: #f5f5f3;
+  border: 1px solid #e0e0dd;
+  border-radius: 8px;
+  overflow: hidden; /* outlineはoffset:-1pxで内側に収めてあるので角丸を割らない */
+  outline: none; /* 板自体のブラウザ既定フォーカスリングは消す。板の「いまどこ」は.ringが語る */
+}
+
+/* ---------- 余白帯(他人専用・常に14px確保する) ---------- */
+
+.mz-others-place-gutter {
+  position: relative;
+  flex: 0 0 14px;
+  width: 14px;
+  height: 100%;
+}
+
+.mz-others-place-mark {
+  position: absolute;
+  left: 1px;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 12px;
+  height: 16px;
+  opacity: 0; /* 「無い」の既定値。is-visibleでだけ1になる */
+  pointer-events: none;
+  transition:
+    transform 220ms var(--mz-others-place-ease),
+    opacity 200ms var(--mz-others-place-ease);
+}
+.mz-others-place-mark.is-visible {
+  opacity: 1;
+}
+.mz-others-place-mark-bar {
+  flex-shrink: 0;
+  width: 2px;
+  height: 16px;
+  background: #8c8c8c;
+}
+.mz-others-place-mark-label {
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+  color: #3d3d3d;
+}
+.mz-others-place-mark-badge {
+  position: absolute;
+  left: 0;
+  top: 17px;
+  font-size: 7px;
+  font-weight: 800;
+  line-height: 1;
+  color: #8c8c8c;
+}
+
+/* 対照モード: 他人は余白帯に出さない(自分と同じoutlineで行に描くため) */
+.mz-others-place.is-contrast .mz-others-place-mark {
+  opacity: 0 !important;
+  transition: none;
+}
+
+/* ---------- 行の列(自分専用の3担体が乗る) ---------- */
+
+.mz-others-place-rows {
+  position: relative;
+  flex: 1 1 326px;
+  width: 326px;
+}
+
+.mz-others-place-row {
+  position: relative;
+  height: 32px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 34px 0 12px; /* 右側は▸の置き場所ぶん空けておく */
+  border-bottom: 1px solid #e5e5e2;
+  cursor: pointer;
+  transition:
+    background-color 0.2s var(--mz-others-place-ease),
+    outline-width 0.15s var(--mz-others-place-ease),
+    outline-color 0.15s var(--mz-others-place-ease);
+  outline-style: solid;
+  outline-offset: -1px;
+  outline-width: 0;
+  outline-color: transparent;
+}
+.mz-others-place-row:last-child {
+  border-bottom: none;
+}
+/* 罠1対策(No.95の実測で発見): hoverの詳細度が他の状態指定に勝たないよう、
+   選択済み・対照の他人outlineの両方を:not()で明示的に除外する */
+.mz-others-place-row:hover:not(.is-selected):not(.is-other-outline) {
+  background: #f0f0ee;
+}
+
+.mz-others-place-row-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #3d3d3d;
+}
+
+/* 選択(塗る): actorにもcontrastLastMoverにも一切触れない。
+   選択はアプリの状態なので、手の情報にも他人の入力にも汚染されない(No.95の原則の継承)。 */
+.mz-others-place-row.is-selected {
+  background: #e2e2de;
+}
+
+/* 対照モードで他人の現在地を行に描く outline(差分1)。自分のringと同じ値を使う。 */
+.mz-others-place-row.is-other-outline {
+  outline-width: 1px;
+  outline-color: #b3b3b3;
+}
+.mz-others-place-row.is-other-outline-primary {
+  outline-width: 2px;
+  outline-color: #2b2b2b;
+}
+
+/* ---------- 輪郭(フォーカス。囲む。自分専用) ---------- */
+
+.mz-others-place-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 326px;
+  height: 32px;
+  outline-style: solid;
+  outline-offset: -1px;
+  outline-width: 1px;
+  outline-color: #b3b3b3; /* 主役でないときの既定値 */
+  opacity: 0; /* 「無い」の既定値。is-shownでだけ1になる */
+  pointer-events: none;
+  transition:
+    transform 140ms var(--mz-others-place-ease),
+    outline-width 180ms var(--mz-others-place-ease),
+    outline-color 180ms var(--mz-others-place-ease),
+    opacity 180ms var(--mz-others-place-ease);
+}
+.mz-others-place-ring.is-shown {
+  opacity: 1;
+}
+.mz-others-place-ring.is-primary {
+  outline-width: 2px;
+  outline-color: #2b2b2b;
+}
+
+/* ---------- ▸(ポインタ。指す。自分専用) ---------- */
+
+.mz-others-place-pointer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 326px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 12px;
+  opacity: 0; /* 「無い」の既定値 */
+  pointer-events: none;
+  transition:
+    transform 120ms var(--mz-others-place-ease),
+    opacity 180ms var(--mz-others-place-ease);
+}
+.mz-others-place-pointer::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid #3d3d3d;
+}
+/* 「弱い」(0.35)と「無い」(0)を混同しない: is-shownが無ければ常に0、
+   is-shownの中でだけ主役(1)/非主役(0.35)が分かれる */
+.mz-others-place-pointer.is-shown {
+  opacity: 0.35;
+}
+.mz-others-place-pointer.is-shown.is-primary {
+  opacity: 1;
+}
+
+/* ---------- 操作ボタン ---------- */
+
+.mz-others-place-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.mz-others-place-ctrl-btn {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.07);
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: #4a4a48;
+  cursor: pointer;
+  transition:
+    transform 0.18s var(--mz-others-place-ease),
+    background-color 0.18s var(--mz-others-place-ease);
+}
+.mz-others-place-ctrl-btn:hover {
+  background: #f5f5f3;
+}
+.mz-others-place-ctrl-btn:active {
+  transform: scale(0.96);
+}
+.mz-others-place-ctrl-btn.is-ghost {
+  background: #eaeae8;
+  box-shadow: none;
+  color: #8c8c8c;
+}
+.mz-others-place-ctrl-btn.is-ghost:hover {
+  background: #e2e2de;
+}
+
+/* ---------- 動きを控えたい人へ ----------
+   グローバル側(src/styles/global.css)がtransition-duration/animation-durationを
+   一律0.01msに潰す。この標本の分岐(主役の切り替え・他人の到着・畳み)はReact state
+   とsetTimeoutの実時間だけで決まり、CSSの実際の尺には依存しないので個別対応は不要。 */
