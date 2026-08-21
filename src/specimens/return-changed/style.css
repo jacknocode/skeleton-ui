@@ -1,0 +1,311 @@
+/* No.97「戻り先が変わっている」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+
+   板は幅340px固定。スクロール領域(.mz-return-changed-scroll)は高さ204px
+   (行高34px×可視6行)、中に16項目(id 0〜15固定・再利用しない)を積む。
+   しおり・「ここに在った」印はどちらもスクロール領域の「中」に絶対配置する
+   ——リストと同じ座標系に置くことで、行が消えて並び順が詰まっても
+   JSが毎フレーム追従計算せずに正しい位置へ追従する（No.94のしおりと同じ作法）。 */
+
+.mz-return-changed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 340px;
+}
+
+/* ---------- 右上のトグル: 既定 / 対照 ---------- */
+
+.mz-return-changed-topbar {
+  width: 340px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mz-return-changed-mode {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+
+.mz-return-changed-mode-btn {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    opacity 0.2s;
+}
+.mz-return-changed-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-return-changed-mode-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+/* ---------- 板 ---------- */
+
+.mz-return-changed-frame {
+  position: relative;
+  width: 340px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+}
+
+.mz-return-changed-scroll {
+  position: relative;
+  width: 340px;
+  height: 204px;
+  overflow-y: auto;
+  overflow-anchor: none; /* ブラウザの自動アンカリングに座標補正を横取りされないため */
+}
+
+.mz-return-changed-item {
+  box-sizing: border-box;
+  height: 34px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f0f0ee;
+  border-left: 2px solid transparent; /* 「読みかけ」印の場所を最初から確保。色を差すだけで
+    レイアウトが動かない（two-cursorsの選択マーカーと同じ手筋） */
+  background: #fff;
+}
+
+/* 「読みかけ」印: id=9の行に常に付く縦線。左端・2px・#5c5c5c。No.90/No.93/two-cursors等
+   図鑑共通の「左端の縦線＝行の位置情報そのもの」語彙をそのまま使う。送信前から出ていて、
+   戻ったあとも消えない——「どこで離れたか」を示すしおり(横線+札。送信のときだけ現れる)
+   とは役割が違う担体で、こちらは「どの行が自分の行か」を送信の有無にかかわらず言う。
+   既定・対照で完全に同一（差分の3箇所には含めない、両方に置く物差し） */
+.mz-return-changed-item.is-current {
+  border-left-color: #5c5c5c;
+}
+
+.mz-return-changed-item-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #5c5c5c;
+}
+.mz-return-changed-item-value {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+}
+
+/* 送信の行き先（未入力）。No.94と同じ語彙: 彩度を持たせず地の変化だけで示す */
+.mz-return-changed-item.is-target {
+  background: #eaeae8;
+}
+.mz-return-changed-item.is-target .mz-return-changed-item-label {
+  color: #3d3d3d;
+}
+.mz-return-changed-item.is-target .mz-return-changed-item-value {
+  color: #3d3d3d;
+  font-weight: 800;
+}
+
+/* 到着のパルス。この回の緩急の約束の例外枠——「いま・ここに着いた」の合図専用、
+   尺は120msに抑える。跳ねる緩急は使わない、減速のみ */
+.mz-return-changed-item.is-pulsing {
+  animation: mz-return-changed-arrive 120ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  transform-origin: center;
+}
+@keyframes mz-return-changed-arrive {
+  0% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ---------- しおり（ここを読んでいた） ----------
+   スクロール領域の子として絶対配置。行と同じ座標系にいるので、並び順が詰まっても
+   top値の再計算だけで正しい行に追従する。登場は即座、退場だけ200msで薄れる
+   （No.94の「登場は一瞬、退場だけ尺を持つ」を踏襲） */
+.mz-return-changed-bookmark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 1;
+}
+.mz-return-changed-bookmark.is-fading {
+  opacity: 0;
+  transition: opacity 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.mz-return-changed-bookmark-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: #8c8c8c;
+}
+.mz-return-changed-bookmark-tag {
+  position: absolute;
+  right: 10px;
+  top: -9px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ---------- 「ここに在った」印 ----------
+   戻り先そのものが消えたときだけ現れる。しおりと違い、時間でも行為（戻る以外）でも
+   消えない——押されるまで残る、という戻り帯と同じ約束をこちらにも適用する。
+   見た目はしおりに近いが、線を破線にして「もうここには無い」ことを示す */
+.mz-return-changed-wastag {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.mz-return-changed-wastag-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 0;
+  border-top: 1.5px dashed #8c8c8c;
+}
+.mz-return-changed-wastag-tag {
+  position: absolute;
+  right: 10px;
+  top: -9px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #5c5c5c;
+  color: #f5f5f3;
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ---------- 戻り帯 ----------
+   板の下端に重ねる絶対配置。フレーム自体の高さは変えない（帯の出現でレイアウトが
+   動くと「板の外形は状態によらず固定」という図鑑の作法から外れるため） */
+.mz-return-changed-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 14px;
+  background: #3d3d3d;
+  cursor: pointer;
+  animation: mz-return-changed-band-in 200ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes mz-return-changed-band-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.mz-return-changed-band-main {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #f5f5f3;
+  text-align: left;
+}
+.mz-return-changed-band-sub {
+  font-size: 10px;
+  font-weight: 700;
+  color: #b3b3b3;
+}
+
+/* ---------- 操作: 送信 / 上で3件消える / 読んでいた行を消す ---------- */
+
+.mz-return-changed-controls {
+  display: flex;
+  gap: 6px;
+  width: 340px;
+}
+
+.mz-return-changed-submit {
+  flex: none;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s;
+}
+.mz-return-changed-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.mz-return-changed-submit:active:not(:disabled) {
+  transform: scale(1.05, 0.92);
+}
+.mz-return-changed-submit:disabled {
+  cursor: default;
+  opacity: 0.45;
+  transform: none;
+}
+
+.mz-return-changed-aux {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px 8px;
+  border-radius: 999px;
+  background: #eaeae8;
+  color: #5c5c5c;
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s;
+}
+.mz-return-changed-aux:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.mz-return-changed-aux:active:not(:disabled) {
+  transform: scale(1.05, 0.92);
+}
+.mz-return-changed-aux:disabled {
+  cursor: default;
+  opacity: 0.4;
+  transform: none;
+}
+
+/* ---------- 動かない位置合わせの補足 ----------
+   .mz-return-changed-item / band / bookmark / wastag のいずれもtransitionを
+   移動(scrollTop)には使わない。scrollTopへの直接代入は常に即時（No.94踏襲）。
+   グローバル側(src/styles/global.css)がprefers-reduced-motion環境で
+   transition-duration/animation-durationを一律潰すので、標本側では対応不要。 */

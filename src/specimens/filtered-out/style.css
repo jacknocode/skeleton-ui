@@ -1,0 +1,296 @@
+/* No.96「絞り込みの外に出る」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+
+   箱(.mz-filtered-out-seat)と中身(.mz-filtered-out-content)の2層構造は
+   place-lost(No.93)と同じ理由——高さ(箱)と不透明度・位置(中身)を同じtransitionに
+   乗せると「箱は開き切ってから中身が現れる/中身が消えてから箱が閉じる」という
+   2phaseが作れない。ここではCSSのtransition-delayでその2phaseの時間差そのものを
+   表現している(is-exiting/is-enteringのブロック参照)。読みかけ行より上で、かつ
+   読みかけが結果に残る/戻るときだけ、箱の高さはCSSではなくJS(index.tsx)がrAFで
+   直接書き換える(scrollTopと同じtから同期させるため)。そちらはis-js-exit/
+   is-js-enterで、中身のtransitionだけ残し、箱のtransitionは意図的に持たせていない。 */
+
+.mz-filtered-out {
+  display: flex;
+  flex-direction: column;
+  width: 340px;
+}
+
+/* ---------- ヘッダー: チップ + 既定/対照トグル ---------- */
+
+.mz-filtered-out-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.mz-filtered-out-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.mz-filtered-out-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #eaeae8;
+  font-size: 10px;
+  font-weight: 700;
+  color: #5c5c5c;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-filtered-out-chip.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-filtered-out-chip:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+/* チップの中の読みかけ印: 読みかけ行と同じ幅2pxの縦線+件数。時間では閉じない(既定のみ) */
+.mz-filtered-out-chip-bar {
+  flex: none;
+  width: 2px;
+  align-self: stretch;
+  border-radius: 1px;
+  background: #f5f5f3;
+}
+.mz-filtered-out-chip-count {
+  flex: none;
+  font-weight: 700;
+  color: #d6d6d2;
+}
+
+.mz-filtered-out-mode {
+  display: flex;
+  flex: none;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-filtered-out-mode-btn {
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-filtered-out-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-filtered-out-mode-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+/* ---------- 帯: 読みかけが絞り込みの外に出たときだけ、リストの上端に差し込む ----------
+   時間では閉じない。「条件を戻す」を押すか、読みかけを結果内の別の行へ移すかでしか消えない */
+.mz-filtered-out-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  background: #eaeae8;
+}
+.mz-filtered-out-banner-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: #5c5c5c;
+}
+.mz-filtered-out-banner-btn {
+  flex: none;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-filtered-out-banner-btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/* ---------- リスト枠 ----------
+   幅340×高さ204(6行分)で固定。行が絞り込みで出入りしても枠自体は動かない */
+.mz-filtered-out-list-wrap {
+  width: 340px;
+}
+
+.mz-filtered-out-list {
+  height: 204px;
+  overflow-y: auto;
+  /* 必須: scroll anchoringに仕事を取られると、対照モードの「読みかけ行がずれる」が
+     ブラウザ側で勝手に打ち消され、標本の差が消える。補正は必ずJS側で明示的に行う */
+  overflow-anchor: none;
+  list-style: none;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.mz-filtered-out-row {
+  position: relative;
+}
+
+/* 箱: 高さ34px固定(可視時)の枠。overflow:hiddenが無いと閉じる/開く最中に中身がはみ出す。
+   区切り線はborderではなくinset box-shadowで描く——borderは高さ0の箱でも1px残ってしまい
+   (受け入れ条件Bの「残存行数×34px」が崩れる)、box-shadowは面積が無ければ何も描かれない */
+.mz-filtered-out-seat {
+  display: block;
+  width: 100%;
+  height: 34px;
+  overflow: hidden;
+  text-align: left;
+  cursor: default;
+  box-shadow: inset 0 -1px 0 #eaeae8;
+}
+.mz-filtered-out-row:last-child .mz-filtered-out-seat {
+  box-shadow: none;
+}
+.mz-filtered-out-seat:disabled {
+  cursor: default;
+}
+.mz-filtered-out-seat:not(:disabled) {
+  cursor: pointer;
+}
+
+/* 可逆な不在: 席(高さ)は残さない。完全に外に出た行は高さ0・区切り線も無し(box-shadowごと消える) */
+.mz-filtered-out-seat.is-hidden-static {
+  height: 0;
+  box-shadow: none;
+}
+
+.mz-filtered-out-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 16px;
+}
+
+.mz-filtered-out-marker {
+  flex: none;
+  width: 2px;
+  align-self: stretch;
+  border-radius: 1px;
+  background: #5c5c5c;
+}
+
+.mz-filtered-out-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #3d3d3d;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mz-filtered-out-remaining {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #b3b3b3;
+}
+
+/* ---------- 外れる(exiting): 中身が160msで薄れて上へ14px寄る → 箱が240msで詰まる ----------
+   1クラスの切り替えだけで2phaseを表現する。箱のtransition-delayを中身の尺(160ms)ぶん
+   遅らせているので、「中身が消え切ってから箱が閉じ始める」がJSのタイマーなしで揃う */
+.mz-filtered-out-seat.is-exiting {
+  height: 0;
+  box-shadow: none;
+  transition:
+    height 240ms cubic-bezier(0.22, 0.61, 0.36, 1) 160ms,
+    box-shadow 80ms linear 320ms;
+}
+.mz-filtered-out-seat.is-exiting .mz-filtered-out-content {
+  opacity: 0;
+  transform: translateY(-14px);
+  transition:
+    opacity 160ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 160ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ---------- 戻る(entering): 箱が240msで開く → 中身が160msで上から下りながらフェードイン ----------
+   exitingの正確な時間的鏡像(合計400ms)。中身のtransition-delayを箱の尺(240ms)ぶん
+   遅らせ、「箱が開き切ってから中身が現れる」を揃える(箱が無いのに中身だけ見える
+   1フレームを作らないため) */
+.mz-filtered-out-seat.is-entering {
+  height: 34px;
+  box-shadow: inset 0 -1px 0 #eaeae8;
+  transition: height 240ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.mz-filtered-out-row:last-child .mz-filtered-out-seat.is-entering {
+  box-shadow: none;
+}
+.mz-filtered-out-seat.is-entering .mz-filtered-out-content {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 160ms cubic-bezier(0.22, 0.61, 0.36, 1) 240ms,
+    transform 160ms cubic-bezier(0.22, 0.61, 0.36, 1) 240ms;
+}
+
+/* ---------- JS駆動(is-js-exit/is-js-enter): 箱の高さはJSがrAFで直接書く ----------
+   読みかけ行より上で、かつ読みかけが結果に残る/戻るときだけ付く。箱にtransitionを
+   一切持たせない(index.tsxがtransition:noneも明示的に張るが、そもそもCSS側にも
+   heightのtransitionを書かない=二重に安全)。中身のfade/translateは箱の高さと
+   無関係に動いてよいので、ここだけは他と同じCSSトランジションのままにしてある */
+.mz-filtered-out-seat.is-js-exit .mz-filtered-out-content {
+  opacity: 0;
+  transform: translateY(-14px);
+  transition:
+    opacity 160ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 160ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.mz-filtered-out-seat.is-js-enter .mz-filtered-out-content {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 160ms cubic-bezier(0.22, 0.61, 0.36, 1) 240ms,
+    transform 160ms cubic-bezier(0.22, 0.61, 0.36, 1) 240ms;
+}
+
+/* ---------- ヒント ---------- */
+.mz-filtered-out-hint {
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  text-align: center;
+}
+
+/* ---------- 対照(ただ詰める) ----------
+   差分は厳密に3箇所(index.tsx側): (1)scrollTop同期をしない (2)帯を出さない
+   (3)チップに読みかけ印を出さない。行の消え方・詰まり方・戻り方・緩急・色・
+   レイアウトのCSSはここでは一切分岐させていない(既定と完全に同一の値を共有) */
+
+/* ---------- 動きを控えたい人へ ----------
+   グローバル側(src/styles/global.css)がtransition-duration/animation-durationを
+   一律0.01msに潰す。transition-delayもduration同様に扱われるため、reduced-motionでは
+   2phaseの時間差もろとも一瞬に潰れるが、「箱は開いてから中身が出る/中身が消えてから
+   箱が閉じる」という順序そのもの(=どちらのクラスが最終的に適用されるか)は速さに
+   依存しないのでそのまま保たれる。JS駆動(is-js-exit/is-js-enter)側のrAFはCSSの
+   durationとは独立(index.tsxのTOTAL_MS定数)だが、この標本の主題(座標を守る/
+   守れないと言う)も速さに依存しないため個別対応は不要 */
