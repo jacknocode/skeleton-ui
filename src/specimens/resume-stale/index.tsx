@@ -50,13 +50,29 @@ import './style.css'
    ブラウザがscrollTopを丸める)と同じ種類の「実測しないと分からない」境界条件だった。
 
    ---- 実装上の判断2: 「12件」をコードに直書きしない ----
-   新着の個数を決めるのは NEW_BATCH_SIZE という名前の定数(=12)だが、これは
-   「1回に何件積むかという舞台設定の値」であって、画面に出す数字ではない。
-   画面に出す件数・帯文言・C1〜C3の実測値はすべて、実際に積んだ配列
-   (latestBatchIds)の .length から出す。舞台設定の12と表示の12が実装上
-   別の場所を通っているので、どちらかを直せばもう片方が自動でずれる関係にはない
+   新着の個数(NEW_BATCH_SIZE)は、積む文言を並べたNEW_LABEL_POOL配列の.lengthから
+   導出する——「12」という数はコードのどこにも書かれておらず、実在の業務名を
+   12個書き並べた結果として12になっている。画面に出す件数・帯文言・C1〜C3の
+   実測値はすべて、実際に積んだ配列(latestBatchIds)の.lengthから出す。舞台設定の
+   側(NEW_LABEL_POOLの要素数)と表示の側(latestBatchIds.length)が実装上別の場所を
+   通っているので、どちらかを直せばもう片方が自動でずれる関係にはない
    (=数字を仕様に合わせて直すのではなく、仕組みが正しい数字を出す、という
    この図鑑の規約どおり)。
+
+   ---- 実装上の判断6(企画側レビューを受けて修正): 行名は連番のプレースホルダではなく
+        実在しそうな業務の1行にする。新着の行名に「新着」を名乗らせない ----
+   初版は行名を`項目07`/`新着100`のようにidから機械的に組み立てていた。実物の
+   スクリーンショットを見てのレビューで2点指摘を受けた: (1) 図鑑の他標本
+   (sent-place等)は台帳に実在しそうな業務名を付けており、連番ラベルだけこの標本で
+   浮く。(2) それ以上に問題なのは、新着行の名前が「新着100」のように"新着だと
+   名乗ってしまっている"点——この標本の主張(対照は行としては正しく戻っているのに、
+   新着が1件も見えない)を担うのは左端の新着マーカーのはずで、行名がそれを兼ねると
+   マーカーという担体の意味が消える。印で言うべきことを名前で言ってはいけない。
+   直し方: RowInfoにlabelフィールドを持たせ、ORIGINAL_ROWS(8行)とNEW_LABEL_POOL
+   (12行ぶんの新着プール)にそれぞれ実在しそうな業務名を直接書いた(連番から
+   `getLabel(id)`のように生成する形は採らない——生成式だと新着12件それぞれに
+   個別の文言を持たせられないため)。新着プールの文言には「新着」「新規」の語を
+   一切含めない。これにより、新着かどうかを示す担体は左端のマーカー1つだけになる。
 
    ---- 実装上の判断3: 新着マーカーは「最新の1回分」だけに付く ----
    3回連続で閉じ直すと、1回目に積んだ12件・2回目に積んだ12件…と行は台帳に
@@ -92,8 +108,6 @@ const FRAME_ALIGN_Y = 68 // 行の上端をこの枠内Yに合わせる(No.97の
 // そこからさらに FRAME_ALIGN_Y ぶん上へ送れる余地を確保する(実装上の判断1参照)
 const BOTTOM_SPACER_H = VISIBLE_H - ROW_H - FRAME_ALIGN_Y // 102
 const RESUME_DEFAULT_ID = 7
-const ORIGINAL_ID_MAX = 7 // これ以下は最初から居た行、これを超えるのは新着由来の行
-const NEW_BATCH_SIZE = 12 // 舞台設定(1回に積む件数)。表示に使う数は必ずlatestBatchIds.lengthから取る
 const PULSE_MS = 120
 
 type Mode = 'default' | 'contrast'
@@ -102,16 +116,43 @@ type PendingScroll = 'top' | 'align-resume' | null
 
 interface RowInfo {
   id: number
+  label: string
 }
 
-const ORIGINAL_ROWS: RowInfo[] = Array.from({ length: ORIGINAL_ID_MAX + 1 }, (_, i) => ({ id: i }))
+// 最初から居た8行。読みかけの既定はid=7(末尾)。帯の文言に入っても自然に読める
+// 長さの、実在しそうな業務名にしてある(連番ラベルは使わない)
+const ORIGINAL_ROWS: RowInfo[] = [
+  { id: 0, label: '経費精算の承認' },
+  { id: 1, label: '名刺印刷の依頼' },
+  { id: 2, label: '会議室予約の変更' },
+  { id: 3, label: '交通費の精算' },
+  { id: 4, label: '契約書の捺印' },
+  { id: 5, label: '請求書の照合' },
+  { id: 6, label: '見積書の再送' },
+  { id: 7, label: '問い合わせ対応' },
+]
+
+// 新着として積む業務名のプール。「新着」「新規」の語は入れない——新着であることを
+// 言うのは左端のマーカーだけの役目にする(実装上の判断6参照)。積む件数(NEW_BATCH_SIZE)は
+// この配列の要素数からそのまま導出する(12という数をどこにも直書きしていない)
+const NEW_LABEL_POOL: string[] = [
+  '出張申請の承認',
+  '稟議書の確認',
+  '備品発注の依頼',
+  '名刺データ更新',
+  '会議室予約変更',
+  '電話対応引継ぎ',
+  '契約更新の通知',
+  '請求書再発行',
+  '見積り依頼返信',
+  '経費精算差戻し',
+  'サンプル送付手配',
+  '問い合わせ履歴',
+]
+const NEW_BATCH_SIZE = NEW_LABEL_POOL.length
 
 function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n))
-}
-
-function rowLabel(id: number): string {
-  return id > ORIGINAL_ID_MAX ? `新着${id}` : `項目${String(id).padStart(2, '0')}`
 }
 
 /** 行idの並び順indexから、y=FRAME_ALIGN_Yへ揃えるscrollTopを算出する(スペーサー込みでclamp) */
@@ -131,7 +172,7 @@ function computeBandMessage(
   elapsedWord: ElapsedWord,
 ): { main: string; cta: string } {
   const count = latestBatchIds.length
-  const label = rowLabel(resumeId)
+  const label = rows.find((r) => r.id === resumeId)?.label ?? ''
   return {
     main: `${elapsedWord}の続き（${label}）— 以降に${count}件`,
     cta: '▸ 続きへ',
@@ -204,7 +245,10 @@ export default function ResumeStale() {
       const batchIds = Array.from({ length: NEW_BATCH_SIZE }, (_, i) => base + i)
       nextBatchBaseRef.current = base + NEW_BATCH_SIZE
 
-      setRows((prev) => [...batchIds.map((id) => ({ id })), ...prev])
+      setRows((prev) => [
+        ...batchIds.map((id, i) => ({ id, label: NEW_LABEL_POOL[i] })),
+        ...prev,
+      ])
       setLatestBatchIds(batchIds)
       setElapsedWord(word)
       setBoardOpen(true)
@@ -325,7 +369,7 @@ export default function ResumeStale() {
                   data-row-id={row.id}
                 >
                   {isNew && <span className="mz-resume-stale-newdot" aria-hidden="true" />}
-                  <span className="mz-resume-stale-item-label">{rowLabel(row.id)}</span>
+                  <span className="mz-resume-stale-item-label">{row.label}</span>
                 </button>
               )
             })}
