@@ -62,7 +62,18 @@ import './style.css'
    ---- 対照モードに受け手の帯を出さない判断 ----
    対照の差分は仕様どおり3箇所だけ(送る中身/受け手の移動/送り手の返り)。受け手側の
    移動は既に完了しているので「▸ここへ行く」のような行為の担体を出す理由がなく、
-   receiverShownは対照では常にfalseのまま(帯の高さ22pxだけは既定と同じく確保する)。 */
+   receiverShownは対照では常にfalseのまま(帯の高さ22pxだけは既定と同じく確保する)。
+
+   ---- 追記: タグ/チップがリストの1行目に重なる不具合(実測では出ない) ----
+   当初は「自分」「K」タグと「未対応のみ」チップを板の内側にposition:absoluteで
+   スクロール領域(<ul>)へ重ねていた。scrollTopや行のy座標はA1〜A13で全部実測して
+   通っていたが、実機のスクリーンショットで見ると1行目の文字がタグ/チップの下に
+   隠れて読めない——A系の実測はどれも「数値」しか見ないので、この重なりは検出できな
+   かった。タグ/チップをボードの外の常設帯へ出す形に直した(自分側は既存の送り手の帯を
+   板の上へ移してタグを同居させ、K側は「タグ+チップ」の行と「受け手の帯」の行を
+   縦に2段重ねた新しい見出し.mz-sent-place-k-headを板の上に新設した)。どちらも
+   中身の有無に関わらず高さが変わらない常設の帯なので、板の位置が動かないこと(A12)
+   は直したあとも成立する(直後に再実測して確認済み。詳細は最終報告)。 */
 
 type Mode = 'default' | 'contrast'
 type SendCase = 'visible' | 'filteredOut' | 'noPermission'
@@ -272,8 +283,12 @@ export default function SentPlace() {
         </div>
       </div>
 
-      <div className="mz-sent-place-board mz-sent-place-board-self">
+      <div className="mz-sent-place-band mz-sent-place-band-sender" aria-live="polite">
         <span className="mz-sent-place-tag">自分</span>
+        {hasSent && <span className="mz-sent-place-band-text">{senderText}</span>}
+      </div>
+
+      <div className="mz-sent-place-board mz-sent-place-board-self">
         <ul className="mz-sent-place-list" ref={selfListRef} aria-label="自分の台帳">
           {ROWS.map((row) => (
             <li
@@ -290,13 +305,41 @@ export default function SentPlace() {
         </ul>
       </div>
 
-      <div className="mz-sent-place-band mz-sent-place-band-sender" aria-live="polite">
-        {hasSent && <span className="mz-sent-place-band-text">{senderText}</span>}
+      <div className="mz-sent-place-k-head">
+        <div className="mz-sent-place-k-head-tags">
+          <span className="mz-sent-place-tag">K</span>
+          <span className="mz-sent-place-chip">{kFilterActive ? '未対応のみ' : 'すべて'}</span>
+        </div>
+        <div
+          className={`mz-sent-place-band mz-sent-place-band-receiver${receiverShown && !contrast ? ' is-visible' : ''}`}
+          aria-live="polite"
+        >
+          {showReceiverContent && pendingCase && (
+            <>
+              <span className="mz-sent-place-band-text">{receiverBandText(pendingCase)}</span>
+              <span className="mz-sent-place-band-actions">
+                {pendingCase !== 'noPermission' && (
+                  <button type="button" className="mz-sent-place-band-action" onClick={handleGoToRow}>
+                    {pendingCase === 'visible' ? '▸ ここへ行く' : '▸ 条件を外して行く'}
+                  </button>
+                )}
+                {pendingCase !== 'visible' && (
+                  <button
+                    type="button"
+                    className="mz-sent-place-band-decline"
+                    onClick={handleDecline}
+                    disabled={declined}
+                  >
+                    見えないと返す
+                  </button>
+                )}
+              </span>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="mz-sent-place-board mz-sent-place-board-k">
-        <span className="mz-sent-place-tag">K</span>
-        <span className="mz-sent-place-chip">{kFilterActive ? '未対応のみ' : 'すべて'}</span>
         <ul className="mz-sent-place-list" ref={kListRef} aria-label="Kの台帳">
           {kVisibleIds.map((id) => (
             <li key={id} className={`mz-sent-place-row${id === kReadingId ? ' is-reading' : ''}`}>
@@ -304,34 +347,6 @@ export default function SentPlace() {
             </li>
           ))}
         </ul>
-      </div>
-
-      <div
-        className={`mz-sent-place-band mz-sent-place-band-receiver${receiverShown && !contrast ? ' is-visible' : ''}`}
-        aria-live="polite"
-      >
-        {showReceiverContent && pendingCase && (
-          <>
-            <span className="mz-sent-place-band-text">{receiverBandText(pendingCase)}</span>
-            <span className="mz-sent-place-band-actions">
-              {pendingCase !== 'noPermission' && (
-                <button type="button" className="mz-sent-place-band-action" onClick={handleGoToRow}>
-                  {pendingCase === 'visible' ? '▸ ここへ行く' : '▸ 条件を外して行く'}
-                </button>
-              )}
-              {pendingCase !== 'visible' && (
-                <button
-                  type="button"
-                  className="mz-sent-place-band-decline"
-                  onClick={handleDecline}
-                  disabled={declined}
-                >
-                  見えないと返す
-                </button>
-              )}
-            </span>
-          </>
-        )}
       </div>
     </div>
   )

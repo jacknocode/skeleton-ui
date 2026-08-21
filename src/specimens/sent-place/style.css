@@ -1,12 +1,26 @@
 /* No.99「自分の現在地を人に送る」
-   外形340×301(実測。上限340×330に収まる)。ヘッダ(送るボタン+既定/対照トグル)+
-   自分の板(104px)+送り手の帯(22px、常時確保)+Kの板(104px)+受け手の帯(22px、常時確保)。
+   外形340×317(実測。上限340×330に収まる)。
+   ヘッダ(送るボタン+既定/対照トグル) → 送り手の帯(22px、「自分」タグ+文言、板の上)
+   → 自分の板(104px) → Kの見出し帯(「K」タグ+チップ14px、受け手の帯22px、板の上)
+   → Kの板(104px)。
+
+   タグ(自分/K)とチップ(絞り込み状態)は当初、板の内側にposition:absoluteで
+   スクロール領域(<ul>)へ重ねていたが、実機のスクリーンショットで「リストの1行目が
+   タグの下に隠れて読めない」不具合が見つかった(実測A1〜A13は行の同一性やscrollTopの
+   数値だけを見るため、この重なりは検出できなかった)。タグ/チップは板の外——
+   スクロールしない常設の帯に出す形に直した。送り手側は帯そのものが「自分」タグ+
+   文言の1行で足りるので、既存の送り手の帯を板の上へ移してタグを同居させるだけで済んだ
+   (高さは元の22pxのまま、増分ゼロ)。受け手側は「Kタグ+チップ」と「受け手の帯(文言+
+   行き先の担体)」の情報量が1行に収まらない(特にfilteredOutケースは行き先ボタンと
+   見えないと返すボタンが両方乗る)ため、板の上に2行の見出し(.mz-sent-place-k-head)を
+   新設し、上段(14px、常設)にタグ+チップ、下段(22px、送信後だけ中身)に既存の受け手の
+   帯をそのまま収めた。どちらの帯も「中身の有無に関わらず高さは固定」のままなので、
+   帯の出入りで板の位置が動かないこと(A12)はこの直しでも変わらず成立する。
 
    板(.mz-sent-place-board)は自分/K共通の見た目: 角丸・border・白背景・overflow:hiddenを
-   持つ「枠」で、その内側にタグ(自分/K)とKだけのチップ(絞り込み状態)をposition:absoluteで
-   浮かせ、スクロールする<ul>本体には一切borderを持たせない(index.tsxのコメント参照——
-   ulにborderを持たせると内側の実効高さが2px減り、行のy座標もmaxScrollTopも実測値が
-   計算値からずれる罠を踏んだ)。
+   持つ「枠」で、スクロールする<ul>本体には一切borderを持たせない(index.tsxのコメント
+   参照——ulにborderを持たせると内側の実効高さが2px減り、行のy座標もmaxScrollTopも
+   実測値が計算値からずれる罠を踏んだ)。
 
    受け手の帯(.mz-sent-place-band-receiver)だけが260ms待ってから220msで現れる
    (JSのsetTimeoutで待ち、CSSのtransitionで現れる——二重構造)。この回の基本イージング
@@ -79,7 +93,6 @@
 /* ---------- 板: 自分 / K 共通 ---------- */
 
 .mz-sent-place-board {
-  position: relative;
   width: 340px;
   height: 104px; /* 26px × 4行。枠(border)はここに置き、内側のulには持たせない
     (ulにborderを持たせると内側の実効高さが2px減り、行のy座標がすべて1pxずれる) */
@@ -90,11 +103,10 @@
   box-sizing: border-box;
 }
 
+/* タグ/チップはスクロールする<ul>の上に重ねず、板の外の帯(常設の行)に置く
+   (実測で見つかった不具合: 重ねるとリストの1行目がタグの下に隠れて読めなくなる) */
 .mz-sent-place-tag {
-  position: absolute;
-  top: 3px;
-  left: 5px;
-  z-index: 1;
+  flex: none;
   padding: 1px 6px;
   border-radius: 999px;
   background: rgba(61, 61, 61, 0.82);
@@ -102,21 +114,16 @@
   font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.02em;
-  pointer-events: none;
 }
 
 .mz-sent-place-chip {
-  position: absolute;
-  top: 3px;
-  right: 5px;
-  z-index: 1;
+  flex: none;
   padding: 1px 6px;
   border-radius: 999px;
   background: rgba(140, 140, 140, 0.18);
   color: #5c5c5c;
   font-size: 8px;
   font-weight: 800;
-  pointer-events: none;
 }
 
 .mz-sent-place-list {
@@ -161,11 +168,31 @@
 .mz-sent-place-band {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 6px;
   height: 22px;
   box-sizing: border-box;
   padding: 0 4px;
+}
+.mz-sent-place-band-receiver {
+  justify-content: space-between;
+}
+
+/* ---------- Kの見出し帯: タグ+チップ(常設) + 受け手の帯(送信後だけ中身が出る) ----------
+   板の上に置く常設の2行。行数はここで固定するので、受け手の帯の中身の有無で
+   K板の位置が動くことはない(A12)。 */
+.mz-sent-place-k-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mz-sent-place-k-head-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 14px;
+  padding: 0 4px;
+  box-sizing: border-box;
 }
 
 .mz-sent-place-band-text {
