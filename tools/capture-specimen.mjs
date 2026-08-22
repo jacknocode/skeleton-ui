@@ -871,6 +871,84 @@ const CHOREO = {
     await sleep(1900)
   },
 
+  'no-place-yet': async (page) => {
+    /* 撮るべきは「出現」と「移動」の撃ち分け。押した瞬間の1フレームに全部入っているので、
+       間をたっぷり取って、湧いたことと滑ったことを別々に見せる */
+    await sleep(1500) // レールは在るのに印が無い。帯が「まだどこも指していない」と名乗っている
+    await page.getByRole('button', { name: 'Tabで入る' }).click()
+    await sleep(1500) // 1行目にその場で湧く。どこからも来ていない（縦位置は1pxも動かない）
+    for (const _ of [1, 2, 3]) {
+      await page.getByRole('button', { name: '↓', exact: true }).click()
+      await sleep(700) // こちらは移動。レールの上を隣まで滑る
+    }
+    await page.getByRole('button', { name: 'Escで解除' }).click()
+    await sleep(1600) // その場で消える。先頭へ帰る動きをしない（帰る先が無い）
+    await page.getByRole('button', { name: 'Tabで入る' }).click()
+    await sleep(1600) // 4行目ではなく1行目に湧く。現在地は状態なので覚えていない
+    // 「無い」は1つではない。空の台帳では、押しても湧かない
+    await page.getByRole('button', { name: '空の台帳' }).click()
+    await sleep(1300)
+    await page.getByRole('button', { name: 'Tabで入る' }).click()
+    await sleep(1500)
+    await page.getByRole('button', { name: '読み込み中' }).click()
+    await sleep(1600) // 3つ目の「無い」。ここまで文言も絵も互いに違う
+    // 対照: 「行があるなら先頭に居ることにする」。読み込み中と空が同じ絵に潰れる
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1400)
+    await page.getByRole('button', { name: '空の台帳' }).click()
+    await sleep(1600) // 直前の読み込み中と見分けがつかない
+    await page.getByRole('button', { name: '16行の台帳' }).click()
+    await sleep(2000) // 誰も押していないのに、印が最初から1行目に付いている
+  },
+
+  'place-without-rows': async (page) => {
+    /* 倍率つまみは掴んで動かす（No.100 と同じ理由）。ズームの不動点は連続な絵でしか見えない */
+    const canvas = await page.locator('.mz-place-without-rows-canvas').boundingBox()
+    const at = (u, v) => [canvas.x + canvas.width * u, canvas.y + canvas.height * v]
+    const dragZoom = async (toRatio, ms) => {
+      const s = await page.locator('.mz-place-without-rows-slider').boundingBox()
+      const y = s.y + s.height / 2
+      const PAD = 6
+      const px = (r) => s.x + PAD + (s.width - PAD * 2) * Math.min(1, Math.max(0, r))
+      const from = await page.evaluate(() => {
+        const el = document.querySelector('.mz-place-without-rows-slider')
+        return (Number(el.value) - Number(el.min)) / (Number(el.max) - Number(el.min))
+      })
+      await page.mouse.move(px(from), y)
+      await page.mouse.down()
+      const steps = Math.max(12, Math.round(ms / 30))
+      for (let i = 1; i <= steps; i++) {
+        await page.mouse.move(px(from + (toRatio - from) * (i / steps)), y)
+        await sleep(30)
+      }
+      await page.mouse.up()
+    }
+    await sleep(1000) // 行の無い空間。名前のあるものが3つと、世界に固定されたグリッド
+    await page.mouse.click(...at(0.47, 0.62))
+    await sleep(1500) // 現在地が湧く。帯は座標ではなく「A棟 の左下 11m」と相対で名乗る
+    await page.getByRole('button', { name: '保存' }).click()
+    await sleep(700)
+    await page.getByRole('button', { name: '配置が変わった' }).click()
+    await sleep(1900) // A棟が動くと現在地も一緒に運ばれる。追従を書いたのではなく、持ち方の帰結
+    await dragZoom(0.75, 1500) // 指した点は画面上で動かない。流れるのはグリッドのほう
+    await sleep(1700) // 途中で基準が細かい粒度へ持ち替わり、引き出し線が繋ぎ変わって帯が名乗る
+    await dragZoom(0, 1100)
+    await sleep(1200)
+    // 対照: 中心の座標と倍率で持つ
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await page.mouse.click(...at(0.47, 0.62))
+    await sleep(1200)
+    await page.getByRole('button', { name: '保存' }).click()
+    await sleep(600)
+    await page.getByRole('button', { name: '配置が変わった' }).click()
+    await sleep(1700)
+    await page.getByRole('button', { name: '復元' }).click()
+    await sleep(1900) // 座標には誤差0で戻る。そこには何も無い
+    await dragZoom(0.75, 1500)
+    await sleep(2000) // 画面中心を不動点にすると、指した点は画面の外へ流れていく
+  },
+
   'resume-stale': async (page) => {
     await sleep(1300) // 8行の台帳と、読みかけ（問い合わせ対応）を読ませる
     await page.getByRole('button', { name: '閉じる' }).click()
