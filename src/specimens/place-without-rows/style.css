@@ -183,6 +183,17 @@
   cursor: crosshair;
 }
 
+/* ワールドに固定された薄いグリッド。left/top/background-size/positionはJSが直接計算する
+   (worldToScreenと同じ式)。canvas内の最背面(shapeより前にDOMへ置く)に敷く。 */
+.mz-place-without-rows-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, #e3e3e0 1px, transparent 1px),
+    linear-gradient(to bottom, #e3e3e0 1px, transparent 1px);
+  pointer-events: none;
+}
+
 .mz-place-without-rows-shape {
   position: absolute;
   box-sizing: border-box;
@@ -197,6 +208,20 @@
   border-radius: 4px;
   background: #eaeae8;
   pointer-events: none;
+}
+/* 細かい粒度(A棟3F東/西)は、基準になり得るあいだ(is-visible)だけ描く。消えて湧くのではなく
+   フェード+わずかな縮小で出入りする(左右のleftとは別軸のtransformなので、配置が変わった
+   のtransitionと干渉しない) */
+.mz-place-without-rows-shape.is-fine {
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 200ms ease-out,
+    transform 200ms ease-out;
+}
+.mz-place-without-rows-shape.is-fine.is-visible {
+  opacity: 1;
+  transform: scale(1);
 }
 .mz-place-without-rows-shape-label {
   font-size: 10px;

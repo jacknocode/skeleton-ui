@@ -99,6 +99,8 @@ const ZOOM_STEP = 0.01
 const FINE_MINZOOM = 2.5 // この倍率以上でしか「A棟 3F 東/西」は基準候補にならない(上り)
 const HYST = 0.3 // ヒステリシス幅。下りはFINE_MINZOOM - HYST = 2.2で基準候補から外れる
 const METERS_PER_UNIT = 0.24 // ワールド距離(px相当)を表示用「m」へ変換する係数(見た目の意味付けのみ)
+const GRID_METERS = 5 // グリッド線の間隔(m)。METERS_PER_UNITで換算する(帯のm表示と同じ換算に載せる)
+const GRID_WORLD = GRID_METERS / METERS_PER_UNIT // 上をワールド単位へ変換した値(数値を別に直書きしない)
 const RELOCATE_MS = 600
 const SWITCH_MS = 260
 const DIR_EPS = 3 // dx/dyがこれ未満なら「その方向には寄っていない」とみなす
@@ -107,8 +109,7 @@ type Mode = 'default' | 'contrast'
 
 interface ShapeDef {
   id: string
-  name: string // 帯・引き出し線のaria-labelに使う正式名
-  shortLabel: string // 箱の中に描く短い符丁
+  name: string // 帯・箱のラベル・引き出し線のaria-labelすべてに使う正式名(名前は1つしか持たない)
   x: number
   y: number
   w: number
@@ -132,12 +133,18 @@ type Place = RelPlace | AbsPlace
 // 名前のあるもの5つ。粗い粒度3つ(minZoom=1.0)＋細かい粒度2つ(minZoom=2.5)。
 // A棟3F東/西はA棟の矩形の内側(右下寄り/左上寄り)に収まるよう配置してある。
 const BASE_SHAPES: ShapeDef[] = [
-  { id: 'reception', name: '受付', shortLabel: '受付', x: 8, y: 10, w: 46, h: 26, minZoom: 1.0 },
-  { id: 'building-a', name: 'A棟', shortLabel: 'A棟', x: 110, y: 36, w: 100, h: 86, minZoom: 1.0 },
-  { id: 'warehouse', name: '倉庫', shortLabel: '倉庫', x: 250, y: 128, w: 80, h: 52, minZoom: 1.0 },
-  { id: 'a-east', name: 'A棟 3F 東', shortLabel: '東', x: 165, y: 73, w: 43, h: 42, minZoom: FINE_MINZOOM },
-  { id: 'a-west', name: 'A棟 3F 西', shortLabel: '西', x: 112, y: 42, w: 43, h: 34, minZoom: FINE_MINZOOM },
+  { id: 'reception', name: '受付', x: 8, y: 10, w: 46, h: 26, minZoom: 1.0 },
+  { id: 'building-a', name: 'A棟', x: 110, y: 36, w: 100, h: 86, minZoom: 1.0 },
+  { id: 'warehouse', name: '倉庫', x: 250, y: 128, w: 80, h: 52, minZoom: 1.0 },
+  { id: 'a-east', name: 'A棟 3F 東', x: 165, y: 73, w: 43, h: 42, minZoom: FINE_MINZOOM },
+  { id: 'a-west', name: 'A棟 3F 西', x: 112, y: 42, w: 43, h: 34, minZoom: FINE_MINZOOM },
 ]
+// 細かい粒度(minZoom > 1.0)かどうか。「基準にできる」と「画面に出す」の条件を1つに
+// 揃えるための唯一の判定はここ(下のfineEligibleと組み合わせて使う。企画からの指摘: 表示側だけ
+// 素のminZoomで判定すると、ヒステリシスの下り側で「見えないのに基準」という穴が開く)
+function isFineShape(s: ShapeDef): boolean {
+  return s.minZoom > ZOOM_MIN
+}
 
 // 「配置が変わった」が動かす先。A棟・倉庫の2つだけ動く(企画書4節どおり)
 const BUILDINGA_BASE = { x: 110, y: 36 }
@@ -168,9 +175,12 @@ function markerWorldOf(place: Place | null, shapesById: Record<string, ShapeDef>
   return { x: c.x + place.dx, y: c.y + place.dy }
 }
 
-/** その倍率で意味のある粒度のもののうち、pt からワールド距離が最も近いものの id */
+/** その倍率で意味のある粒度のもののうち、pt からワールド距離が最も近いものの id。
+    「基準にできる」の判定はisFineShape+fineEligibleの組だけで行う——画面に描くかどうかの
+    判定(下のJSX)も同じ組を使うので、「見えているのに基準になれない/基準なのに見えない」
+    という食い違いがそもそも作れない。 */
 function nearestAnchorId(pt: { x: number; y: number }, shapes: ShapeDef[], fineEligible: boolean): string {
-  const eligible = shapes.filter((s) => s.minZoom <= ZOOM_MIN || fineEligible)
+  const eligible = shapes.filter((s) => !isFineShape(s) || fineEligible)
   let bestId = eligible[0].id
   let bestDist = Infinity
   for (const s of eligible) {
@@ -395,6 +405,15 @@ export default function PlaceWithoutRows() {
 
   const posTransition = isRelocating ? 'left 600ms ease-in-out, top 600ms ease-in-out' : 'none'
 
+  // ワールドに固定された薄いグリッド。CSSのbackground-size/positionだけで表現し、
+  // 個々の線をDOM要素として持たない。間隔(画面px)=GRID_WORLD*zoom、原点のずれ(画面px)=
+  // -viewOrigin*zoom——どちらもworldToScreenと同じ式(screen=(world-viewOrigin)*zoom)の
+  // 特殊形でしかない。これにより「指した点は動かないがグリッドは流れる」(既定)と
+  // 「グリッドごと全部流れる」(対照)が、そのまま同じ計算の結果として出る。
+  const gridSpacing = GRID_WORLD * zoom
+  const gridOffsetX = -viewOrigin.x * zoom
+  const gridOffsetY = -viewOrigin.y * zoom
+
   return (
     <div className="mz-place-without-rows">
       <div className="mz-place-without-rows-header">
@@ -456,12 +475,26 @@ export default function PlaceWithoutRows() {
         role="img"
         aria-label="配置図。クリックで現在地を置く"
       >
+        <div
+          className="mz-place-without-rows-grid"
+          style={{
+            backgroundSize: `${gridSpacing}px ${gridSpacing}px`,
+            backgroundPosition: `${gridOffsetX}px ${gridOffsetY}px`,
+          }}
+        />
+
         {shapesNow.map((s) => {
           const topLeft = worldToScreen({ x: s.x, y: s.y }, viewOrigin, zoom)
+          const fine = isFineShape(s)
+          // 細かい粒度の図形は、それが基準になり得るあいだ(fineEligible)だけ描く。
+          // 表示条件と「基準にできるか」の条件を同じ変数で判定しているので、
+          // 「見えているのに基準がA棟のまま」という食い違いは原理的に起きない(企画の指摘)。
           return (
             <div
               key={s.id}
-              className="mz-place-without-rows-shape"
+              className={`mz-place-without-rows-shape${fine ? ' is-fine' : ''}${
+                fine && fineEligible ? ' is-visible' : ''
+              }`}
               style={{
                 left: topLeft.x,
                 top: topLeft.y,
@@ -470,7 +503,7 @@ export default function PlaceWithoutRows() {
                 transition: posTransition,
               }}
             >
-              <span className="mz-place-without-rows-shape-label">{s.shortLabel}</span>
+              <span className="mz-place-without-rows-shape-label">{s.name}</span>
             </div>
           )
         })}
