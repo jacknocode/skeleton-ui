@@ -122,9 +122,16 @@ const ROWS: RowInfo[] = [
 ]
 const ROW_COUNT = ROWS.length // 16という数をどこにも直書きしない。台帳の要素数から導出する
 
-// 読み込み中の骨組み行。幅を役に応じて変え(全部同じ幅だと段組みに見えないため)、
-// 本数は配列の要素数(=3)からそのまま導出する。文字は一切持たせない
-const SKELETON_WIDTHS = [58, 74, 46] as const
+// 読み込み中の骨組み行。本数は可視行数(VISIBLE_ROWS)にそのまま合わせる——器の高さ(204px)を
+// 骨組みでも埋めることで、「行が届いていないだけで器のかたちは同じ」を絵にする(企画側レビュー
+// で修正: 初版は3本だけで下半分が空白になり、空の台帳の絵に近づいてしまっていた)。
+// 幅は役に応じて変える(全部同じ幅だと段組みに見えないため)パターンをVISIBLE_ROWS件ぶん
+// 巡回させて作る——6という数を直書きせず、VISIBLE_ROWSから導出する。文字は一切持たせない
+const SKELETON_WIDTH_PATTERN = [58, 74, 46, 66, 52] as const
+const SKELETON_WIDTHS = Array.from(
+  { length: VISIBLE_ROWS },
+  (_, i) => SKELETON_WIDTH_PATTERN[i % SKELETON_WIDTH_PATTERN.length],
+)
 
 // 3状態の帯文言。互いに1文字も一致しない(C2)
 const MSG_LOADING = '台帳が届いていない — 指せる行がまだ無い'
