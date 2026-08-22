@@ -247,6 +247,20 @@
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
+/* ハロー: 印がラベルの上に落ちたとき、下の文字が透けて潰れて読めなくなるのを防ぐ。
+   印自体の線幅・色は変えない(印は主張しない担体のままにする、企画の指示どおり)。
+   キャンバスの地色(#fff)の円を十字の下に敷くだけ。引き出し線の先端はこの印の位置と
+   同じ座標なので、ここに敷けば線の先端も同時に覆われる。半径7px(=十字の箱と同じ14px) */
+.mz-place-without-rows-marker::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: -7px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+}
 
 /* 十字はCSSの疑似要素2本で描く(画像を使わない) */
 .mz-place-without-rows-marker-glyph {
