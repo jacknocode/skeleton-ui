@@ -901,6 +901,34 @@ const CHOREO = {
     await sleep(2000) // 誰も押していないのに、印が最初から1行目に付いている
   },
 
+  'place-as-range': async (page) => {
+    /* 撮るべきは3つ。塗りが伸びるときアンカーが動かないこと、反転で作用点が
+       消えずに向きを返すこと、絞り込みで塗りが分断されること。
+       どれも「何が動かないか」が中身なので、押したあとの間を長めに取る */
+    await sleep(1500) // 3件の塗り・アンカーの●・作用点の▼が別々の担体として見えている
+    for (const _ of [1, 2]) {
+      await page.getByRole('button', { name: 'Shift+↓' }).click()
+      await sleep(750) // 伸びるのはフォーカス側だけ。アンカー行は1pxも動かない
+    }
+    await sleep(600)
+    for (const _ of [1, 2, 3, 4, 5]) {
+      await page.getByRole('button', { name: 'Shift+↑' }).click()
+      await sleep(700) // 途中で必ず1件（アンカーのみ）を通り、そこから上へ育ち直す
+    }
+    await sleep(1500) // 作用点は消えて湧いたのではなく、アンカーを軸に向きを返している
+    await page.getByRole('button', { name: '絞り込む' }).click()
+    await sleep(2300) // 集合で持っているので件数は変わらない。塗りのほうが分断される
+    await page.getByRole('button', { name: '解除' }).click()
+    await sleep(1800) // 外に出ていた行が戻る。失っていない
+    // 対照: 範囲を上端と下端で持つ
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1200)
+    await page.getByRole('button', { name: '絞り込む' }).click()
+    await sleep(2300) // 選んでいない行が黙って範囲に入り、件数が増える
+    await page.getByRole('button', { name: '解除' }).click()
+    await sleep(2400) // 増えたまま戻らない。読み手には壊れたことが分からない
+  },
+
   'place-without-rows': async (page) => {
     /* 倍率つまみは掴んで動かす（No.100 と同じ理由）。ズームの不動点は連続な絵でしか見えない */
     const canvas = await page.locator('.mz-place-without-rows-canvas').boundingBox()
