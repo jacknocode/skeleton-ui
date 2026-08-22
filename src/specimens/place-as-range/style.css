@@ -1,26 +1,306 @@
+/* No.103「現在地に幅があるとき」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+   色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #8c8c8c 中 / #d6d6d3 淡 / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。
+
+   板は幅340px固定。担体は3つ: 塗り(.is-selected の背景)=範囲そのもの、
+   作用点(.mz-place-as-range-action)=次に伸びる端、アンカー印(.mz-place-as-range-anchor)=
+   動かない側。対照はこの3つのうち塗り1つしか持たない(作用点・アンカー印を描かない)
+   ——これが対照の定義そのもの(C1/C2で個数0として測る対象)。 */
+
 .mz-place-as-range {
-  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+}
+
+/* ---------- 1行目: 絞り込む/解除 + 既定/対照トグル(同居) ---------- */
+
+.mz-place-as-range-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.mz-place-as-range-filters {
+  display: flex;
+  gap: 4px;
+}
+.mz-place-as-range-filter-btn {
+  padding: 6px 10px;
   border-radius: 999px;
+  background: #eaeae8;
+  color: #5c5c5c;
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    opacity 0.2s,
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-place-as-range-filter-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-place-as-range-filter-btn:disabled {
+  cursor: default;
+  color: #c2c2bf;
+  opacity: 0.6;
+}
+
+.mz-place-as-range-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-place-as-range-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-place-as-range-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 2行目: 操作4ボタン ---------- */
+
+.mz-place-as-range-row2 {
+  display: flex;
+  gap: 6px;
+}
+.mz-place-as-range-op-btn {
+  flex: 1 1 auto;
+  padding: 7px 4px;
+  border-radius: 10px;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 10.5px;
   font-weight: 800;
   color: #5c5c5c;
   cursor: pointer;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s;
+}
+.mz-place-as-range-op-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+}
+.mz-place-as-range-op-btn:active {
+  transform: scale(1.05, 0.92);
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-place-as-range.is-active {
-  animation: mz-place-as-range-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 帯: 選択件数を名乗る(常時表示。既定/対照どちらも出す) ----------
+   既定だけ「絞り込みの外」の語を条件付きで足す(defOutCount>0のときだけ、index.tsx側で
+   組み立て済みの文字列をそのまま出す)。対照は常に件数だけ("選択N件")——増えたことに
+   触れない、が対照の定義(C6)。 */
+.mz-place-as-range-band {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 10.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-@keyframes mz-place-as-range-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+
+/* ---------- 板(340×204で固定) ---------- */
+
+.mz-place-as-range-frame {
+  position: relative;
+  width: 340px;
+  height: 204px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+}
+.mz-place-as-range-scroll {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-anchor: none;
+}
+
+/* ---------- 行 ---------- */
+
+.mz-place-as-range-row {
+  position: relative;
+  box-sizing: border-box;
+  height: 34px;
+  padding: 0 14px 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f0f0ee;
+  overflow: hidden;
+  transition:
+    background-color var(--mz-par-collapse-ms, 160ms),
+    height var(--mz-par-split-ms, 220ms) cubic-bezier(0.34, 1.56, 0.64, 1),
+    padding var(--mz-par-split-ms, 220ms) cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity var(--mz-par-split-ms, 220ms) ease-out,
+    border-color var(--mz-par-split-ms, 220ms);
+}
+/* 絞り込みで表示から消える行(=対照だけが誤って巻き込む・既定は"外に出る"だけの行)。
+   高さを潰して消える(=「動きの設計」表の"塗りが分断される")。DOMからは即座に外さず、
+   縦につぶすことで残りの行が詰まる様子を見せる */
+.mz-place-as-range-row.is-collapsed {
+  height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+  border-bottom-color: transparent;
+}
+.mz-place-as-range-row-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+.mz-place-as-range-row-owner {
+  flex: none;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #b3b3b3;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+
+/* ---------- 塗り(範囲=結果) ----------
+   角丸は表示上の隣接ではなくidの連続性(かつ隣が現在表示されているか)で決める
+   (index.tsxのconnectUp/connectDown、設計メモの「分断の見え方」参照)。連続の始端/終端
+   だけに丸みと2pxの隙間を付けることで、絞り込みでDOM上隣り合ってしまったid4/id6が
+   1つの塊に見えてしまう(=C5が読めなくなる)のを防ぐ。 */
+.mz-place-as-range-row.is-selected {
+  background: #dedede;
+}
+.mz-place-as-range-row.is-selected.is-run-start {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  margin-top: 2px;
+}
+.mz-place-as-range-row.is-selected.is-run-end {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  margin-bottom: 2px;
+  border-bottom-color: transparent;
+}
+
+/* 新しく集合に入った行が伸びる(Shift+↓/↑で新規に加わった1行だけ)。原点はアンカー寄りの端
+   (index.tsxがinline styleでtransform-originを渡す)。既存の行(is-selectedのまま留まる行)
+   にはこのanimationは掛からない——1回性のクラスなので再レンダーのたびに再生されはしない */
+.mz-place-as-range-row.is-growing {
+  animation: mz-place-as-range-grow var(--mz-par-grow-ms, 160ms) cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-place-as-range-grow {
+  from {
+    transform: scaleY(0);
   }
-  60% {
-    transform: scale(0.9, 1.1);
+  to {
+    transform: scaleY(1);
   }
+}
+
+/* ---------- アンカー印(動かない側) ----------
+   行のループの外にある持続する単一要素(index.tsx参照)。位置(translateY)と見た目(pulseの
+   scale)を2層に分ける——外側(-wrap)はtranslateYだけを持ち移動時のtransitionを常設、
+   内側(素の-anchor)はscaleだけを持ちpulseのanimationを担当する。1pxも動かない(C1)。
+   対照にはこの要素自体が存在しない(常にDOM上0個=C1)。 */
+.mz-place-as-range-anchor-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 34px;
+  pointer-events: none;
+  transition: transform var(--mz-par-flip-ms, 200ms) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-place-as-range-anchor {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: 999px;
+  background: #3d3d3d;
+}
+.mz-place-as-range-anchor.is-pulsing {
+  animation: mz-place-as-range-anchor-pulse var(--mz-par-anchor-pulse-ms, 180ms) ease-out;
+}
+@keyframes mz-place-as-range-anchor-pulse {
+  0%,
   100% {
-    transform: none;
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.9);
+  }
+}
+
+/* ---------- 作用点(次に伸びる端) ----------
+   同じく2層構造。外側(-wrap)がtranslateYで行を追いかけ、内側(素の-action)がrotateで
+   向きを返す。反転の前後でも消えない・湧かない(C2)——同一のDOM要素がrotateするだけ。
+   ▾を既定(下向き)にし、上向きはrotate(180deg)(フォーカス=アンカーの1件のときは下向きが
+   既定。企画書の決め)。対照にはこの要素自体が存在しない(常にDOM上0個=C2)。 */
+.mz-place-as-range-action-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 34px;
+  pointer-events: none;
+  transition: transform var(--mz-par-flip-ms, 200ms) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-place-as-range-action {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  width: 0;
+  height: 0;
+  margin-top: -3px;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 6px solid #3d3d3d;
+  transform-origin: 50% 40%;
+  transform: rotate(0deg);
+  transition: transform var(--mz-par-flip-ms, 200ms) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-place-as-range-action.is-up {
+  transform: rotate(180deg);
+}
+
+/* ---------- 動きを控えたい人へ ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .mz-place-as-range-filter-btn,
+  .mz-place-as-range-op-btn,
+  .mz-place-as-range-row,
+  .mz-place-as-range-row.is-growing,
+  .mz-place-as-range-anchor-wrap,
+  .mz-place-as-range-anchor,
+  .mz-place-as-range-anchor.is-pulsing,
+  .mz-place-as-range-action-wrap,
+  .mz-place-as-range-action {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
