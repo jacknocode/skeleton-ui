@@ -800,6 +800,93 @@ const CHOREO = {
     await page.getByRole('button', { name: /元の位置へ戻る/ }).click()
     await sleep(2400) // 画面が1pxも動かない。縦線は画面外(-34px)に居る
   },
+
+  'sent-place': async (page) => {
+    const send = () => page.getByRole('button', { name: '「ここ見て」を送る' }).click()
+    const row = (name) => page.locator('.mz-sent-place-list').first().getByText(name, { exact: true })
+    await sleep(1200) // 自分の板（読みかけ=見積りの確認）と K の板（未対応のみで絞り込み済み）を読ませる
+    // (1) K にも見える行を送る。自分の帯は+0msで出るが、K の帯は260ms遅れて届く
+    await send()
+    await sleep(2000) // 帯が出たあとも K は1pxも動かない。動かすのは行為だけ
+    await page.getByRole('button', { name: /ここへ行く/ }).click()
+    await sleep(1600) // 尺ゼロで着地する
+    // (2) K の絞り込みの外にある行を送る。可逆性は行ではなく条件の側に載る（No.96）
+    await row('在庫の補充依頼').click()
+    await sleep(700)
+    await send()
+    await sleep(2000)
+    await page.getByRole('button', { name: /条件を外して行く/ }).click()
+    await sleep(1700) // チップが解除され、そのうえで行へ着く。2段階を1手に畳んでよい
+    // (3) K に権限が無い行を送る。送り手の帯は(1)(2)と1文字も変わらない
+    await row('取引条件の確認').click()
+    await sleep(700)
+    await send()
+    await sleep(2200) // ▸ が出ない。押せない導線は出さない
+    await page.getByRole('button', { name: '見えないと返す' }).click()
+    await sleep(1900) // ここで初めて送り手の帯が変わる。開示は権限の持ち主の行為で閉じる
+    // 対照: 座標を送って相手を飛ばす。送り手の帯に K の権限が現れる（＝漏れている）
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await send()
+    await sleep(2400)
+  },
+
+  'container-changed': async (page) => {
+    /* 幅のつまみは掴んで動かす。一気に飛ばすと「連続な補正」が撮れないので、
+       この標本では pointer を細かく刻むこと自体が説明になっている */
+    const drag = async (toRatio, ms) => {
+      const s = await page.locator('.mz-container-changed-slider').boundingBox()
+      const y = s.y + s.height / 2
+      /* 端ちょうどの座標（矩形の右端 = x + width）は要素の外側なので、
+         そこで mouse.down() すると掴み損ねる。左右を 4px ずつ内側に寄せた区間へ写す */
+      const PAD = 4
+      const at = (r) => s.x + PAD + (s.width - PAD * 2) * Math.min(1, Math.max(0, r))
+      const from = await page.evaluate(() => {
+        const el = document.querySelector('.mz-container-changed-slider')
+        const min = Number(el.min), max = Number(el.max)
+        return (Number(el.value) - min) / (max - min)
+      })
+      await page.mouse.move(at(from), y)
+      await page.mouse.down()
+      const steps = Math.max(10, Math.round(ms / 30))
+      for (let i = 1; i <= steps; i++) {
+        await page.mouse.move(at(from + (toRatio - from) * (i / steps)), y)
+        await sleep(30)
+      }
+      await page.mouse.up()
+    }
+    await sleep(1100) // 読みかけ（06）が折り返して何行にもなっているのを読ませる
+    await drag(0, 1100) // 狭める。読みかけの上端は枠内 y=56px に貼り付いたまま1pxも動かない
+    await sleep(700)
+    await drag(1, 900) // 広げる。往復しても読みかけは動かず、行 id も変わらない
+    await sleep(700)
+    await page.getByRole('button', { name: '回転' }).click()
+    await sleep(1400) // 離散の変化は尺ゼロ。同じ持ち方から、適用だけが替わる
+    await page.getByRole('button', { name: '回転' }).click()
+    await sleep(1100)
+    // 対照: 座標を保つ。scrollTop は1pxも変わらないのに、読みかけは枠の外へ出ていく
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(800)
+    await drag(0, 1100)
+    await sleep(1900)
+  },
+
+  'resume-stale': async (page) => {
+    await sleep(1300) // 8行の台帳と、読みかけ（問い合わせ対応）を読ませる
+    await page.getByRole('button', { name: '閉じる' }).click()
+    await sleep(1000)
+    await page.getByRole('button', { name: '翌日ひらく' }).click()
+    await sleep(2600) // 台帳の頭に居て、新着が見えている。帯は出るが板は動かない
+    await page.getByRole('button', { name: /続きへ/ }).click()
+    await sleep(2000) // 押して初めて戻る。持っていないのではなく、適用していない
+    // 対照: 黙って復元する（＝No.97 の答えのまま）。行としては誤差0で正しく着く
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await page.getByRole('button', { name: '閉じる' }).click()
+    await sleep(1000)
+    await page.getByRole('button', { name: '翌日ひらく' }).click()
+    await sleep(2800) // 読みかけの行にぴったり着地しているのに、新着は1件も見えていない
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))

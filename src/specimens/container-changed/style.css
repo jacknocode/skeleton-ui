@@ -1,0 +1,231 @@
+/* No.100「入れ物のほうが変わる」
+   モノクロ・自己完結。外形は幅340px以内・高さ330px以内(実測して確認する)。
+
+   .mz-container-changed-frameのwidthはJSがstyle属性で直接書く(168〜320pxの連続値)ので
+   ここではtransitionを一切張らない——回転(離散)のときに中間状態を通さないため。 */
+
+.mz-container-changed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 340px;
+}
+
+/* ---------- ヘッダ: 幅つまみ・回転・対照トグル(1行目) / 読みかけを末尾へ(2行目) ----------
+   企画の舞台図(plan-100)どおり、対照トグルは専用の行を持たず、幅つまみと同じ行の右端に
+   同居させる——縦の余白が340×330の外形予算に収まらないため(実測で発見。専用行にすると
+   高さ353pxになり、330pxの上限を超えた)。 */
+
+.mz-container-changed-header {
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mz-container-changed-widthrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mz-container-changed-mode {
+  flex: none;
+  display: flex;
+  padding: 2px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+
+.mz-container-changed-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-container-changed-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* 掴んで動かす連続入力。ネイティブのrange。見た目だけ図鑑の語彙に合わせて描き直す */
+.mz-container-changed-slider {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 20px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+.mz-container-changed-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: #d6d6d3;
+}
+.mz-container-changed-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: #3d3d3d;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-container-changed-slider:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+.mz-container-changed-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: #d6d6d3;
+}
+.mz-container-changed-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: #3d3d3d;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.mz-container-changed-rotate,
+.mz-container-changed-tailbtn {
+  flex: none;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: #eaeae8;
+  color: #5c5c5c;
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s;
+}
+.mz-container-changed-rotate:hover,
+.mz-container-changed-tailbtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.mz-container-changed-rotate:active,
+.mz-container-changed-tailbtn:active:not(:disabled) {
+  transform: scale(1.05, 0.92);
+}
+.mz-container-changed-tailbtn {
+  width: 100%;
+  text-align: center;
+}
+.mz-container-changed-tailbtn:disabled {
+  cursor: default;
+  opacity: 0.4;
+  transform: none;
+}
+
+/* ---------- 舞台: 入れ物(枠)が340px幅の中で168〜320pxへ連続に変わる ---------- */
+
+.mz-container-changed-stage {
+  width: 340px;
+  display: flex;
+  justify-content: center;
+}
+
+.mz-container-changed-frame {
+  position: relative;
+  flex: none;
+  max-width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+  /* widthはJSがstyle属性で直接指定する。transitionは持たない(回転の中間状態を作らないため) */
+}
+
+.mz-container-changed-scroll {
+  position: relative;
+  overflow-y: auto;
+  overflow-anchor: none; /* ブラウザの自動アンカリングに座標補正を横取りされないため */
+}
+
+/* 行はbuttonそのもの。クリックで読みかけを移せる(No.92/filtered-outの系譜) */
+.mz-container-changed-row {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f0ee;
+  border-left: 2px solid transparent; /* 「読みかけ」印の場所を最初から確保 */
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+.mz-container-changed-row.is-reading {
+  border-left-color: #5c5c5c;
+  background: #fafaf9;
+}
+
+.mz-container-changed-row-id {
+  flex: none;
+  padding-top: 1px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #b3b3b3;
+}
+.mz-container-changed-row-note {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 17px;
+  color: #5c5c5c;
+  overflow-wrap: anywhere; /* 幅が狭いとき、実際に折り返させる(本物の折り返し) */
+}
+.mz-container-changed-row.is-reading .mz-container-changed-row-note {
+  color: #3d3d3d;
+  font-weight: 700;
+}
+
+/* ---------- 帯: 「この幅では上端を保てません」---------- */
+/* 場所は常に確保する(No.90の系譜: 不在でレイアウトが動かない)。保てている間は0個。
+   状態通知なので、基本のオーバーシュートではなく減速のみの短いフェードを使う
+   (return-changedの戻り帯と同じ判断: 「保てなくなった」という事実の提示に弾みは要らない) */
+.mz-container-changed-bandslot {
+  width: 340px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mz-container-changed-band {
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: mz-container-changed-band-in 180ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes mz-container-changed-band-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------- 動かない位置合わせの補足 ----------
+   .mz-container-changed-scrollのscrollTopへの代入は常に即時(transitionを張らない)。
+   グローバル側(src/styles/global.css)がprefers-reduced-motion環境でtransition-duration/
+   animation-durationを一律潰すので、標本側では対応不要。 */
