@@ -151,14 +151,14 @@ const ITEMS: ItemDef[] = [
   { id: 'est-check', name: '見積りの確認', assignees: ['担当B', '担当C'], due: '今週', tags: ['見積', '至急'], progress: 40 },
   { id: 'contract-fix', name: '契約書の修正', assignees: ['担当A'], due: '今週', tags: ['見積'], progress: 70 },
   { id: 'invoice', name: '請求書の発行', assignees: ['担当A'], due: '来週', tags: ['定例'], progress: 90 },
-  { id: 'spec-review', name: '仕様のレビュー', assignees: ['担当A', '担当B'], due: '今週', tags: ['定例'], progress: 55 },
+  { id: 'spec-review', name: '仕様のレビュー', assignees: ['担当A', '担当C'], due: '今週', tags: ['定例'], progress: 55 },
   { id: 'onboard', name: '受け入れ準備', assignees: ['担当B'], due: '来週', tags: ['定例'], progress: 20 },
   { id: 'inquiry', name: '問い合わせ対応', assignees: ['担当C'], due: '今週', tags: ['至急'], progress: 60 },
   { id: 'shipping', name: '出荷の手配', assignees: ['担当C'], due: '来週', tags: ['至急'], progress: 35 },
   { id: 'budget', name: '予算の突き合わせ', assignees: ['担当A'], due: '期日なし', tags: ['見積'], progress: 80 },
-  { id: 'training', name: '研修の日程調整', assignees: ['担当B'], due: '来週', tags: ['定例'], progress: 10 },
+  { id: 'training', name: '研修の日程調整', assignees: ['担当C'], due: '来週', tags: ['定例'], progress: 10 },
   { id: 'audit', name: '棚卸しの立ち会い', assignees: ['担当C'], due: '期日なし', tags: ['定例'], progress: 100 },
-  { id: 'renew', name: '更新の案内', assignees: ['担当A'], due: '期日なし', tags: ['見積'], progress: 45 },
+  { id: 'renew', name: '更新の案内', assignees: ['担当A'], due: '期日なし', tags: ['定例'], progress: 45 },
   { id: 'handover', name: '引き継ぎメモ', assignees: ['担当B'], due: '来週', tags: ['定例'], progress: 25 },
 ]
 const ITEM_MAP = new Map(ITEMS.map((i) => [i.id, i]))

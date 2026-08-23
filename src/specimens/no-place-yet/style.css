@@ -194,7 +194,11 @@
   border-bottom-color: #f0f0ee;
 }
 
-/* 入口の印。中空の小さな輪だけ。行を囲まない・塗らない(「これから」を弱く言う) */
+/* 入口の印。中空の小さな輪だけ。行を囲まない・塗らない(「これから」を弱く言う)。
+   is-entryのときだけ、呼吸(opacityの明滅)を纏う――No.59「予告と発効」の型の借用
+   (詳しくはindex.tsx冒頭コメント参照)。線幅をベースより太くして(1.4px→1.9px)、
+   480px縮小でも視認できる強さにしてある。ただし径はベースのまま6pxに留め、
+   現在地の縁取り(行を囲む・強い)とは混ざらない弱さを保つ */
 .mz-no-place-yet-entry-mark {
   position: absolute;
   left: 10px;
@@ -204,9 +208,24 @@
   border-radius: 50%;
   border: 1.4px solid transparent;
   transform: translateY(-50%);
+  animation-name: none; /* 既定では呼吸しない(is-entryが付いたときだけ動く。C10) */
 }
 .mz-no-place-yet-row.is-entry .mz-no-place-yet-entry-mark {
-  border-color: #9a9a9a;
+  border-width: 1.9px;
+  border-color: #7d7d7d;
+  animation: mz-no-place-yet-breathe 1.8s ease-in-out infinite;
+}
+/* 呼吸はopacityだけを動かす(径は変えない=周囲の行を騒がせない)。
+   基本イージング(ぷるん)は跳ねる=出来事の語彙なので使わない。
+   これは「まだ確定していない、待っている」状態の語彙なので素直なease-in-out */
+@keyframes mz-no-place-yet-breathe {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .mz-no-place-yet-row-label {
