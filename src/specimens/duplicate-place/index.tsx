@@ -103,7 +103,34 @@ import './style.css'
    企画書は「40→65にする」と一方向で書いているが、実測を繰り返せる標本にするため
    40⇄65を往復するトグルにした(押すたびに値が変わり、パルスも毎回起きる)。表示される
    のは常に「両方の出現で同じ値」であることと「光るのは1か所だけ」であることなので、
-   往復させても主張は変わらない。 */
+   往復させても主張は変わらない。
+
+   ---- 検収後の直し(実装上の判断4): 台帳所属表の間隔調整、ロジックは1行も変えていない ----
+   検収から「受け入れ条件は全部通っているのに、目で見ると同じ行の2出現が同時に画面に
+   入らない」という指摘が来た。この標本の主題そのもの(同じ行が2か所にある)を画面上で
+   同時に示せていなければ、数値が全部通っていても標本として失格——という図鑑の一貫した
+   立場のとおりの指摘で、直したのはITEMSの所属表だけ(グループの行数配分)。
+
+   最初に提示された対策(担当B=est-check・onboard・handoverの3件、間隔128px)を実際に
+   実装して実測したところ、まだ足りなかった: 担当Cの出現をクリックして読みかけにすると
+   (=クリックした行をy=68へ揃えるロジック、これは触っていない)、担当Bの出現はy=-60まで
+   押し出されて完全に画面外に消えた(実測)。対照で担当Bへ復元した瞬間も、担当Cの出現は
+   y=196〜230でVISIBLE_H=204をわずかに割り、34px中8pxのスリバーしか見えなかった(実測、
+   .is-sameの可視判定でfullyVisible=falseと確認)。原因はロジック側にある: 「クリックした
+   (=読んでいる)行をy=FRAME_ALIGN_Y(68)へ揃える」動作を変えない前提だと、もう片方の出現が
+   画面内に収まる条件は2通りに分かれる——読んでいる方が下の出現なら
+   間隔<=FRAME_ALIGN_Y(68)、読んでいる方が上の出現なら間隔<=VISIBLE_H-FRAME_ALIGN_Y-ROW_H
+   (204-68-34=102)。どちらの向きで読んでも両方が入るには、この2つのうち厳しい方
+   (68px)を満たす間隔が要る。128pxはどちらの条件も満たしていなかった。
+
+   間隔は「間に挟まる行数」で決まる(見出し1つ26px+項目n個×34px)ので、68px以下に収める
+   には項目0個(=担当Bにest-check以外を1件も置かない)しかない。そこでonboard・handoverを
+   担当Cへ移し、担当Bをest-check単独の1件にした(間隔=ROW_H+GROUP_H=34+26=60px、
+   68px以下を満たす)。この変更後に実測すると、担当Cを読みかけにしたとき担当Bはy=8〜42
+   (fullyVisible)、対照で担当Bへ復元した瞬間も担当Cはy=128〜162(fullyVisible)と、
+   どちらの向きでも両方が枠内に完全に収まることを確認した(最終報告に実測値を記載)。
+   タグ別(見積/至急、間隔128px)は今回のC10の指摘対象ではないため触っていないが、
+   同じ理屈で同じ限界を抱えている——企画側への申し送り事項として最終報告に書く。 */
 
 const ROW_H = 34
 const GROUP_H = 26
@@ -152,14 +179,14 @@ const ITEMS: ItemDef[] = [
   { id: 'contract-fix', name: '契約書の修正', assignees: ['担当A'], due: '今週', tags: ['見積'], progress: 70 },
   { id: 'invoice', name: '請求書の発行', assignees: ['担当A'], due: '来週', tags: ['定例'], progress: 90 },
   { id: 'spec-review', name: '仕様のレビュー', assignees: ['担当A', '担当C'], due: '今週', tags: ['定例'], progress: 55 },
-  { id: 'onboard', name: '受け入れ準備', assignees: ['担当B'], due: '来週', tags: ['定例'], progress: 20 },
+  { id: 'onboard', name: '受け入れ準備', assignees: ['担当C'], due: '来週', tags: ['定例'], progress: 20 },
   { id: 'inquiry', name: '問い合わせ対応', assignees: ['担当C'], due: '今週', tags: ['至急'], progress: 60 },
   { id: 'shipping', name: '出荷の手配', assignees: ['担当C'], due: '来週', tags: ['至急'], progress: 35 },
   { id: 'budget', name: '予算の突き合わせ', assignees: ['担当A'], due: '期日なし', tags: ['見積'], progress: 80 },
   { id: 'training', name: '研修の日程調整', assignees: ['担当C'], due: '来週', tags: ['定例'], progress: 10 },
   { id: 'audit', name: '棚卸しの立ち会い', assignees: ['担当C'], due: '期日なし', tags: ['定例'], progress: 100 },
   { id: 'renew', name: '更新の案内', assignees: ['担当A'], due: '期日なし', tags: ['定例'], progress: 45 },
-  { id: 'handover', name: '引き継ぎメモ', assignees: ['担当B'], due: '来週', tags: ['定例'], progress: 25 },
+  { id: 'handover', name: '引き継ぎメモ', assignees: ['担当C'], due: '来週', tags: ['定例'], progress: 25 },
 ]
 const ITEM_MAP = new Map(ITEMS.map((i) => [i.id, i]))
 
