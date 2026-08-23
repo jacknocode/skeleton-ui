@@ -888,6 +888,82 @@ const CHOREO = {
     await sleep(2800) // 読みかけの行にぴったり着地しているのに、新着は1件も見えていない
   },
 
+  'place-without-rows': async (page) => {
+    /* 行の無い空間なので、撮るべきものは「何がアンカーになっているか」の移り変わり。
+       倍率のつまみは掴んで動かす（離した瞬間に選び直しが走るので、掴みっぱなしと
+       離すのを撮り分けることがそのまま説明になる）。 */
+    const panBy = async (dx, dy, ms) => {
+      /* 枠（300×180）より長い距離は一度に引けないので、何回かに分けて引く */
+      const box = await page.locator('.mz-place-without-rows-viewport').boundingBox()
+      const cx = box.x + box.width / 2
+      const cy = box.y + box.height / 2
+      const legs = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 110))
+      for (let l = 0; l < legs; l++) {
+        await page.mouse.move(cx, cy)
+        await page.mouse.down()
+        const steps = Math.max(5, Math.round(ms / legs / 30))
+        for (let i = 1; i <= steps; i++) {
+          await page.mouse.move(cx + (dx / legs) * (i / steps), cy + (dy / legs) * (i / steps))
+          await sleep(30)
+        }
+        await page.mouse.up()
+        await sleep(80)
+      }
+    }
+    const zoomTo = async (z, ms) => {
+      const s = await page.locator('.mz-place-without-rows-zoom-slider').boundingBox()
+      const y = s.y + s.height / 2
+      const PAD = 4
+      const meta = await page.evaluate(() => {
+        const el = document.querySelector('.mz-place-without-rows-zoom-slider')
+        return { min: Number(el.min), max: Number(el.max), value: Number(el.value) }
+      })
+      const at = (v) => s.x + PAD + ((s.width - PAD * 2) * (v - meta.min)) / (meta.max - meta.min)
+      await page.mouse.move(at(meta.value), y)
+      await page.mouse.down()
+      const steps = Math.max(10, Math.round(ms / 30))
+      for (let i = 1; i <= steps; i++) {
+        await page.mouse.move(at(meta.value + (z - meta.value) * (i / steps)), y)
+        await sleep(30)
+      }
+      await page.mouse.up() // 離した瞬間にアンカーの選び直しが走る
+    }
+    await sleep(900)
+    await panBy(-350, -60, 900) // 配電盤のあたりへ寄る。アンカーが乗り換わっていく
+    await sleep(700)
+    await zoomTo(0.6, 900)
+    await sleep(1500) // 名前が読めない大きさになった配電盤は、アンカーの資格を失う
+    await zoomTo(1.6, 800)
+    await sleep(1000) // 名前が戻る。ただし掴んでいる間は乗り換えないので、まだ給湯室のまま
+    await panBy(-25, -85, 500)
+    await sleep(1100) // 配電盤のほうへ寄ると、離した瞬間にアンカーが乗り換わる
+    await page.getByRole('button', { name: '閉じる' }).click()
+    await sleep(600)
+    await page.getByRole('button', { name: /見ているもの/ }).click()
+    await sleep(600)
+    await page.getByRole('button', { name: 'ひらく' }).click()
+    await sleep(2200) // 見ていたものが動いたので、現在地も付いていく（画面上の位置は不変）
+    await page.getByRole('button', { name: '閉じる' }).click()
+    await sleep(500)
+    await page.getByRole('button', { name: /消す/ }).click()
+    await sleep(500)
+    await page.getByRole('button', { name: 'ひらく' }).click()
+    await sleep(2200) // 指し直せないので適用しない。帯が「おおよそ」と名乗る
+    await page.getByRole('button', { name: /おおよその場所へ/ }).click()
+    await sleep(1800) // 押して初めて動く。着いた先に「ここに在りました」の跡が残る
+    // 対照: 中心の座標と倍率で持つ（＝No.97 が撃った座標を2次元へ広げただけ）
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(600)
+    await panBy(-350, -60, 900)
+    await sleep(600)
+    await page.getByRole('button', { name: '閉じる' }).click()
+    await sleep(500)
+    await page.getByRole('button', { name: /見ているもの/ }).click()
+    await sleep(500)
+    await page.getByRole('button', { name: 'ひらく' }).click()
+    await sleep(2600) // 中心は誤差0で戻っているのに、見ていたものはもう画面に居ない
+  },
+
   'duplicate-place': async (page) => {
     /* この標本は「同じ行が2か所にある」ことが主題なので、2つの出現が同時に
        枠内に居る状態を作ってから撮る（そのために台帳の所属を組み直してある）。 */
@@ -904,7 +980,9 @@ const CHOREO = {
     await page.getByRole('button', { name: '期日別' }).click()
     await sleep(1800) // 候補が1つなら黙って指し直す（帯を出さない）
     await page.getByRole('button', { name: '担当者別' }).click()
-    await sleep(1200)
+    await sleep(1800) // 戻ってくると候補はまた2つ。曖昧さは分け方のほうに属している
+    await page.getByRole('button', { name: /担当Cの下へ/ }).click()
+    await sleep(1400)
     // 対照: 行 id だけで持つ（＝No.97 の答えのまま）
     await page.getByRole('button', { name: '対照', exact: true }).click()
     await sleep(700)
