@@ -156,15 +156,16 @@
   background: #3d3d3d;
 }
 
+/* 資格(canReadName)を満たすときだけ描画される。省略記号では潰さない——
+   資格を満たす=名前が読める大きさ、なのだから全部描き切る。折り返しは許容し、
+   親(.mz-place-without-rows-item)のoverflow:hiddenを万一のはみ出し防止の
+   最終防衛線として残す(通常はここで切れることは無い想定) */
 .mz-place-without-rows-item-label {
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 800;
-  line-height: 1.1;
+  line-height: 1.15;
   color: #5c5c5c;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
+  white-space: normal;
   text-align: center;
 }
 
@@ -296,18 +297,19 @@
 .mz-place-without-rows-actors {
   width: 340px;
   display: flex;
-  gap: 5px;
+  gap: 7px;
 }
 
 .mz-place-without-rows-actor-btn {
   flex: 1 1 0;
   min-width: 0;
-  padding: 6px 2px;
+  padding: 7px 4px;
   border-radius: 999px;
   background: #eaeae8;
   color: #8c8c8c;
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 700;
+  letter-spacing: -0.01em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

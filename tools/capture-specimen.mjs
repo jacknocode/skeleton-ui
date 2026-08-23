@@ -887,6 +887,73 @@ const CHOREO = {
     await page.getByRole('button', { name: '翌日ひらく' }).click()
     await sleep(2800) // 読みかけの行にぴったり着地しているのに、新着は1件も見えていない
   },
+
+  'duplicate-place': async (page) => {
+    /* この標本は「同じ行が2か所にある」ことが主題なので、2つの出現が同時に
+       枠内に居る状態を作ってから撮る（そのために台帳の所属を組み直してある）。 */
+    const est = (group) => page.locator(`[data-item-id="est-check"][data-group-key="${group}"]`)
+    await sleep(1200)
+    await est('担当C').click()
+    await sleep(1800) // 担当B と 担当C に同じ行。囲みは自分が読んでいる担当C の側だけ
+    await page.getByRole('button', { name: '進捗を進める' }).click()
+    await sleep(1500) // 2か所とも 65% に変わるが、光るのは読んでいる側の1か所だけ
+    await page.getByRole('button', { name: 'タグ別' }).click()
+    await sleep(2400) // 経路が消え、候補が2つ。選ばずに提示する（押すまで動かない）
+    await page.getByRole('button', { name: /至急の下へ/ }).click()
+    await sleep(1800)
+    await page.getByRole('button', { name: '期日別' }).click()
+    await sleep(1800) // 候補が1つなら黙って指し直す（帯を出さない）
+    await page.getByRole('button', { name: '担当者別' }).click()
+    await sleep(1200)
+    // 対照: 行 id だけで持つ（＝No.97 の答えのまま）
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(700)
+    await est('担当C').click()
+    await sleep(1200)
+    await page.getByRole('button', { name: '閉じる' }).click()
+    await sleep(900)
+    await page.getByRole('button', { name: 'ひらく' }).click()
+    await sleep(2800) // 囲みは担当B へ。印は動かず両方に残っている＝同じ行なのに違う場所
+  },
+
+  'no-place-yet': async (page) => {
+    /* この標本の主題はキー操作の結果なので、撮り方＝どのキーをどの順で押すか。
+       Esc のあとの「無い」が、開いた直後の「無い」と同じ絵で始まる先だけが違う、
+       というのが芯なので、既定と対照で同じ順番のキーを押す。 */
+    const frame = page.locator('.mz-no-place-yet-frame')
+    await sleep(1000)
+    await page.getByRole('button', { name: /8件/ }).click()
+    await sleep(1900) // 骨 → 一覧。現在地は無く、入口の印だけが呼吸している
+    await frame.focus()
+    await page.keyboard.press('ArrowDown')
+    await sleep(1300) // 予告していた行に、その場で立ち上がる（移動ではない）
+    for (let i = 0; i < 5; i++) {
+      await page.keyboard.press('ArrowDown')
+      await sleep(260)
+    }
+    await sleep(700)
+    await page.keyboard.press('Escape')
+    await sleep(1700) // 現在地は消え、入口の印は直前に居た行に残る
+    await page.keyboard.press('ArrowDown')
+    await sleep(1800) // 隣ではなく、居た場所から始まる
+    // 対照: 開いた直後に先頭へ置く（＝No.101 の実装のまま）。入口の印を持たない
+    await page.getByRole('button', { name: '閉じる' }).click()
+    await sleep(700)
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(500)
+    await page.getByRole('button', { name: /8件/ }).click()
+    await sleep(1900) // 何も選んでいないのに、もう先頭に居る
+    await frame.focus()
+    for (let i = 0; i < 5; i++) {
+      await page.keyboard.press('ArrowDown')
+      await sleep(260)
+    }
+    await sleep(500)
+    await page.keyboard.press('Escape')
+    await sleep(1500)
+    await page.keyboard.press('ArrowDown')
+    await sleep(2200) // 先頭へ戻る。直前に居た場所が画面のどこにも残っていない
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))

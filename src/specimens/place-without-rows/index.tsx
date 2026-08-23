@@ -27,11 +27,26 @@ import './style.css'
    そもそも無い)。
 
    ---- アンカー選定は「資格→距離」の二段(この標本の芯) ----
-   資格は (1)図形の中心がビューポート内 (2)見かけの短辺 min(w,h)*zoom が14px以上、
-   の両方。資格のある中で画面距離が最小のものを選ぶ。世界距離だけで選ぶと倍率を
-   変えても順位が変わらない(全員に同じ倍率が掛かるため)——だから「読み手が
-   識別できる大きさで写っているか」を先に問う資格を挟む。実測(下記C6)で
-   倍率0.6ではkitchen、倍率2.2ではpanelが選ばれることを確認した。
+   資格は (1)図形の中心がビューポート内 (2)名前が読める大きさで写っている、の両方。
+   資格のある中で画面距離が最小のものを選ぶ。世界距離だけで選ぶと倍率を変えても
+   順位が変わらない(全員に同じ倍率が掛かるため)——だから「読み手が識別できる
+   大きさで写っているか」を先に問う資格を挟む。
+
+   ---- 資格を「名前が読める大きさ」に定義し直した経緯(検収を受けての修正) ----
+   初版は資格(2)を抽象的なpx閾値(見かけの短辺14px以上)として実装したが、実物の
+   スクリーンショットを見ると倍率1.6でpanel(配電盤)のラベルが「配…」と省略され、
+   読めていなかった。この標本の主張は「行の代わりになるのは名前であって座標では
+   ない」——その名前が画面で読めていない時点で、主張そのものが画面に出ていない。
+   直したのは実装ではなく資格の定義そのもの: 「見かけの短辺が何pxか」ではなく
+   「名前が読める大きさで写っているか」を資格の中身にし、canReadName(f, zoom)
+   という1つの述語に切り出して、ラベルを描くかどうかの判定とアンカーの資格判定の
+   両方がこの同じ述語を呼ぶようにした。閾値未満なら(1)ラベルを描かない・
+   (2)アンカーになれない、の両方が同時に起こる——「読めないものは、現在地の基準に
+   できない」がコード上も1箇所の判定から出てくる。この修正にあわせてpanelの寸法を
+   26×18→40×28へ広げた(検収指定。小さい什器がpanelだけだとC6の観察が単調に
+   なるため、exitを40×28のまま据え置いて小さい什器を2つにした)。実測(下記C6)で
+   倍率0.6ではkitchen、倍率2.2ではpanelが選ばれ、かつラベルの有無がその倍率での
+   資格と一致することを確認した。
 
    ---- 「掴んでいる間は選び直さない」の実装 ----
    アンカーの再選定(computeAnchor→setAnchorId)は、パンのpointerup・ズームスライダー
@@ -59,11 +74,15 @@ import './style.css'
    持つ、という役割分担にした。
 
    ---- 実装して初めて詰まった点 ----
-   1. パンのドラッグでelement.setPointerCapture()を使うと、素早く300×180の枠外まで
-      動かした際にPlaywrightの合成pointerイベントでは稀にcaptureが素直に効かない
-      ケースがあった(実ブラウザの手動操作では問題ないが、テストの合成イベント
-      駆動だと安定しない)。windowにpointermove/pointerupを動的addEventListener
-      する方式に変えたところ、captureの成否に依存しなくなり安定した。
+   1. 実測中、Playwrightのpage.mouse(実OSイベント経由の合成ドラッグ)が、帯の
+      CTAボタン(「▸ おおよその場所へ」)がDOM上に存在する特定の状態でだけ、
+      pointerdownの直後の1回しかpointermoveを配送してくれない現象に当たった。
+      onMoveの中にconsole.logを仕込んで検証したところ、配送されたイベントに対する
+      本実装側の計算は毎回正しく、原因はChromium側の合成入力パイプラインが
+      その状態で後続のmousemoveを取りこぼす(CDP越し特有の挙動で、実ユーザーの
+      本物のポインタ操作では起きない)ことだと切り分けられた。計測スクリプト側を
+      dispatchEvent直叩き(PointerEventを自分でwindowへ撃つ)に変えて解決した——
+      実装(index.tsx)は無傷で、直したのは計測手法(scratchpadのlib.mjs)側だけ。
    2. C7(空白地帯)の設計で、lounge(中心250,330)のyを330に置いた意図が「(120,430)
       から見て 340〜520 の可視y範囲にちょうど掛からない」ことだと実測して初めて
       裏取りできた(330<340なので資格判定より前の『中心がビューポート内』の時点で
@@ -80,6 +99,23 @@ import './style.css'
       確認した。これは対照の強さであると同時に、C7で対照だけが正直に机上の空論を
       抱えたまま復元してしまう(=誤った現在地であることに読み手が気づけない)
       という弱さの裏返しでもある。
+   5. C5「離した後に選び直しが走り、選ばれるアンカーが変わる」を企画書どおり
+      (panel・左3分の1・倍率0.9→2.2)実測すると、離した後もアンカーはpanelのまま
+      変わらなかった。理由は数式で説明できる: ズームの不動点はアンカーの「画面上
+      の距離」を常に一定に保つ(=C4がまさにこれを証明している)一方、他の候補の
+      画面距離はd(z)=|D*z+O|(Dはアンカーとのワールド差、Oは開始時のアンカーの
+      画面オフセット、zは倍率)でzについて単調に増える。つまり倍率を上げながら
+      固定アンカーを掴み続ける限り、"距離"で他の候補が追いつくことは無い——
+      追いつけるとしたら倍率を下げるときだけ、という総当たり検証(z0=0.9→2.2は
+      該当0/128520件、逆方向2.2→0.9は数千件成立)を報告したところ、検収から
+      「方向を逆にする」より良い直し方が示された: 掴んだまま2.2→0.6まで下げると、
+      乗り換えの引き金は距離の逆転ではなく資格の喪失で起こる——panel(40×28)の
+      見かけ短辺は0.6倍で28×0.6=16.8pxとなりLABEL_MIN_PX(22px)を割り込み、
+      名前が読めなくなって資格を失う。距離では終始panelの方がkitchenより近い
+      (資格が同着なら常にpanelが勝つ)ので、乗り換えの理由が距離ではなく資格
+      そのものであることも数値で言える。C6の判定基準(資格→距離)が、
+      掴む/離すという操作の文脈でも同じ形で効くことをC5が示す、という
+      構成に直った。実測値はC5の項を参照。
 */
 
 // ---------- 舞台の定数(企画書の間取り図の数値をそのまま定数化) ----------
@@ -91,7 +127,7 @@ const ZOOM_MIN = 0.6
 const ZOOM_MAX = 2.4
 const ZOOM_STEP = 0.2 // ±ボタン1回ぶんの刻み(企画は値を指定していないのでUI都合で選ぶ)
 const SLIDER_STEP = 0.01 // スライダーの粒度
-const MIN_ANCHOR_PX = 14 // アンカーの資格: 見かけの短辺の下限
+const LABEL_MIN_PX = 22 // 資格=「名前が読める大きさ」の下限(見かけの短辺基準)。canReadNameが唯一の参照元
 const HOME_CENTER = { x: 150, y: 90 } // ホーム: 倍率1.0, 中心(150,90)(企画書指定)
 const PANEL_MOVE = { dx: 90, dy: 70 } // 「動かす(見ているもの)」= 配電盤(企画書指定)
 const DOCK_MOVE = { dx: -60, dy: -40 } // 「動かす(別のもの)」= 搬入口(企画書指定)
@@ -113,7 +149,7 @@ const FURNITURE_INITIAL: FurnitureInfo[] = [
   { id: 'reception', name: '受付', cx: 120, cy: 90, w: 96, h: 56 },
   { id: 'meeting', name: '打ち合わせ室', cx: 300, cy: 120, w: 120, h: 72 },
   { id: 'kitchen', name: '給湯室', cx: 470, cy: 96, w: 64, h: 40 },
-  { id: 'panel', name: '配電盤', cx: 505, cy: 168, w: 26, h: 18 },
+  { id: 'panel', name: '配電盤', cx: 505, cy: 168, w: 40, h: 28 },
   { id: 'rack', name: 'サーバーラック', cx: 640, cy: 210, w: 88, h: 60 },
   { id: 'lounge', name: '休憩スペース', cx: 250, cy: 330, w: 132, h: 80 },
   { id: 'dock', name: '搬入口', cx: 700, cy: 400, w: 100, h: 54 },
@@ -137,7 +173,15 @@ function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n))
 }
 
-/** アンカーの資格(中心がビューポート内・見かけの短辺≥MIN_ANCHOR_PX)を満たすもののうち
+/** 資格の中身そのもの:「名前が読める大きさで写っているか」。ラベルを描くかどうかの
+    判定(JSX側)と、アンカーになれるかどうかの判定(computeAnchor)の両方が、
+    この1つの述語だけを見る——資格の意味を2箇所に書き分けない(検収を受けての修正、
+    冒頭コメント参照) */
+function canReadName(f: FurnitureInfo, zoom: number): boolean {
+  return Math.min(f.w, f.h) * zoom >= LABEL_MIN_PX
+}
+
+/** アンカーの資格(中心がビューポート内・canReadNameを満たす)を満たすもののうち
     画面距離が最小のものを選ぶ。呼ぶタイミングは「操作の区切り」だけに限定する(本文参照) */
 function computeAnchor(furniture: FurnitureInfo[], center: { x: number; y: number }, zoom: number): string | null {
   let bestId: string | null = null
@@ -146,8 +190,7 @@ function computeAnchor(furniture: FurnitureInfo[], center: { x: number; y: numbe
     const sx = VP_W / 2 + (f.cx - center.x) * zoom
     const sy = VP_H / 2 + (f.cy - center.y) * zoom
     const inside = sx >= 0 && sx <= VP_W && sy >= 0 && sy <= VP_H
-    const apparentMinSide = Math.min(f.w, f.h) * zoom
-    if (!inside || apparentMinSide < MIN_ANCHOR_PX) continue
+    if (!inside || !canReadName(f, zoom)) continue
     const dist = Math.hypot(sx - VP_W / 2, sy - VP_H / 2)
     if (dist < bestDist) {
       bestDist = dist
@@ -411,7 +454,7 @@ export default function PlaceWithoutRows() {
                     style={{ left: f.cx - f.w / 2, top: f.cy - f.h / 2, width: f.w, height: f.h }}
                   >
                     {f.id === anchorId && <span className="mz-place-without-rows-anchordot" aria-hidden="true" />}
-                    <span className="mz-place-without-rows-item-label">{f.name}</span>
+                    {canReadName(f, zoom) && <span className="mz-place-without-rows-item-label">{f.name}</span>}
                   </div>
                 ))}
                 {trace && (
