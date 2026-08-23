@@ -1,26 +1,317 @@
+/* No.103「同じ行が2か所にある」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+   既存標本(resume-stale等)と同じ色トークンを踏襲する
+   (#fff / #eaeae8 / #3d3d3d / #5c5c5c / #8c8c8c / #b3b3b3 / #f5f5f3)。
+
+   板は幅340px固定。スクロール領域(.mz-duplicate-place-scroll)は高さ204px。
+   末尾に透明な余白(.mz-duplicate-place-spacer)を持つ——3通りのグループ分けいずれの
+   末尾行もy=68pxまで引き上げられるようにするための構造上の必要(index.tsxの
+   「実装上の判断2」参照)。帯は板の外(下)に置き、状態によらず高さを固定した枠
+   (.mz-duplicate-place-band-slot)を常に確保することで、板の上端yが帯の有無で動かない
+   ことを担保する。
+
+   同一性の印(is-same、弱い)と現在地(is-here、強い)は別の担体にした:
+   is-same = 左端の細い縦線+薄い塗り。is-here = 行を囲む枠線(box-shadow inset)。
+   is-hereは常にis-sameを伴う(現在地はかならず同一性の印の中の1つ)ので、CSS上は
+   is-hereのスタイルがis-sameの上に重ねて掛かるように書く。 */
+
 .mz-duplicate-place {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 340px;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-duplicate-place.is-active {
-  animation: mz-duplicate-place-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 上段: グループ分け切替(左) + 既定/対照(右) ---------- */
+
+.mz-duplicate-place-topbar {
+  width: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-duplicate-place-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
+
+.mz-duplicate-place-grouping {
+  display: flex;
+  padding: 2px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+
+.mz-duplicate-place-grouping-btn {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    opacity 0.2s;
+}
+.mz-duplicate-place-grouping-btn.is-active {
+  background: #5c5c5c;
+  color: #f5f5f3;
+}
+.mz-duplicate-place-grouping-btn:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.mz-duplicate-place-mode {
+  display: flex;
+  padding: 2px;
+  border-radius: 999px;
+  background: #eaeae8;
+  flex: none;
+}
+
+.mz-duplicate-place-mode-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    opacity 0.2s;
+}
+.mz-duplicate-place-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-duplicate-place-mode-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+/* ---------- 操作: 閉じる/ひらく + 進捗を進める ---------- */
+
+.mz-duplicate-place-controls {
+  display: flex;
+  gap: 6px;
+  width: 340px;
+}
+
+.mz-duplicate-place-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #eaeae8;
+  color: #5c5c5c;
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s;
+}
+.mz-duplicate-place-btn.is-primary {
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+.mz-duplicate-place-btn:disabled {
+  cursor: default;
+  opacity: 0.4;
+  transform: none;
+}
+.mz-duplicate-place-btn:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+.mz-duplicate-place-btn:not(:disabled):active {
+  transform: scale(1.05, 0.92);
+}
+
+/* ---------- 板 ---------- */
+
+.mz-duplicate-place-frame {
+  position: relative;
+  width: 340px;
+  height: 204px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+}
+
+.mz-duplicate-place-scroll {
+  position: relative;
+  width: 340px;
+  height: 204px;
+  overflow-y: auto;
+  overflow-anchor: none; /* ブラウザの自動アンカリングに座標をいじられないため */
+}
+
+.mz-duplicate-place-header {
+  box-sizing: border-box;
+  width: 100%;
+  height: 26px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  background: #f5f5f3;
+  color: #b3b3b3;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.mz-duplicate-place-item {
+  box-sizing: border-box;
+  width: 100%;
+  height: 34px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid #f0f0ee;
+  border-left: 3px solid transparent; /* is-sameの印の場所を最初から確保 */
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+.mz-duplicate-place-item:hover {
+  background: #fafaf9;
+}
+
+/* 同一性の印(弱い): 現在地の項目の全出現に付く。左端の細い線+薄い塗り */
+.mz-duplicate-place-item.is-same {
+  border-left-color: #b3b3b3;
+  background: #f8f8f6;
+}
+.mz-duplicate-place-item.is-same:hover {
+  background: #f2f2ef;
+}
+.mz-duplicate-place-item.is-same .mz-duplicate-place-item-label {
+  color: #3d3d3d;
+}
+
+/* 現在地(強い): ただ1行だけ。行を囲む枠線でis-sameとは別物として見分けられるようにする */
+.mz-duplicate-place-item.is-here {
+  border-left-color: #3d3d3d;
+  background: #eeeeec;
+  box-shadow: inset 0 0 0 2px #3d3d3d;
+}
+
+.mz-duplicate-place-item-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mz-duplicate-place-item-progress {
+  flex: none;
+  font-size: 10px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #b3b3b3;
+}
+.mz-duplicate-place-item.is-same .mz-duplicate-place-item-progress {
+  color: #8c8c8c;
+}
+
+/* 到着/更新のパルス。尺は120msに抑える(この回の緩急の約束の例外枠) */
+.mz-duplicate-place-item.is-pulsing {
+  animation: mz-duplicate-place-arrive 120ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  transform-origin: center;
+}
+@keyframes mz-duplicate-place-arrive {
+  0% {
+    transform: scale(1.02);
   }
   100% {
-    transform: none;
+    transform: scale(1);
   }
 }
+
+.mz-duplicate-place-spacer {
+  width: 100%;
+}
+
+.mz-duplicate-place-closed {
+  width: 340px;
+  height: 204px;
+  display: grid;
+  place-items: center;
+  background: #f5f5f3;
+  color: #b3b3b3;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+/* ---------- 帯の枠(常に場所を確保) ----------
+   状態によらず高さを固定するので、帯の有無で板の上端yが動くことは無い。 */
+.mz-duplicate-place-band-slot {
+  width: 340px;
+  min-height: 40px;
+  display: flex;
+  align-items: stretch;
+}
+
+.mz-duplicate-place-band {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #3d3d3d;
+  animation: mz-duplicate-place-band-in 200ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes mz-duplicate-place-band-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.mz-duplicate-place-band-main {
+  font-size: 10px;
+  font-weight: 700;
+  color: #f5f5f3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-duplicate-place-band-choices {
+  display: flex;
+  gap: 6px;
+}
+.mz-duplicate-place-band-choice {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #5c5c5c;
+  color: #eaeae8;
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.mz-duplicate-place-band-choice:hover {
+  background: #6c6c6c;
+}
+
+/* ---------- 動かない位置合わせの補足 ----------
+   .mz-duplicate-place-scroll の scrollTop への直接代入は常に即時(尺ゼロ)。
+   グローバル側(src/styles/global.css)がprefers-reduced-motion環境で
+   transition-duration/animation-durationを一律潰すので、標本側では対応不要。 */

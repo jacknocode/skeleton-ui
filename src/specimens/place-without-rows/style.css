@@ -1,26 +1,377 @@
+/* No.102「行のない現在地」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+   No.101(resume-stale)と同じ色トークンを踏襲する
+   (#fff / #eaeae8 / #3d3d3d / #5c5c5c / #8c8c8c / #b3b3b3 / #f5f5f3)。
+
+   間取り図の枠(.mz-place-without-rows-frame)は300×180px固定。パン・ズームは
+   .mz-place-without-rows-worldlayer の transform だけで表現し、この要素には
+   transition を一切掛けない——尺ゼロの復元/近似ジャンプが「setStateしたら
+   次のペイントでそこに在る」で素直に成立するようにするため(index.tsxの
+   冒頭コメント参照)。ボタン類のホバー/押下だけは基本イージング
+   cubic-bezier(0.34, 1.56, 0.64, 1) で軽く弾ませる。 */
+
 .mz-place-without-rows {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 340px;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-place-without-rows.is-active {
-  animation: mz-place-without-rows-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 右上のトグル: 既定 / 対照 ---------- */
+
+.mz-place-without-rows-topbar {
+  width: 340px;
+  display: flex;
+  justify-content: flex-end;
 }
-@keyframes mz-place-without-rows-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+
+.mz-place-without-rows-mode {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+
+.mz-place-without-rows-mode-btn {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    opacity 0.2s;
+}
+.mz-place-without-rows-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-place-without-rows-mode-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+/* ---------- 操作: 閉じる/ひらく・ホーム ---------- */
+
+.mz-place-without-rows-row {
+  display: flex;
+  gap: 6px;
+  width: 340px;
+}
+
+.mz-place-without-rows-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: #eaeae8;
+  color: #5c5c5c;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s;
+}
+.mz-place-without-rows-btn.is-primary {
+  flex: none;
+  padding: 8px 22px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+.mz-place-without-rows-btn:hover {
+  transform: translateY(-2px);
+}
+.mz-place-without-rows-btn:active {
+  transform: scale(1.05, 0.92);
+}
+.mz-place-without-rows-btn:disabled {
+  cursor: default;
+  opacity: 0.4;
+  transform: none;
+}
+
+/* ---------- 間取り図の枠 ---------- */
+
+.mz-place-without-rows-frame {
+  position: relative;
+  width: 300px;
+  height: 180px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+}
+
+.mz-place-without-rows-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+.mz-place-without-rows-viewport:active {
+  cursor: grabbing;
+}
+
+/* パン・ズームの実体。transitionを持たせないことで尺ゼロの代入がそのまま画面に出る */
+.mz-place-without-rows-worldlayer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+
+.mz-place-without-rows-item {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #eaeae8;
+  border: 1px solid #dcdcda;
+}
+/* 現在のアンカーだけ枠を濃くする(このアンカーが現在地の担体だと分かるように) */
+.mz-place-without-rows-item.is-anchor {
+  background: #dedede;
+  border: 1.5px solid #3d3d3d;
+}
+.mz-place-without-rows-anchordot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: #3d3d3d;
+}
+
+.mz-place-without-rows-item-label {
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #5c5c5c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
+}
+
+/* 消えたものの跡。座標は近似でしかないことを、控えめな点線の印で示す */
+.mz-place-without-rows-trace {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  margin-top: -5px;
+  border: 1.5px dashed #b3b3b3;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mz-place-without-rows-trace-label {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 7px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+}
+
+/* 「閉じています」の控えめな演出。枠の外形(300×180)は開閉で一切変わらない */
+.mz-place-without-rows-closed {
+  width: 300px;
+  height: 180px;
+  display: grid;
+  place-items: center;
+  background: #f5f5f3;
+  color: #b3b3b3;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+/* ---------- ズームバー(枠の下端に重ねる。行を1つ増やさないための配置) ---------- */
+
+.mz-place-without-rows-zoombar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 6px;
+  background: rgba(61, 61, 61, 0.82);
+}
+
+.mz-place-without-rows-zoom-btn {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #f5f5f3;
+  color: #3d3d3d;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-place-without-rows-zoom-btn:hover {
+  transform: scale(1.12);
+}
+.mz-place-without-rows-zoom-btn:active {
+  transform: scale(0.9);
+}
+
+.mz-place-without-rows-zoom-slider {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 14px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+/* トラック。地(暗いズームバー)と同化しないよう、はっきり明るいグレーにする */
+.mz-place-without-rows-zoom-slider::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 999px;
+  background: #8c8c8c;
+}
+.mz-place-without-rows-zoom-slider::-moz-range-track {
+  height: 3px;
+  border-radius: 999px;
+  background: #8c8c8c;
+}
+/* つまみ。地の色(暗いズームバー)から浮くよう、白に近い色＋濃い縁取りにする */
+.mz-place-without-rows-zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  margin-top: -5px;
+  border-radius: 999px;
+  background: #f5f5f3;
+  border: 2px solid #3d3d3d;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+.mz-place-without-rows-zoom-slider::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: #f5f5f3;
+  border: 2px solid #3d3d3d;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.mz-place-without-rows-zoom-value {
+  flex: none;
+  width: 36px;
+  text-align: right;
+  font-size: 9.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #f5f5f3;
+}
+
+/* ---------- よその人が動かす/消す ---------- */
+
+.mz-place-without-rows-actors {
+  width: 340px;
+  display: flex;
+  gap: 5px;
+}
+
+.mz-place-without-rows-actor-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 6px 2px;
+  border-radius: 999px;
+  background: #eaeae8;
+  color: #8c8c8c;
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-place-without-rows-actor-btn:hover {
+  background: #dedede;
+  color: #5c5c5c;
+  transform: translateY(-1px);
+}
+.mz-place-without-rows-actor-btn:active {
+  transform: scale(1.05, 0.92);
+}
+
+/* ---------- 帯の枠(常に場所を確保。板の上端yが帯の有無で動かないようにする) ---------- */
+
+.mz-place-without-rows-band-slot {
+  width: 340px;
+  height: 26px;
+  display: flex;
+  align-items: stretch;
+}
+
+.mz-place-without-rows-band {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: #3d3d3d;
+  cursor: pointer;
+  animation: mz-place-without-rows-band-in 200ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+/* 「持てない」だけを告げる静的な帯。押しても行き先が無いのでbuttonにせず、cursorも変えない */
+.mz-place-without-rows-band.is-static {
+  cursor: default;
+}
+@keyframes mz-place-without-rows-band-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
   }
-  60% {
-    transform: scale(0.9, 1.1);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  100% {
-    transform: none;
-  }
+}
+.mz-place-without-rows-band-main {
+  font-size: 10px;
+  font-weight: 800;
+  color: #f5f5f3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-place-without-rows-band-cta {
+  flex: none;
+  font-size: 10px;
+  font-weight: 800;
+  color: #eaeae8;
 }

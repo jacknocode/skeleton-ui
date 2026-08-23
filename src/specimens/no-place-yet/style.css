@@ -1,26 +1,269 @@
+/* No.104「まだどこにも居ない」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+   色トークンはこの回の他標本(place-without-rows・duplicate-place)と同じ並び
+   (#fff / #eaeae8 / #3d3d3d / #5c5c5c / #b3b3b3 / #f5f5f3)。
+
+   板(.mz-no-place-yet-frame)の高さは index.tsx 側で FRAME_H(=行数×行高)を
+   インラインstyleとして渡す。読み込み中・空・一覧・未オープンのどの状態でも
+   高さが同じなので、状態が切り替わっても外形が動かない。
+
+   この標本の担体は2種類あり、意図的に形も強さも変えてある:
+   - 入口の印(.mz-no-place-yet-entry-mark): 行の左端にある小さな"輪"(中空・
+     縁取りのみ)。行を囲まない・塗らない。「ここから始まる」という弱い予告。
+   - 現在地(.mz-no-place-yet-row.is-here): 行そのものを縁取りで囲み、背景も
+     薄く沈める。「ここに居る」という強い事実。
+   同じ行に両方が乗ることはない(is-entryはhereId===nullのときしか立たない)ので、
+   見た目が衝突して主題を潰すことも構造的に起きない。 */
+
 .mz-no-place-yet {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 340px;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-no-place-yet.is-active {
-  animation: mz-no-place-yet-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 右上のトグル: 既定 / 対照 ---------- */
+
+.mz-no-place-yet-topbar {
+  width: 340px;
+  display: flex;
+  justify-content: flex-end;
 }
-@keyframes mz-no-place-yet-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+
+.mz-no-place-yet-mode {
+  display: flex;
+  padding: 2px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+
+.mz-no-place-yet-mode-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-no-place-yet-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 操作: ひらく（N件）/ ひらく（0件）/ 閉じる ---------- */
+
+.mz-no-place-yet-controls {
+  display: flex;
+  gap: 6px;
+  width: 340px;
+}
+
+.mz-no-place-yet-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eaeae8;
+  color: #5c5c5c;
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-no-place-yet-btn.is-primary {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-no-place-yet-btn:hover {
+  transform: translateY(-1px);
+}
+.mz-no-place-yet-btn:active {
+  transform: scale(1.05, 0.92);
+}
+
+/* ---------- 板 ---------- */
+
+.mz-no-place-yet-frame {
+  position: relative;
+  width: 340px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  outline: none;
+}
+/* 枠にフォーカスが入ったことを薄く示す(Tabで入れることの手がかり) */
+.mz-no-place-yet-frame.is-focusable:focus-visible {
+  box-shadow:
+    0 0 0 2px #3d3d3d,
+    0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* まだ一度もひらいていない(閉じている)ときの中身 */
+.mz-no-place-yet-idle {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #b3b3b3;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ---------- 読み込み中: 骨 ---------- */
+
+.mz-no-place-yet-skeleton-list {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mz-no-place-yet-bone {
+  height: 30px; /* index.tsx の ROW_H と一致させること */
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-bottom: 1px solid #f5f5f3;
+}
+.mz-no-place-yet-bone::before {
+  content: '';
+  display: block;
+  width: 58%;
+  height: 10px;
+  border-radius: 4px;
+  background: #eaeae8;
+  /* 骨の明滅は「いま・ここ」を主張する動きではなく、ただの待ち時間の合図なので
+     この標本の基本イージング(ぷるん)は使わず、素直なease-in-outにする */
+  animation: mz-no-place-yet-shimmer 1.1s ease-in-out infinite;
+}
+.mz-no-place-yet-bone:nth-child(3n + 2)::before {
+  width: 42%;
+}
+.mz-no-place-yet-bone:nth-child(3n)::before {
+  width: 68%;
+}
+@keyframes mz-no-place-yet-shimmer {
+  0%,
+  100% {
+    opacity: 0.5;
   }
-  60% {
-    transform: scale(0.9, 1.1);
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ---------- 空: 文言1個 ---------- */
+
+.mz-no-place-yet-empty {
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+.mz-no-place-yet-empty-text {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+}
+
+/* ---------- 一覧 ---------- */
+
+.mz-no-place-yet-list {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mz-no-place-yet-row {
+  position: relative;
+  box-sizing: border-box;
+  height: 30px; /* index.tsx の ROW_H と一致させること */
+  padding: 0 12px 0 26px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1.5px solid transparent; /* is-here の縁取りと高さがズレないよう最初から場所を確保 */
+  background: #fff;
+}
+.mz-no-place-yet-row:not(:last-child) {
+  border-bottom-color: #f0f0ee;
+}
+
+/* 入口の印。中空の小さな輪だけ。行を囲まない・塗らない(「これから」を弱く言う) */
+.mz-no-place-yet-entry-mark {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1.4px solid transparent;
+  transform: translateY(-50%);
+}
+.mz-no-place-yet-row.is-entry .mz-no-place-yet-entry-mark {
+  border-color: #9a9a9a;
+}
+
+.mz-no-place-yet-row-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+
+/* 現在地。行そのものを縁取りで囲み、背景も沈める――入口の印とは形も強さも別物 */
+.mz-no-place-yet-row.is-here {
+  border: 1.5px solid #3d3d3d;
+  border-radius: 6px;
+  background: #f5f5f3;
+}
+.mz-no-place-yet-row.is-here .mz-no-place-yet-row-label {
+  color: #3d3d3d;
+}
+
+/* 立ち上がり。scaleだけを動かし、translateは一切使わない(出発地の無い移動は移動として描かない)。
+   transform-origin: top にして、縮尺しても上端の座標が動かないようにしてある
+   (実装して初めて分かった詰まりどころ3。中心基準だと上端がわずかに沈む/浮くため実測でNGになる) */
+.mz-no-place-yet-row.is-arriving {
+  transform-origin: top center;
+  animation: mz-no-place-yet-standup 120ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-no-place-yet-standup {
+  0% {
+    transform: scale(0.88);
   }
   100% {
-    transform: none;
+    transform: scale(1);
   }
+}
+
+/* 開いた行。現在地よりさらに強く塗って、はっきり別状態だと分かるようにする */
+.mz-no-place-yet-row.is-open {
+  background: #3d3d3d;
+  border-color: #3d3d3d;
+}
+.mz-no-place-yet-row.is-open .mz-no-place-yet-row-label {
+  color: #f5f5f3;
+}
+.mz-no-place-yet-open-mark {
+  margin-left: auto;
+  font-size: 9px;
+  font-weight: 800;
+  color: #eaeae8;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- 操作の凡例 ---------- */
+
+.mz-no-place-yet-hint {
+  width: 340px;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  line-height: 1.4;
 }
