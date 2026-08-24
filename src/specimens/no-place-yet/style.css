@@ -1,0 +1,349 @@
+/* No.102「まだどこにも居ない」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+   色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #8c8c8c 中 / #d6d6d3 淡 / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。
+
+   板は幅340px固定。帯(.mz-no-place-yet-band)は専用の高さ枠を持たず、文言が無いときは
+   要素ごとDOMから外れる(index.tsxのmsg===nullで丸ごと出し分け)——「保てているうちは
+   黙る」を、高さを潰すのではなく本当に「無い」ことで表現する。そのぶん帯の有無で外形の
+   高さが変わるので、外形の実測は「帯が出ている最大ケース」で行う(C9の報告参照)。
+
+   印(.mz-no-place-yet-marker)は位置レイヤーと見た目レイヤーの2層(index.tsxの
+   「実装上の判断1」参照)。外側はtranslateYだけを持ち移動(↓↑)のtransitionを常設、
+   内側の棒(.mz-no-place-yet-marker-bar)はscale/opacityだけを持ち出現・消滅のanimationを
+   担当する。対照の「滑り込み」出現だけ例外的に外側自身にanimationをかける。 */
+
+.mz-no-place-yet {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+}
+
+/* ---------- 1行目: シーン切替 + 既定/対照トグル(同居) ---------- */
+
+.mz-no-place-yet-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.mz-no-place-yet-scenes {
+  display: flex;
+  gap: 4px;
+}
+
+.mz-no-place-yet-scene-btn {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #eaeae8;
+  color: #8c8c8c;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-no-place-yet-scene-btn:hover {
+  transform: translateY(-1px);
+}
+.mz-no-place-yet-scene-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+.mz-no-place-yet-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-no-place-yet-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-no-place-yet-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 2行目: 操作4ボタン ---------- */
+
+.mz-no-place-yet-row2 {
+  display: flex;
+  gap: 6px;
+}
+
+.mz-no-place-yet-op-btn {
+  flex: 1 1 auto;
+  padding: 7px 6px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 11px;
+  font-weight: 800;
+  color: #5c5c5c;
+  cursor: pointer;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s,
+    box-shadow 0.2s;
+}
+.mz-no-place-yet-op-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+}
+.mz-no-place-yet-op-btn:active:not(:disabled) {
+  transform: scale(1.05, 0.92);
+}
+.mz-no-place-yet-op-btn:disabled {
+  cursor: default;
+  color: #c2c2bf;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+/* ---------- 帯: 3状態を見分けるための唯一の文字 ----------
+   専用の高さ枠を持たない(msg===nullなら要素ごと出さない)。「▸」が付く=押せる
+   (rowsシーン・未選択・既定のときだけ)。それ以外は素の帯(role=status)で押せない。 */
+
+.mz-no-place-yet-band {
+  display: block;
+  width: 100%;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: mz-no-place-yet-band-in 0.18s ease-out both;
+}
+.mz-no-place-yet-band.is-actionable {
+  cursor: pointer;
+}
+@keyframes mz-no-place-yet-band-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- 板(3シーン共通の外枠。340×204で固定) ---------- */
+
+.mz-no-place-yet-frame {
+  position: relative;
+  width: 340px;
+  height: 204px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+}
+
+/* ---------- シーン: 読み込み中 ----------
+   行の箱(高さ34px・border-bottom)は.mz-no-place-yet-rowと同じリズムで作る。
+   6行ぶん(204px)でちょうど器の高さいっぱいを埋め、余白を残さない(企画側レビューで修正:
+   3行だけだと下半分が空白になり、空の台帳の絵に近づいてしまっていた)。 */
+
+.mz-no-place-yet-skeletons {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.mz-no-place-yet-skeleton-row {
+  box-sizing: border-box;
+  height: 34px;
+  padding: 0 14px 0 18px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #f0f0ee;
+}
+.mz-no-place-yet-skeleton-bar {
+  height: 12px;
+  border-radius: 999px;
+  background: #e2e2e0;
+  animation: mz-no-place-yet-skeleton-pulse 1.2s ease-in-out infinite;
+}
+@keyframes mz-no-place-yet-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/* ---------- シーン: 空の台帳 ----------
+   「該当なし」はテキストノードではなく擬似要素で描く。読み込み中(骨組み=文字を一切
+   持たない)とリスト領域のtextContentを一致させるための実装(index.tsxの「実装上の判断4」)。 */
+
+.mz-no-place-yet-empty {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+.mz-no-place-yet-empty::before {
+  content: '該当なし';
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+}
+
+/* ---------- シーン: 16行の台帳 ---------- */
+
+.mz-no-place-yet-scroll {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-anchor: none;
+  scroll-behavior: smooth;
+}
+
+.mz-no-place-yet-row {
+  box-sizing: border-box;
+  height: 34px;
+  padding: 0 14px 0 18px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #f0f0ee;
+}
+.mz-no-place-yet-row-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+
+/* レール: 「置ける場所はあるが、まだ置かれていない」を描く常設の縦線。
+   16行シーン・既定モードだけに出す(対照はこの概念自体を持たない=常に出さない)。
+   未選択のあいだ(place===null)だけ、ごく淡く上下に呼吸する2次アクション。 */
+.mz-no-place-yet-rail {
+  position: absolute;
+  top: 0;
+  left: 8px;
+  width: 2px;
+  /* 実測して気づいた点: 淡色トークン#d6d6d3を白背景に単純opacity(~0.55)で乗せると
+     ほぼ視認できず、「レールが在って印が無い」の絵が成立しなかった(スクリーンショットで発覚)。
+     中間トーンの#b3b3b3・呼吸の下限も0.7まで持ち上げて視認性を確保する。 */
+  background: #b3b3b3;
+}
+.mz-no-place-yet-rail.is-breathing {
+  animation: mz-no-place-yet-rail-breathe 2.4s ease-in-out infinite;
+}
+@keyframes mz-no-place-yet-rail-breathe {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ---------- 印: 位置レイヤー(外側) ----------
+   translateYだけを持つ。移動(↓↑)はここのtransitionだけで滑る(C4)。出現(既定)・消滅は
+   この層のtransformを一切動かさない=文書内Yが不動(C3/C5)。対照の「滑り込み」出現だけ、
+   このレイヤー自身に一回性のanimationをかけてYを動かす(下記.is-entering-slide参照)。 */
+.mz-no-place-yet-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-no-place-yet-marker.is-entering-slide {
+  animation: mz-no-place-yet-slide-in 0.2s ease-out both;
+}
+@keyframes mz-no-place-yet-slide-in {
+  from {
+    transform: translateY(-34px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ---------- 印: 見た目レイヤー(内側・行の左端を指す短いバー) ----------
+   No.95の「指す」担体。scale/opacityだけを持つ。既定の出現(その場でぷるん)と
+   解除の消滅(その場でしぼむ)はここのanimationが担当する。 */
+.mz-no-place-yet-marker-bar {
+  width: 3px;
+  height: 18px;
+  margin-left: 5px;
+  border-radius: 2px;
+  background: #3d3d3d;
+}
+.mz-no-place-yet-marker-bar.is-entering-pop {
+  animation: mz-no-place-yet-pop-in 0.14s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-no-place-yet-pop-in {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.mz-no-place-yet-marker-bar.is-leaving {
+  animation: mz-no-place-yet-leave 0.12s ease-out both;
+}
+@keyframes mz-no-place-yet-leave {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* ---------- 動きを控えたい人へ ----------
+   グローバルCSS(src/styles/global.css)の`*`ルールでも潰れるが、この標本フォルダ単体で
+   コピーされたとき(グローバルCSSを持ち込まないとき)にも同じ挙動になるよう、ここでも
+   明示しておく。骨組みの脈動・レールの呼吸は完全に止めてよい(進捗/装飾の演出でしかない)。
+   出現・移動・消滅のanimation/transitionは「動きは無いが切り替わりは残す」よう極短にする
+   ——切り替わり自体は情報だから消さない。 */
+@media (prefers-reduced-motion: reduce) {
+  .mz-no-place-yet-skeleton-bar,
+  .mz-no-place-yet-rail,
+  .mz-no-place-yet-band,
+  .mz-no-place-yet-marker,
+  .mz-no-place-yet-marker-bar,
+  .mz-no-place-yet-scene-btn,
+  .mz-no-place-yet-op-btn {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

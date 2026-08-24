@@ -1,0 +1,325 @@
+/* No.104「行のない現在地」
+   モノクロ・自己完結。外形は幅340px以内・高さ330px以内(実測して確認する)。
+
+   .mz-place-without-rows-shape / -marker / -leader の left/top/width/height はJSが
+   style属性で直接書く(ワールド座標→画面座標の変換結果)。ここではtransitionを
+   一切張らない——ズームつまみをドラッグしている最中(毎フレーム更新)に遅延補間が
+   混じると、指と図形がずれて見える。transitionが要る場面(配置が変わった/基準の
+   持ち替え)は、JS側がisRelocating/isSwitchingの間だけstyle.transitionへ文字列を
+   直接足す形にしている(冒頭コメント「詰まりどころ(2)」参照)。 */
+
+.mz-place-without-rows {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 340px;
+}
+
+/* ---------- ヘッダ: 1行目=保存/配置が変わった/復元+対照トグル、2行目=倍率つまみ ---------- */
+
+.mz-place-without-rows-header {
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mz-place-without-rows-row1,
+.mz-place-without-rows-row2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mz-place-without-rows-btn {
+  flex: none;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #eaeae8;
+  color: #5c5c5c;
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s;
+}
+.mz-place-without-rows-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.mz-place-without-rows-btn:active:not(:disabled) {
+  transform: scale(1.05, 0.92);
+}
+.mz-place-without-rows-btn:disabled {
+  cursor: default;
+  opacity: 0.4;
+  transform: none;
+}
+
+.mz-place-without-rows-mode {
+  flex: none;
+  display: flex;
+  padding: 2px;
+  margin-left: auto;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-place-without-rows-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-place-without-rows-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* 倍率つまみ。No.100の幅つまみと同じ語彙(掴んで動かす連続入力) */
+.mz-place-without-rows-slider {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 20px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+.mz-place-without-rows-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: #d6d6d3;
+}
+.mz-place-without-rows-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: #3d3d3d;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-place-without-rows-slider:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+.mz-place-without-rows-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: #d6d6d3;
+}
+.mz-place-without-rows-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: #3d3d3d;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.mz-place-without-rows-zoomval {
+  flex: none;
+  min-width: 34px;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #5c5c5c;
+  text-align: right;
+}
+
+/* ---------- 帯: 現在地の名乗り(不在でレイアウトが動かないよう場所は常に確保) ---------- */
+
+.mz-place-without-rows-bandslot {
+  width: 340px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mz-place-without-rows-band {
+  padding: 3px 12px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 10.5px;
+  font-weight: 700;
+  /* 持ち替え・通常表示どちらも「文言が差し替わったこと」を淡い沈みで示す。
+     時間で消えるアニメーションではなく、要素が張り替わるたび毎回1回だけ再生する
+     ("差し替わったこと"が分かればよいので、内容が同じでも毎回起きて構わない) */
+  animation: mz-place-without-rows-band-dip 200ms ease-out;
+}
+@keyframes mz-place-without-rows-band-dip {
+  0% {
+    opacity: 0.45;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ---------- キャンバス: 名前のあるもの5つ＋現在地の印＋引き出し線 ---------- */
+
+.mz-place-without-rows-canvas {
+  position: relative;
+  flex: none;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #d6d6d3;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+  cursor: crosshair;
+}
+
+/* ワールドに固定された薄いグリッド。left/top/background-size/positionはJSが直接計算する
+   (worldToScreenと同じ式)。canvas内の最背面(shapeより前にDOMへ置く)に敷く。 */
+.mz-place-without-rows-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, #e3e3e0 1px, transparent 1px),
+    linear-gradient(to bottom, #e3e3e0 1px, transparent 1px);
+  pointer-events: none;
+}
+
+.mz-place-without-rows-shape {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  /* ラベルは左下に置く。A棟の内側にA棟3F東/西が重なって載る配置なので、左下だけが
+     どの倍率でも他の矩形に隠れずに残る(実測して発見。左上に置くとA棟のラベルが
+     A棟3F西の箱に完全に隠れて読めなくなった) */
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 4px 6px;
+  border: 1.5px solid #b3b3b3;
+  border-radius: 4px;
+  background: #eaeae8;
+  pointer-events: none;
+}
+/* 細かい粒度(A棟3F東/西)は、基準になり得るあいだ(is-visible)だけ描く。消えて湧くのではなく
+   フェード+わずかな縮小で出入りする(左右のleftとは別軸のtransformなので、配置が変わった
+   のtransitionと干渉しない) */
+.mz-place-without-rows-shape.is-fine {
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 200ms ease-out,
+    transform 200ms ease-out;
+}
+.mz-place-without-rows-shape.is-fine.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+.mz-place-without-rows-shape-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #5c5c5c;
+  white-space: nowrap;
+}
+
+/* 引き出し線: 1pxのdiv。left/top=印の位置、widthを長さ、rotateを角度として使う */
+.mz-place-without-rows-leader {
+  position: absolute;
+  height: 1px;
+  background: #8c8c8c;
+  transform-origin: left center;
+  pointer-events: none;
+}
+
+/* 現在地の印。left/topはJSが直接書く(常に画面座標)。中心合わせはtranslateで行う */
+.mz-place-without-rows-marker {
+  position: absolute;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+/* ハロー: 印がラベルの上に落ちたとき、下の文字が透けて潰れて読めなくなるのを防ぐ。
+   印自体の線幅・色は変えない(印は主張しない担体のままにする、企画の指示どおり)。
+   キャンバスの地色(#fff)の円を十字の下に敷くだけ。引き出し線の先端はこの印の位置と
+   同じ座標なので、ここに敷けば線の先端も同時に覆われる。半径7px(=十字の箱と同じ14px) */
+.mz-place-without-rows-marker::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: -7px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+/* 十字はCSSの疑似要素2本で描く(画像を使わない) */
+.mz-place-without-rows-marker-glyph {
+  position: absolute;
+  top: -7px;
+  left: -7px;
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+.mz-place-without-rows-marker-glyph::before,
+.mz-place-without-rows-marker-glyph::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: #3d3d3d;
+  border-radius: 1px;
+}
+.mz-place-without-rows-marker-glyph::before {
+  width: 14px;
+  height: 2px;
+  transform: translate(-50%, -50%);
+}
+.mz-place-without-rows-marker-glyph::after {
+  width: 2px;
+  height: 14px;
+  transform: translate(-50%, -50%);
+}
+
+/* 出現: 出発地の無い最初の1つ(や、置き直し)は移動ではなく出現として描く(C7: 位置は
+   一切動かさず、拡大率だけを0.4→1へ)。キーはJS側でクリックのたびに増やし、要素を
+   毎回作り直すことでアニメーションを再生させている(return-changedのpulseと同じ手口) */
+.mz-place-without-rows-marker-glyph.is-appear {
+  animation: mz-place-without-rows-marker-appear 140ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-place-without-rows-marker-appear {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 復元の着地: 尺ゼロで移動した直後、1度だけ脈打つ(位置は動かさない) */
+.mz-place-without-rows-marker-glyph.is-pulse {
+  animation: mz-place-without-rows-marker-pulse 180ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-place-without-rows-marker-pulse {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
