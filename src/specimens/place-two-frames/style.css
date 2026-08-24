@@ -1,26 +1,330 @@
+/* No.107「窓が2つあるとき」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+   色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡 /
+   #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。外形は340×330px以内。
+
+   「囲み」(現在地・行の上)と「縁」(窓の活性)は別の担体という主張を、CSSでも別の
+   要素・別の形にして徹底する:
+   ・囲み(.mz-place-two-frames-row.is-cursor) … 行の内側、box-shadow inset。
+     行と一緒にスクロールする(=台帳の中を動くもの)。
+   ・縁(.mz-place-two-frames-window.is-active-frame) … 窓そのものの外周、box-shadow outset。
+     スクロールしても動かない(=枠に固定されたもの)。
+   同じCSSプロパティ(box-shadow)を使っていても、要素・位置・動くか動かないかが
+   違うので、読み手には別の担体として届く。 */
+
 .mz-place-two-frames {
-  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 340px;
+}
+
+/* ---------- 1行目: 文脈のひとこと + 既定/対照トグル ----------
+   capture.html(GIF収録用)はギャラリーの見出しを描かないため、標本名を知る手掛かりが
+   ここにしか無い。控えめな一文で「同じ台帳・窓は2枚」という前提だけ渡しておく。 */
+
+.mz-place-two-frames-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.mz-place-two-frames-caption {
+  font-size: 10px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+}
+
+.mz-place-two-frames-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
   border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-place-two-frames-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-place-two-frames-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 2行目: 操作3ボタン ---------- */
+
+.mz-place-two-frames-row2 {
+  display: flex;
+  gap: 6px;
+}
+
+.mz-place-two-frames-op-btn {
+  flex: 1 1 auto;
+  padding: 6px 6px;
+  border-radius: 9px;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 11px;
   font-weight: 800;
   color: #5c5c5c;
   cursor: pointer;
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s,
+    opacity 0.2s;
+}
+.mz-place-two-frames-op-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+}
+.mz-place-two-frames-op-btn:active:not(:disabled) {
+  transform: scale(1.05, 0.92);
+}
+.mz-place-two-frames-op-btn:disabled {
+  cursor: default;
+  color: #c2c2bf;
+  box-shadow: none;
+  opacity: 0.6;
+}
+.mz-place-two-frames-op-btn[data-op='toggle-b'] {
+  flex-grow: 1.6;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-place-two-frames.is-active {
-  animation: mz-place-two-frames-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 窓2枚のコンテナ ----------
+   窓間の余白は企画書の指定どおり8px固定(それ以外の行間より広く取り、「窓」という
+   1つの塊であることを見た目でも言う)。 */
+
+.mz-place-two-frames-windows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
-@keyframes mz-place-two-frames-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+
+/* ---------- 窓1枚 ----------
+   縁(box-shadow outset)が活性を言う。非活性は淡いグレーの1px、活性は濃い2px+浮き。
+   is-offscreenは縁の色をわずかに変えるだけに留める(方角の担体そのものは別要素なので、
+   縁は「いま探しものが枠外にある」ことまでは主張しない)。 */
+
+.mz-place-two-frames-window {
+  position: relative;
+  height: 112px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 0 0 1px #d6d6d3;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease-out;
+}
+.mz-place-two-frames-window.is-active-frame {
+  box-shadow:
+    0 0 0 2px #3d3d3d,
+    0 8px 18px rgba(0, 0, 0, 0.1);
+}
+
+.mz-place-two-frames-window-label {
+  position: absolute;
+  top: 6px;
+  left: 10px;
+  z-index: 2;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #eaeae8;
+  color: #8c8c8c;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+.mz-place-two-frames-window.is-active-frame .mz-place-two-frames-window-label {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+.mz-place-two-frames-nudges {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  z-index: 2;
+  display: flex;
+  gap: 2px;
+}
+.mz-place-two-frames-nudges button {
+  width: 16px;
+  height: 14px;
+  border-radius: 4px;
+  background: #eaeae8;
+  color: #8c8c8c;
+  font-size: 8px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+.mz-place-two-frames-nudges button:hover {
+  background: #d6d6d3;
+  color: #5c5c5c;
+}
+
+/* ---------- 窓の中身(スクロールする層) ----------
+   可視4行×行高28px=112pxちょうど。窓の外形(112px)と同じなので、窓自体には
+   スクロール用の余白(パディング)を持たせない。 */
+
+.mz-place-two-frames-scroll {
+  height: 112px;
+  overflow-y: auto;
+  overflow-anchor: none;
+  scroll-behavior: smooth;
+  border-radius: 12px;
+}
+.mz-place-two-frames-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.mz-place-two-frames-row {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 14px 0 44px; /* 左は窓ラベルぶんの余白 */
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #f0f0ee;
+  transition: box-shadow 0.15s ease-out;
+}
+.mz-place-two-frames-row-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 囲み(現在地)。行の内側、insetのbox-shadow。台帳の中を一緒にスクロールする
+   ——縁(窓の活性)とは別要素・別の動き方であることが、この標本の芯(難所a)。 */
+.mz-place-two-frames-row.is-cursor {
+  box-shadow: inset 0 0 0 2px #3d3d3d;
+  background: #f5f5f3;
+}
+.mz-place-two-frames-row.is-cursor .mz-place-two-frames-row-label {
+  color: #3d3d3d;
+  font-weight: 800;
+}
+
+/* ---------- 方角の担体 ----------
+   縁に固定(top:0 または bottom:0)・縦位置を動かさない・距離は行数・▸で飛ぶ
+   (No.106と同じ規則。詳細はindex.tsxの難所(c)コメント参照)。
+   スクロールする層(.scroll)の外側、窓(.window)の直接の子として絶対配置するので、
+   中身がどれだけスクロールしても位置が動かない。 */
+
+.mz-place-two-frames-direction {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 9.5px;
+  font-weight: 800;
+  cursor: pointer;
+  animation: mz-place-two-frames-direction-in 0.16s ease-out both;
+}
+.mz-place-two-frames-direction.is-up {
+  top: 6px;
+}
+.mz-place-two-frames-direction.is-down {
+  bottom: 6px;
+}
+.mz-place-two-frames-direction-text {
+  flex: 1 1 auto;
+}
+@keyframes mz-place-two-frames-direction-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
   }
-  60% {
-    transform: scale(0.9, 1.1);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  100% {
-    transform: none;
+}
+.mz-place-two-frames-window.is-active-frame .mz-place-two-frames-direction {
+  background: #1f1f1f;
+}
+
+/* ---------- 窓Bが閉じているときの置き換え ----------
+   窓と同じ外形(高さ112px)を保つ(閉じても板全体の高さが変わらないようにする)。
+   「窓Bは閉じています」がC10の言う唯一の帯(0〜1個、窓の事実のみ)。 */
+
+.mz-place-two-frames-window-closed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 112px;
+  border-radius: 12px;
+  background: #eaeae8;
+  border: 1px dashed #c2c2bf;
+}
+.mz-place-two-frames-band {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+.mz-place-two-frames-reopen-btn {
+  padding: 5px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #5c5c5c;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-place-two-frames-reopen-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* ---------- 注記行: 現在地の行名(常設・0〜1個の帯とは別枠) ---------- */
+
+.mz-place-two-frames-note {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #5c5c5c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 動きを控えたい人へ ----------
+   グローバルCSS(src/styles/global.css)の`*`ルールがtransition/animationの尺を潰す。
+   scroll-behavior: smooth はtransitionではないためグローバル側では潰されないが、
+   企画側の申し送りどおりここでも個別対応はしない(この標本フォルダ単体で
+   コピーされた場合でも、既存標本群と同じ扱いに揃える)。 */
+@media (prefers-reduced-motion: reduce) {
+  .mz-place-two-frames-op-btn,
+  .mz-place-two-frames-mode-btn,
+  .mz-place-two-frames-window,
+  .mz-place-two-frames-row,
+  .mz-place-two-frames-direction,
+  .mz-place-two-frames-reopen-btn {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
