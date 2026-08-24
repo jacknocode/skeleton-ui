@@ -1,26 +1,264 @@
+/* No.105「自分で動く現在地」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+   色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡2 / #d6d6d3 淡 /
+   #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。
+
+   塗り担体(.mz-place-plays-itself-fill-overlay)と囲み担体(-cursor-overlay)は台帳の
+   行配列の外に1つずつ常設する絶対配置要素(index.tsxの「実装上の判断2」参照)。
+   既定はfill-overlayのtransformにtransitionを持たない(=行が変わると1フレームで飛ぶ)。
+   対照だけmode-contrastの下で0.30sのイージングが付き、隣の行を踏み越えながら滑る。 */
+
 .mz-place-plays-itself {
-  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+}
+
+/* ---------- 1行目: ラベル + 既定/対照トグル ---------- */
+
+.mz-place-plays-itself-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.mz-place-plays-itself-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--zk-ink-soft, #8c8c8c);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mz-place-plays-itself-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
   border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-place-plays-itself-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-place-plays-itself-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 2行目: 操作3ボタン ---------- */
+
+.mz-place-plays-itself-row2 {
+  display: flex;
+  gap: 6px;
+}
+
+.mz-place-plays-itself-op-btn {
+  flex: 1 1 auto;
+  padding: 7px 6px;
+  border-radius: 10px;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 11px;
   font-weight: 800;
   color: #5c5c5c;
   cursor: pointer;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s,
+    box-shadow 0.2s;
+}
+.mz-place-plays-itself-op-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+}
+.mz-place-plays-itself-op-btn:active:not(:disabled) {
+  transform: scale(1.05, 0.92);
+}
+.mz-place-plays-itself-op-btn:disabled {
+  cursor: default;
+  color: #c2c2bf;
+  box-shadow: none;
+  opacity: 0.6;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-place-plays-itself.is-active {
-  animation: mz-place-plays-itself-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 帯: 追従が外れているときだけ1本(c) ----------
+   専用の高さ枠を持たない。既定でしか描かない(対照は担体を持たず、常に強制追従する)。 */
+
+.mz-place-plays-itself-band {
+  display: block;
+  width: 100%;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+  animation: mz-place-plays-itself-band-in var(--mz-ppi-band-ms, 0.18s) ease-out both;
 }
-@keyframes mz-place-plays-itself-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+@keyframes mz-place-plays-itself-band-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
   }
-  60% {
-    transform: scale(0.9, 1.1);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  100% {
-    transform: none;
+}
+
+/* ---------- 板(340×192で固定。可視6行×行高32px) ---------- */
+
+.mz-place-plays-itself-frame {
+  position: relative;
+  width: 340px;
+  height: 192px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+}
+
+.mz-place-plays-itself-scroll {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-anchor: none;
+}
+
+.mz-place-plays-itself-row {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0 12px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #f0f0ee;
+  cursor: pointer;
+}
+.mz-place-plays-itself-row-speaker {
+  flex: none;
+  width: 14px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #b3b3b3;
+}
+.mz-place-plays-itself-row-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: #5c5c5c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 再生し終えた行はうっすら退く(装飾。担体ではない) */
+.mz-place-plays-itself-row.is-past .mz-place-plays-itself-row-text,
+.mz-place-plays-itself-row.is-past .mz-place-plays-itself-row-speaker {
+  color: #c2c2bf;
+}
+.mz-place-plays-itself-row.is-current .mz-place-plays-itself-row-text {
+  color: #3d3d3d;
+}
+
+/* ---------- 塗り担体(機械の現在地) ----------
+   台帳の行配列の外にある、1つだけ常設の絶対配置要素。内側の棒(fill-bar)だけが幅を持つ。
+   既定: transformにtransitionを持たない(=行が変わると1フレームで飛ぶ・C3)。内側の棒は
+   `key`で行ごとに再マウントし、CSS animationを0%→100%・linearで行の長さぶんだけ流す(b)。
+   対照: mode-contrast配下でtransform/widthの両方に0.30sのイージングが付く。 */
+.mz-place-plays-itself-fill-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 32px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.mode-contrast .mz-place-plays-itself-fill-overlay {
+  transition: transform var(--mz-ppi-flip-ms, 0.3s) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mz-place-plays-itself-fill-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: #d6d6d3;
+  animation-name: mz-place-plays-itself-fill-grow;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+/* 満ちている先端に濃い縁を1本立てる。実測して気づいた点: #d6d6d3の面だけだと白地との
+   コントラストが弱く、幅が小さいうち(=行が鳴り始めた直後)はスクリーンショットで
+   ほぼ見えなかった。先端の縁があれば、幅0%に近くても「そこまで満ちている」が読める */
+.mz-place-plays-itself-fill-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: 100%;
+  background: #8c8c8c;
+}
+@keyframes mz-place-plays-itself-fill-grow {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+/* 対照: CSS animationをやめて、JSが260msごとに置く目標値をtransitionで追いかける。
+   FLIP_MS(0.30s)がTICK_MS(0.26s)より長いので、前の追いかけが終わる前に次の目標が来て
+   常に追い越し中の絵になる(=時刻と表示がずれる) */
+.mode-contrast .mz-place-plays-itself-fill-bar {
+  animation: none;
+  transition: width var(--mz-ppi-flip-ms, 0.3s) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- 囲み担体(読み手の現在地) ----------
+   既定にしか存在しない(対照は担体を1つに兼用する。a)。位置はtranslateYで動くが、
+   これは時間を写す担体ではないので通常のぷるんで良い(塗りとは違うルール)。 */
+.mz-place-plays-itself-cursor-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: 32px;
+  border: 2px solid #3d3d3d;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 2;
+  transition: transform var(--mz-ppi-cursor-ms, 0.18s) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- 動きを控えたい人へ ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .mz-place-plays-itself-band,
+  .mz-place-plays-itself-op-btn,
+  .mz-place-plays-itself-mode-btn,
+  .mz-place-plays-itself-fill-overlay,
+  .mz-place-plays-itself-fill-bar,
+  .mz-place-plays-itself-cursor-overlay {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

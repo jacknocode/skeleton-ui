@@ -993,6 +993,106 @@ const CHOREO = {
     await page.getByRole('button', { name: '翌日ひらく' }).click()
     await sleep(2800) // 読みかけの行にぴったり着地しているのに、新着は1件も見えていない
   },
+
+  'place-plays-itself': async (page) => {
+    /* 撮るべきは「主語が2人になる瞬間」と「止めたら権利が返る瞬間」。
+       塗り（機械）と囲み（読み手）が別の行に出ているコマが、この標本の全部 */
+    const row = (i) => page.locator(`.mz-place-plays-itself-row[data-row="${i}"]`)
+    await sleep(900) // まだ誰も動かしていない。担体は0個
+    await page.getByRole('button', { name: /再生/ }).click()
+    await sleep(2600) // 塗りが等速で満ちて、行を送っていく。緩急は付いていない
+    await page.getByRole('button', { name: /停止/ }).click()
+    await sleep(1500) // 止めた瞬間、塗りと同じ行に囲みが湧く（＝貸した権利が返る）
+    await page.getByRole('button', { name: '↓', exact: true }).click()
+    await sleep(800) // 囲みだけ動く。止まっている機械は読み手に付いてこない
+    await page.getByRole('button', { name: '↓', exact: true }).click()
+    await sleep(900)
+    await page.getByRole('button', { name: /再生/ }).click()
+    await sleep(1700) // 塗りは塗りの位置から続く（囲みの位置からではない）
+    await row(8).click()
+    await sleep(2000) // 主語が2人。塗りは進み続け、囲みは読み手が置いた行に残る
+    await page.mouse.move(280, 250)
+    await page.mouse.wheel(0, 130)
+    await sleep(1800) // 追従が外れ、帯が湧く。現在地（塗り）は止まらない
+    await page.getByRole('button', { name: /再生位置へ戻る/ }).click()
+    await sleep(1600) // 行為で閉じる。時間では戻らない
+    await page.getByRole('button', { name: /2行戻す/ }).click()
+    await sleep(1800) // 逆走。溜めが無いので、戻る動きが「これから進む」に見えない
+    // 対照: 担体を1つに兼ね、塗りの移動にぷるんを付ける
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(700)
+    await page.getByRole('button', { name: /再生/ }).click()
+    await sleep(1500)
+    await row(7).click()
+    await sleep(2400) // 選んだそばから、機械が読み手の選択を上書きしていく
+  },
+
+  'place-offscreen': async (page) => {
+    /* 撮るべきは「囲みが方角へ渡る瞬間」と「距離だけが変わって縦位置が動かないこと」。
+       対照は縁に貼り付いたまま動かない——同じ「動かない」でも意味が正反対になる */
+    await sleep(1000) // 現在地は枠の中。担体は囲みだけ
+    for (const _ of [1, 2, 3]) {
+      await page.getByRole('button', { name: /下へ/ }).click()
+      await sleep(500) // 枠のほうが動いていく。現在地は1pxも動いていない
+    }
+    await sleep(1500) // 完全に見えなくなった瞬間に、囲みが縁の方角へ渡った
+    for (const _ of [1, 2]) {
+      await page.getByRole('button', { name: /下へ/ }).click()
+      await sleep(600) // 遠ざかっても担体は動かない。増えるのは距離の数だけ
+    }
+    await sleep(1400)
+    await page.locator('.mz-place-offscreen-dir').click()
+    await sleep(1900) // 尺ゼロで着地。出て行った縁（上）と同じ側に置き直す
+    for (const _ of [1, 2, 3, 4]) {
+      await page.getByRole('button', { name: /上へ/ }).click()
+      await sleep(420) // 今度は下へ出す。向きが変わっても規則は同じ
+    }
+    await sleep(1800)
+    // 対照: 現在地の担体を枠の縁に貼り付ける（＝そこに現在地があるように見える）
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    for (const _ of [1, 2, 3, 4]) {
+      await page.getByRole('button', { name: /下へ/ }).click()
+      await sleep(420)
+    }
+    await sleep(2200) // どこまで離れても縁に居座り、距離を1度も名乗らない
+  },
+
+  'place-two-frames': async (page) => {
+    /* 撮るべきは「同じ瞬間に2つの窓が違うことを言う」1コマ。
+       ↓の回数は実測で決めた——9回で両窓に囲み、13回で窓Bが方角に変わる */
+    const down = page.getByRole('button', { name: '↓', exact: true })
+    await sleep(1000) // 窓Aは先頭、窓Bは中ほど。現在地は1つ
+    for (const _ of Array.from({ length: 9 })) {
+      await down.click()
+      await sleep(230) // 追いかけるのは窓Aだけ。窓Bは1pxも動かない
+    }
+    await sleep(1800) // 現在地が窓Bの視界にも入り、囲みが2個になる（同じ事実の2つの像）
+    for (const _ of Array.from({ length: 4 })) {
+      await down.click()
+      await sleep(260)
+    }
+    await sleep(2200) // 窓Aは囲み、窓Bは「▼2行下」。同じ現在地について違うことを言っている
+    await page.locator('.mz-place-two-frames-window').nth(1).locator('.mz-place-two-frames-direction').click()
+    await sleep(1700) // 押した窓だけが動く。窓Aは1pxも動かず、現在地も動かない
+    for (const _ of [1, 2, 3]) {
+      await down.click()
+      await sleep(280) // 頼んだ窓は追いつき、頼まなかった窓はまた置いていかれる
+    }
+    await sleep(1600) // 2つの窓はすぐまた違うことを言い出す。揃っていたのは頼んだ一瞬だけ
+    await page.getByRole('button', { name: '窓Bを閉じる' }).click()
+    await sleep(1300)
+    await page.getByRole('button', { name: '開く', exact: true }).click()
+    await sleep(2000) // 閉じる前の位置は戻らない（スクロールは窓のもの）。現在地は残っている
+    // 対照: 2つの窓を1つのスクロール値に畳む（＝窓が2つある意味が消える）
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    for (const _ of [1, 2, 3, 4]) {
+      await down.click()
+      await sleep(300)
+    }
+    await sleep(2000) // 頼んでいない窓まで一緒に動き、2つの窓が同じものを映し続ける
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
