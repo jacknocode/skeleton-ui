@@ -999,15 +999,16 @@ const CHOREO = {
        枠を動かして見せる。開いた時点で現在地はもう可視域の外に居る（＝事実は最初から
        成立している）ので、まず何も押さずに帯が出ていることを見せる */
     await sleep(1700) // 開いた瞬間から「▼ 現在地は 6行下」。押されて出たのではない
-    for (const _ of [1, 2, 3]) {
+    for (const _ of [1, 2, 3, 4]) {
       await page.getByRole('button', { name: '▼ 下へ' }).click()
-      await sleep(800) // 近づくにつれて距離だけが連続に減る。出る／出ないは事実なので離散
+      await sleep(750) // 近づくにつれて距離だけが連続に減る。出る／出ないは事実なので離散
     }
-    await sleep(1200) // 交差した瞬間に帯が消え、現在地の印が行の上に見えている
-    await page.getByRole('button', { name: '▼ 下へ' }).click()
-    await sleep(900)
-    await page.getByRole('button', { name: '▼ 下へ' }).click()
-    await sleep(1600) // 上へ抜けた。印は端で止まらず、行と一緒に外へ出ていく
+    await sleep(1300) // 交差した瞬間に帯が消え、現在地の印が行の上に見えている
+    for (const _ of [1, 2, 3, 4]) {
+      await page.getByRole('button', { name: '▼ 下へ' }).click()
+      await sleep(700) // 印は端で止まらない。行と一緒に、可視域の上へ抜けていく
+    }
+    await sleep(1500) // 抜けきると、枠の上の縁に別の担体（方角）が出る
     await page.getByRole('button', { name: /現在地へ戻る/ }).click()
     await sleep(1800) // 押されて初めて閉じる。飛ばずに経路を見せ、尺は距離に依らない
     // 対照: 印そのものを端に張り付かせる（方角と現在地を1つの担体で兼ねる）
