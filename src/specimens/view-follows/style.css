@@ -1,26 +1,212 @@
+/* No.107「追いかける視界」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+   色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡 / #d6d6d3 罫 /
+   #eaeae8 面 / #f5f5f3 反転文字 / #fff)。
+
+   scrollTopのアニメーションはCSSのtransition/scroll-behaviorではなく、すべて
+   index.tsx側のJS(requestAnimationFrame)が担う(index.tsx冒頭「実装上の判断4」参照)。
+   そのためこのファイルにscrollTopがらみのtransition/animationは1つも無い——
+   「借りている移動」(即時 or 対照の280msトゥイーン)と「頼まれた移動」(再開の320ms
+   トゥイーン)は、同じCSSクラスの上でJSが書き分けている。
+
+   帯(.mz-view-follows-band)・常設表示(.mz-view-follows-indicator)は専用の高さ枠を
+   持たず、出さないときは要素ごとDOMから外す(index.tsxのshowBand/showIndicatorで
+   丸ごと出し分け)。帯と常設表示は同時に出ない(following一つの状態から排他的に
+   導出される)ので、外形の高さは「帯が出ている・自動で積むボタンだけの行」の
+   ケースで実測している(下記「板」のコメント参照)。 */
+
 .mz-view-follows {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-view-follows.is-active {
-  animation: mz-view-follows-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: 新着操作3つ + 既定/対照トグル ---------- */
+
+.mz-view-follows-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-view-follows-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+
+.mz-view-follows-actions {
+  display: flex;
+  gap: 5px;
+  min-width: 0;
+}
+
+.mz-view-follows-action-btn {
+  flex: none;
+  padding: 6px 7px;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 10px;
+  font-weight: 800;
+  color: #5c5c5c;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s;
+}
+.mz-view-follows-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+}
+.mz-view-follows-action-btn:active {
+  transform: scale(1.05, 0.92);
+}
+
+.mz-view-follows-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-view-follows-mode-btn {
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-view-follows-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 2行目: 自動で積む + 常設表示「新着に追随中」 ----------
+   常設表示は借りている権利を画面に出し続けるための唯一の担体(index.tsx答え(b))。
+   button ではない要素にする(収録台本がボタンとして押せないようにする指定どおり)。 */
+
+.mz-view-follows-row2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 26px;
+}
+
+.mz-view-follows-auto-btn {
+  flex: none;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: #eaeae8;
+  color: #8c8c8c;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-view-follows-auto-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+.mz-view-follows-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+}
+.mz-view-follows-indicator::before {
+  content: '';
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: #8c8c8c;
+}
+
+/* ---------- 帯: 降りたことを、降ろされた側が名乗る ----------
+   時間では閉じない(押すことでしか消えない)。件数は降りているあいだ増え続ける。
+   ボタン名には「追随を再開」を含める(mainとctaの2つのテキストノードで、
+   button要素のアクセシブルネームは両方の文字列を連結したものになる)。 */
+
+.mz-view-follows-band {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 8px 8px 12px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  cursor: pointer;
+  animation: mz-view-follows-band-in 0.18s ease-out both;
+}
+.mz-view-follows-band-main {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #f5f5f3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-view-follows-band-cta {
+  flex: none;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #f5f5f3;
+  color: #3d3d3d;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+@keyframes mz-view-follows-band-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
   }
-  60% {
-    transform: scale(0.9, 1.1);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  100% {
-    transform: none;
-  }
+}
+
+/* ---------- 板(ログ枠): 340×204(6行ぶん)で固定 ---------- */
+
+.mz-view-follows-scroll {
+  position: relative;
+  width: 340px;
+  height: 204px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  /* 必須: scroll anchoringに仕事を取られると、末尾に足しただけのはずの新着行で
+     ブラウザが勝手にscrollTopを動かしうる。追随の可否はJS(index.tsx)だけが
+     決めるので、ブラウザ側の自動補正は明示的に切っておく */
+  overflow-anchor: none;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+}
+
+.mz-view-follows-row {
+  box-sizing: border-box;
+  height: 34px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #f0f0ee;
+}
+.mz-view-follows-row-label {
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #8c8c8c;
 }

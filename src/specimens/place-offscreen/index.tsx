@@ -1,12 +1,360 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './style.css'
 
-/** TODO: どう動く標本かを一行で */
+/* ---- No.106「見えていない現在地」----
+   この回(No.105〜107)の共通テーマ:「現在地が動くのは読み手が動かしたときだけ」
+   「現在地は見えている」という、No.90〜104が黙って置いていた2つの前提を外す。この標本が
+   外すのは後者。40行の台帳をスクロールしても、現在地(＝読んでいる行)そのものは1pxも動か
+   ない――動くのは視界(可視域)のほう。だから「現在地が見えなくなったとき何を見せるか」が
+   主題で、「現在地をどう動かすか」はここでは扱わない(現在地は「12行目に置く」ボタンでしか
+   変わらず、スクロールでは変わらない)。
+
+   ---- 答え(a): 端に出るのは現在地ではなく方角。だから別の担体・別の親 ----
+   現在地の印(行の左端の2px線＋行の背景タイント)は、行のDOM子要素としてだけ存在する。
+   40行を常にすべて描画しており(仮想化していない)、現在地の行が可視域の外へスクロール
+   されても、その行自体・印自体はDOM上に存在し続け、位置や見た目に関する属性を一切変えない
+   (下記「実装上の判断1」)。可視域外へ出たことを言うのは、枠(.frame)の直接の子として
+   別に生える三角+距離の帯であって、行の中の印とは別物――クラス名はもちろんDOM上の親も
+   異なる(印は.rowの子、帯は.frameの子。C6はclosest()で検証する)。
+
+   ---- 答え(b): 方角は現在地から生えない ----
+   帯は枠の縁から「染み出す」(opacity+縁の方向へ6pxのtranslateY、160ms、ease-out。ぷるん
+   ではない――理由は下記の緩急についての注記)。この160msのあいだ現在地の印は指一本動かない
+   ――というより、印の見た目は可視域や帯の状態を一切参照していない(常に「置かれている行
+   かどうか」だけで決まる)ので、そもそも動かしようがない。C9はこの構造をそのまま実測する。
+
+   ---- 答え(c): 閾値を持たない。述語(交差判定)だけを持つ ----
+   No.104は基準の持ち替えにヒステリシス(幅)を持たせて正解だったが、ここでは逆になる――
+   「事実」に幅を持たせてはいけない。判定は「現在地行の矩形」と「可視矩形」が交差している
+   かどうか、それだけ(intersects関数)。pxの猶予もタイマーの遅延も無い。半分だけ覗いている
+   行には帯を出さない(交差しているから)。距離("N行上")は連続値として別に扱う――出る/出ない
+   は事実なので離散、どれだけ外かは量なので連続、という書き分け。
+
+   ---- 答え(d): 追いかけない。戻り道は行為でしか閉じない ----
+   帯はタイマーで消えない。押されて初めて閉じる(No.94)。押すと、現在地行を可視域の縁に
+   一致させる位置までscrollTopをアニメーションさせる――一気に飛ばず経路を見せる(No.92)。
+   尺は現在地までの距離に依らず280ms固定(下記「実装上の判断2」)。
+
+   ---- 対照(よくある実装)が壊す3点 ----
+   1. 現在地の印そのものが端まで滑ってきて張り付く(方角の担体を持たない＝1つの担体で兼ねる)
+   2. 判定に50pxの閾値を持つ(50px以上出て初めて張り付く＝閾値の内側では何も言わない)
+   3. 張り付いた印が3000msでフェードアウトして消える
+   この3点以外(尺・緩急・色・レイアウト・「▲上へ」「▼下へ」の挙動)はすべて既定と同じ値を
+   共有している――対照専用の値は上の3点のためだけに存在する(下記「実装上の判断3」)。
+
+   ---- 実装上の判断1: 現在地の印は「行の中に生まれて行の中で終わる」。座標計算を一切しない ----
+   40行をvirtualizeせず常に全部描画しているのは節約ではなく主張そのもの――現在地の印の
+   JSXは`isCurrent = rowNumber === place`という、スクロール位置を一切参照しない条件だけで
+   出し分けている。これにより「印が動いていない」は実測するまでもなくコードの形として保証
+   される(スクロールイベントのハンドラから印のコードへは辺が1本も無い)。
+
+   ---- 実装上の判断2: scrollTopの唯一の情報源はonScroll。ボタンもアニメーションもDOMに
+   書き込むだけで、Reactの状態はonScrollハンドラだけが更新する ----
+   「▲上へ/▼下へ」はscrollBy({behavior:'smooth'})でDOMに書くだけ、戻る操作(handleReturn)も
+   requestAnimationFrameでel.scrollTopに直接書くだけ――どちらもReactのstateには触れない。
+   scrollTopをプログラムから書き換えてもブラウザは'scroll'イベントを発火するので、
+   onScrollハンドラ(setScrollTop)が唯一の経路として状態に反映する。企画書の「スクロールは
+   ボタンでも生のスクロールでも起きること(onScrollを見る実装にする)」をそのまま設計に
+   採用した形――経路を二重に持たない。
+
+   ---- 実装上の判断3: 対照の「張り付く印」は、実は行の印と同一DOM要素ではいられない ----
+   企画は対照を「1つの担体で兼ねる」と書いているが、実装すると見た目の話であって物理的な
+   話ではないと分かる。行の印は.rowの通常フローの子として存在し(答え(a)の設計)、対照が
+   「端まで滑ってきて張り付く」ためには、スクロールによる見切れの影響を受けない.frame直下
+   の絶対配置要素である必要がある――つまり行の中にいる間の印と、端に張り付いた印は、
+   スタイルは同じでもDOM上は別の要素にならざるを得ない(is-current行の印を隠し、
+   .dockmarkerを新たに生やす)。これは対照の粗を実装面からさらに裏付ける――「現在地の印が
+   端まで来た」ように見えるものは、実は最初から「現在地の印のふりをした別の何か」でしか
+   作れない。担体を分けなかった代償として、対照は結局「本物のふりをする偽物」を必要とする。
+   (企画書には無かった気づきなので、報告に明記する。)
+
+   ---- 緩急についての注記: 「借りている移動」にはぷるんを載せない ----
+   共通ルールが「連続に進み続けるものには基本イージング(ぷるん)を載せない」「106/107でも
+   『借りている移動』には載せない」と念を押している。視界を動かす行為(「▲上へ/▼下へ」・
+   戻るボタンのscrollTopアニメーション)はどちらも「読み手から借りた視界の移動」そのものな
+   ので、ぷるんではなくoffscreen-arrivals/filtered-outと同じ減速のみのcubic-bezier
+   (0.22, 0.61, 0.36, 1)を使う。帯の登場(染み出す動き)も同様に減速のみ。一方、対照の
+   「張り付く」動きは視界の移動ではなく印の見た目が閾値を跨いだ瞬間に弾む誤りなので、
+   ここだけ基本のぷるんを使っている――対照が「かわいく見えるが嘘をついている」ことを
+   動きの質でも体現させた(企画書に明記が無い判断なので報告に明記する)。 */
+
+// ---------- 舞台の寸法 ----------
+const ROW_H = 34
+const VISIBLE_ROWS = 6
+const VISIBLE_H = ROW_H * VISIBLE_ROWS // 204
+const ROW_COUNT = 40
+const MAX_SCROLL_TOP = ROW_COUNT * ROW_H - VISIBLE_H // 1156
+const SCROLL_STEP = ROW_H * 2 // 68px = 2行。「▲上へ/▼下へ」1回ぶんの量
+const DEFAULT_PLACE = 12 // 1始まりの行番号
+
+// ---------- 対照だけが持つ閾値と時間(企画書が明示的に「対照だけ」と指定した3値) ----------
+const CONTRAST_THRESHOLD = 50 // px。これを超えて外れて初めて印が端に張り付く
+const CONTRAST_FADE_MS = 3000 // 張り付いてからフェードが始まるまで
+const CONTRAST_FADE_OUT_MS = 180 // フェード自体の尺(消える直前の一瞬)
+
+// ---------- 共通の尺(既定・対照で共有) ----------
+const BAND_ENTER_MS = 160 // 帯が縁から染み出す尺(答え(b))
+const RETURN_MS = 280 // 押して戻るときの尺。距離に依らず一定(答え(d))
+const DOCK_ENTER_MS = 220 // 対照: 端に張り付く瞬間のポップ(対照だけの一回性の動き)
+
+type Mode = 'default' | 'contrast'
+type Dir = 'up' | 'down'
+type DockPhase = 'hidden' | 'shown' | 'fading'
+
+interface Indicator {
+  dir: Dir
+  rows: number // 可視域から何行分外れているか(連続値。答え(c))
+}
+
+function clamp(n: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, n))
+}
+
+// filtered-out/offscreen-arrivalsと同じNewton法によるcubic-bezierの数値評価。
+// 「借りている移動」は減速のみの(0.22, 0.61, 0.36, 1)で統一する(緩急についての注記)
+function makeBezierEase(x1: number, y1: number, x2: number, y2: number) {
+  const a = (p1: number, p2: number) => 1 - 3 * p2 + 3 * p1
+  const b = (p1: number, p2: number) => 3 * p2 - 6 * p1
+  const c = (p1: number) => 3 * p1
+  const calc = (t: number, p1: number, p2: number) => ((a(p1, p2) * t + b(p1, p2)) * t + c(p1)) * t
+  const slope = (t: number, p1: number, p2: number) => 3 * a(p1, p2) * t * t + 2 * b(p1, p2) * t + c(p1)
+  return (x: number) => {
+    let t = x
+    for (let i = 0; i < 6; i++) {
+      const s = slope(t, x1, x2)
+      if (Math.abs(s) < 1e-6) break
+      t -= (calc(t, x1, x2) - x) / s
+    }
+    return calc(t, y1, y2)
+  }
+}
+const returnEase = makeBezierEase(0.22, 0.61, 0.36, 1)
+
+// 40行の台帳。文言は"#01"のような固定文字列で作る(乱数を使わない。企画書の指定どおり)
+const ROW_LABELS = Array.from({ length: ROW_COUNT }, (_, i) => `#${String(i + 1).padStart(2, '0')}`)
+
+// 現在地行を可視域の縦中央へ置く初期scrollTop。「置いた直後は見えている」デモ状態から始める
+function centeredScrollTop(place: number): number {
+  const rowTop = (place - 1) * ROW_H
+  return clamp(rowTop - (VISIBLE_H - ROW_H) / 2, 0, MAX_SCROLL_TOP)
+}
+
+/** 見えていない現在地: 現在地は1pxも動かない。動くのは視界のほう。方角は現在地から生えない。 */
 export default function PlaceOffscreen() {
-  const [active, setActive] = useState(false)
+  const [mode, setMode] = useState<Mode>('default')
+  const [place, setPlace] = useState(DEFAULT_PLACE) // 1始まりの行番号。スクロールでは変わらない
+  const [scrollTop, setScrollTop] = useState(() => centeredScrollTop(DEFAULT_PLACE))
+
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const returnRafRef = useRef<number | null>(null)
+  const dockTimersRef = useRef<number[]>([])
+
+  // ---------- 幾何: 現在地行の矩形と可視矩形が交差しているか(答え(c)。閾値を持たない述語) ----------
+  const rowTop = (place - 1) * ROW_H
+  const rowBottom = rowTop + ROW_H
+  const visibleTop = scrollTop
+  const visibleBottom = scrollTop + VISIBLE_H
+  const intersects = rowBottom > visibleTop && rowTop < visibleBottom
+
+  // ---------- 既定: 方角の帯。閾値なし、交差の否定がそのまま出現条件 ----------
+  const indicator = useMemo<Indicator | null>(() => {
+    if (mode !== 'default' || intersects) return null
+    if (rowBottom <= visibleTop) {
+      const gap = visibleTop - rowBottom
+      return { dir: 'up', rows: Math.floor(gap / ROW_H) + 1 }
+    }
+    const gap = rowTop - visibleBottom
+    return { dir: 'down', rows: Math.floor(gap / ROW_H) + 1 }
+  }, [mode, intersects, rowBottom, visibleTop, rowTop, visibleBottom])
+
+  // ---------- 対照: 50px閾値を超えたときだけ「張り付き先」を持つ ----------
+  const dockDir = useMemo<Dir | null>(() => {
+    if (mode !== 'contrast' || intersects) return null
+    if (rowBottom <= visibleTop) {
+      const gap = visibleTop - rowBottom
+      return gap > CONTRAST_THRESHOLD ? 'up' : null
+    }
+    const gap = rowTop - visibleBottom
+    return gap > CONTRAST_THRESHOLD ? 'down' : null
+  }, [mode, intersects, rowBottom, visibleTop, rowTop, visibleBottom])
+
+  // 対照専用: 張り付いてから3000msでフェード開始、フェード完了で消す(タイマーで閉じる=No.94が
+  // 禁じたやり方をそのまま対照として実演する。既定側はこの仕組みを一切持たない)
+  const [dockPhase, setDockPhase] = useState<DockPhase>('hidden')
+  useEffect(() => {
+    dockTimersRef.current.forEach((id) => window.clearTimeout(id))
+    dockTimersRef.current = []
+    if (dockDir === null) {
+      setDockPhase('hidden')
+      return
+    }
+    setDockPhase('shown')
+    const t1 = window.setTimeout(() => setDockPhase('fading'), CONTRAST_FADE_MS)
+    const t2 = window.setTimeout(() => setDockPhase('hidden'), CONTRAST_FADE_MS + CONTRAST_FADE_OUT_MS)
+    dockTimersRef.current = [t1, t2]
+    return () => {
+      window.clearTimeout(t1)
+      window.clearTimeout(t2)
+    }
+  }, [dockDir])
+
+  useEffect(
+    () => () => {
+      if (returnRafRef.current !== null) cancelAnimationFrame(returnRafRef.current)
+      dockTimersRef.current.forEach((id) => window.clearTimeout(id))
+    },
+    [],
+  )
+
+  // 唯一の情報源。ボタンもアニメーションもDOMのscrollTopに書くだけで、
+  // Reactの状態更新はここだけを経由する(実装上の判断2)
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    setScrollTop(el.scrollTop)
+  }, [])
+
+  const handleUp = useCallback(() => {
+    scrollRef.current?.scrollBy({ top: -SCROLL_STEP, behavior: 'smooth' })
+  }, [])
+  const handleDown = useCallback(() => {
+    scrollRef.current?.scrollBy({ top: SCROLL_STEP, behavior: 'smooth' })
+  }, [])
+
+  const handleResetPlace = useCallback(() => {
+    setPlace(DEFAULT_PLACE)
+  }, [])
+
+  const handleModeChange = useCallback((next: Mode) => {
+    setMode((prev) => {
+      if (prev === next) return prev
+      return next
+    })
+    setPlace(DEFAULT_PLACE)
+    if (returnRafRef.current !== null) {
+      cancelAnimationFrame(returnRafRef.current)
+      returnRafRef.current = null
+    }
+    const el = scrollRef.current
+    const top = centeredScrollTop(DEFAULT_PLACE)
+    if (el) el.scrollTop = top // 'scroll'イベント経由でsetScrollTopにも反映される
+    else setScrollTop(top)
+  }, [])
+
+  // 押して戻る(答え(d))。現在地行を可視域の縁に一致させる位置まで、距離に依らず280msで
+  // 経路を見せながら動かす。scrollTopへの書き込みだけを行い、Reactの状態はonScroll任せ
+  const handleReturn = useCallback(
+    (dir: Dir) => {
+      const el = scrollRef.current
+      if (!el) return
+      if (returnRafRef.current !== null) {
+        cancelAnimationFrame(returnRafRef.current)
+        returnRafRef.current = null
+      }
+      const targetTop = clamp(dir === 'up' ? rowTop : rowBottom - VISIBLE_H, 0, MAX_SCROLL_TOP)
+      const startTop = el.scrollTop
+      if (startTop === targetTop) return
+      const startTime = performance.now()
+      const tick = () => {
+        const elapsed = performance.now() - startTime
+        const t = Math.min(1, elapsed / RETURN_MS)
+        el.scrollTop = startTop + (targetTop - startTop) * returnEase(t)
+        if (t < 1) {
+          returnRafRef.current = requestAnimationFrame(tick)
+        } else {
+          returnRafRef.current = null
+        }
+      }
+      returnRafRef.current = requestAnimationFrame(tick)
+    },
+    [rowTop, rowBottom],
+  )
+
+  const dockVisible = mode === 'contrast' && dockPhase !== 'hidden' && dockDir !== null
+
   return (
-    <button className={`mz-place-offscreen${active ? ' is-active' : ''}`} onClick={() => setActive((a) => !a)}>
-      place-offscreen
-    </button>
+    <div className="mz-place-offscreen">
+      <div className="mz-place-offscreen-row1">
+        <div className="mz-place-offscreen-scrollbtns" role="group" aria-label="視界の移動">
+          <button type="button" className="mz-place-offscreen-scroll-btn" onClick={handleUp}>
+            ▲ 上へ
+          </button>
+          <button type="button" className="mz-place-offscreen-scroll-btn" onClick={handleDown}>
+            ▼ 下へ
+          </button>
+        </div>
+        <div className="mz-place-offscreen-mode" role="group" aria-label="既定・対照">
+          <button
+            type="button"
+            className={`mz-place-offscreen-mode-btn${mode === 'default' ? ' is-active' : ''}`}
+            onClick={() => handleModeChange('default')}
+          >
+            既定
+          </button>
+          <button
+            type="button"
+            className={`mz-place-offscreen-mode-btn${mode === 'contrast' ? ' is-active' : ''}`}
+            onClick={() => handleModeChange('contrast')}
+          >
+            対照
+          </button>
+        </div>
+      </div>
+
+      <div className="mz-place-offscreen-row2">
+        <button type="button" className="mz-place-offscreen-reset-btn" onClick={handleResetPlace}>
+          現在地を12行目に置く
+        </button>
+      </div>
+
+      <div className="mz-place-offscreen-frame">
+        <div
+          ref={scrollRef}
+          className="mz-place-offscreen-scroll"
+          onScroll={handleScroll}
+          aria-label="台帳(40行)"
+        >
+          {ROW_LABELS.map((label, i) => {
+            const rowNumber = i + 1
+            const isCurrent = rowNumber === place
+            // 対照は張り付いている間だけ行の中の印を隠す(答え(a)の印はここでは出さない。
+            // 張り付いた印は.frame直下の別要素が担う――実装上の判断3参照)
+            const showInlineMarker = isCurrent && (mode === 'default' || dockDir === null)
+            return (
+              <div
+                key={label}
+                className={`mz-place-offscreen-row${showInlineMarker ? ' is-current' : ''}`}
+                data-row-index={rowNumber}
+              >
+                {showInlineMarker && <span className="mz-place-offscreen-marker-line" aria-hidden="true" />}
+                <span className="mz-place-offscreen-row-label">{label}</span>
+              </div>
+            )
+          })}
+        </div>
+
+        {mode === 'default' && indicator && (
+          <button
+            type="button"
+            key={indicator.dir}
+            className={`mz-place-offscreen-dirband is-${indicator.dir}`}
+            onClick={() => handleReturn(indicator.dir)}
+          >
+            <span aria-hidden="true">
+              {indicator.dir === 'up' ? '▲' : '▼'} 現在地は {indicator.rows}行{indicator.dir === 'up' ? '上' : '下'}
+            </span>
+            <span className="mz-place-offscreen-sr-only">現在地へ戻る</span>
+          </button>
+        )}
+
+        {dockVisible && dockDir && (
+          <span
+            key={dockDir}
+            className={`mz-place-offscreen-dockmarker is-${dockDir}${dockPhase === 'fading' ? ' is-fading' : ''}`}
+            aria-hidden="true"
+          />
+        )}
+      </div>
+    </div>
   )
 }

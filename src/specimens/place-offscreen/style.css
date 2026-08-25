@@ -1,26 +1,290 @@
+/* No.106「見えていない現在地」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+   色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡 / #d6d6d3 罫 /
+   #eaeae8 面 / #f5f5f3 反転文字 / #fff)。
+
+   構造(index.tsxの答え(a)・実装上の判断1/3と対応):
+   ・.mz-place-offscreen-marker-line は .mz-place-offscreen-row の子(現在地の印。行の持ち物)
+   ・.mz-place-offscreen-dirband は .mz-place-offscreen-frame の直接の子(方角の帯。枠の持ち物)
+   ・.mz-place-offscreen-dockmarker も .mz-place-offscreen-frame の直接の子
+     (対照専用。行から外れて張り付いた「印のふりをした別要素」)
+
+   prefers-reduced-motion はこの回の共通ルールによりグローバルCSSが面倒を見るため、
+   ここには書かない(No.90〜104の標本にあった@mediaブロックはこの回では意図的に省いている)。 */
+
 .mz-place-offscreen {
-  padding: 12px 24px;
-  border-radius: 999px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+}
+
+/* ---------- 1行目: 視界移動2ボタン + 既定/対照トグル ---------- */
+
+.mz-place-offscreen-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.mz-place-offscreen-scrollbtns {
+  display: flex;
+  gap: 6px;
+}
+
+.mz-place-offscreen-scroll-btn {
+  padding: 7px 10px;
+  border-radius: 10px;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 11px;
   font-weight: 800;
   color: #5c5c5c;
   cursor: pointer;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s;
+}
+.mz-place-offscreen-scroll-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+}
+.mz-place-offscreen-scroll-btn:active {
+  transform: scale(1.05, 0.92);
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-place-offscreen.is-active {
-  animation: mz-place-offscreen-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+.mz-place-offscreen-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
 }
-@keyframes mz-place-offscreen-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+.mz-place-offscreen-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-place-offscreen-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 2行目: 測定用リセットボタン ---------- */
+
+.mz-place-offscreen-row2 {
+  display: flex;
+}
+
+.mz-place-offscreen-reset-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #eaeae8;
+  color: #8c8c8c;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-place-offscreen-reset-btn:hover {
+  transform: translateY(-1px);
+  background: #d6d6d3;
+  color: #3d3d3d;
+}
+
+/* ---------- 板(台帳を収める枠。340×204で固定) ---------- */
+
+.mz-place-offscreen-frame {
+  position: relative;
+  width: 340px;
+  height: 204px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+}
+
+.mz-place-offscreen-scroll {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-anchor: none;
+}
+
+.mz-place-offscreen-row {
+  box-sizing: border-box;
+  position: relative;
+  height: 34px;
+  padding: 0 14px 0 20px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #f0f0ee;
+}
+.mz-place-offscreen-row.is-current {
+  background: #eaeae8;
+}
+.mz-place-offscreen-row-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 現在地の印(行の子。答え(a)) ----------
+   スクロール位置を一切参照しない。isCurrentだけで出し分けているので、
+   可視域の外へ出てもこの要素の属性は何も変わらない(C9はこれを実測する)。 */
+.mz-place-offscreen-marker-line {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 20px;
+  border-radius: 1px;
+  background: #3d3d3d;
+}
+
+/* ---------- 方角の帯(枠の子。答え(a)/(b)) ----------
+   縁から染み出す: opacity + 縁の方向へ6pxのtranslateY、160ms。減速のみ(ぷるんを使わない
+   理由はindex.tsx「緩急についての注記」)。押すと戻る(現在地へ戻るを含む名前で発見できる)。 */
+.mz-place-offscreen-dirband {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+  z-index: 2;
+}
+.mz-place-offscreen-dirband.is-up {
+  top: 0;
+  animation: mz-place-offscreen-band-in-up 0.16s ease-out both;
+}
+.mz-place-offscreen-dirband.is-down {
+  bottom: 0;
+  animation: mz-place-offscreen-band-in-down 0.16s ease-out both;
+}
+@keyframes mz-place-offscreen-band-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
   }
-  60% {
-    transform: scale(0.9, 1.1);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  100% {
-    transform: none;
+}
+@keyframes mz-place-offscreen-band-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 視覚的には隠すがアクセシビリティツリーには残す(「現在地へ戻る」を含む名前にするため) */
+.mz-place-offscreen-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- 対照専用: 端に張り付く印(枠の子。実装上の判断3) ----------
+   行の印(marker-line)と同じ視覚言語(2px縦線+タイント)を、枠の縁いっぱいの帯に潰して
+   再現する――「同じ担体で描く」という対照の誤りをそのまま絵にする。
+   張り付く瞬間だけ基本のぷるんを使う(緩急についての注記: ここは「借りている移動」ではなく
+   閾値を跨いだ瞬間に弾む、対照の誤りそのものを担う動きだから)。3000ms後にフェードして消える
+   (時間で閉じる=No.94が禁じたやり方。既定はこの仕組みを持たない)。 */
+.mz-place-offscreen-dockmarker {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 14px;
+  background: #d6d6d3;
+  z-index: 2;
+  pointer-events: none;
+}
+.mz-place-offscreen-dockmarker::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 10px;
+  border-radius: 1px;
+  background: #3d3d3d;
+}
+/* 実測して気づいた点: 淡色トークン#eaeae8を高さ8pxの帯だけで白い枠に乗せると、
+   スクリーンショット上でほぼ視認できなかった(角の2px線しか見えない)。行の本物のタイントは
+   34px四方あるから見えていただけで、対照の「印のふりをした帯」は薄いままだと逆に
+   「何も出ていない」という、この標本が既定側で批判している状態そのものに見えてしまう。
+   高さを14pxへ、背景を一段濃い#d6d6d3へ、縁取りを足して境界をはっきりさせた。 */
+.mz-place-offscreen-dockmarker.is-up {
+  top: 0;
+  border-bottom: 1px solid #d6d6d3;
+  animation: mz-place-offscreen-dock-in-up 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.mz-place-offscreen-dockmarker.is-down {
+  bottom: 0;
+  border-top: 1px solid #d6d6d3;
+  animation: mz-place-offscreen-dock-in-down 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.mz-place-offscreen-dockmarker.is-fading {
+  animation: mz-place-offscreen-dock-out 0.18s ease-out both;
+}
+@keyframes mz-place-offscreen-dock-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes mz-place-offscreen-dock-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes mz-place-offscreen-dock-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }

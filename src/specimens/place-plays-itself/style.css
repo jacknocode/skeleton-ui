@@ -1,26 +1,263 @@
+/* No.105「自分で動く現在地」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+   色トークンは図鑑のパレット(#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡 / #d6d6d3 罫 /
+   #eaeae8 面 / #f5f5f3 反転文字 / #fff)。
+
+   位置レイヤー(.mz-place-plays-itself-head)と見た目レイヤー(.mz-place-plays-itself-knob)は
+   別要素(index.tsxの冒頭コメント「答え(a)」参照)。位置レイヤーは translateX の直値のみで、
+   既定では transition/animation を一切持たない——連続に進み続けるものに基本イージング
+   (ぷるん)を載せないことがこの標本の主張そのもの。対照だけ、この層に
+   `transition: transform 100ms cubic-bezier(0.34,1.56,0.64,1)` を常設する(index.tsxで
+   inline styleとして付与)。見た目レイヤー(頭部の丸)だけが、一時停止の座り・掴んだ瞬間の
+   膨らみという「離散な出来事」のscale変化を担当する。 */
+
 .mz-place-plays-itself {
-  padding: 12px 24px;
-  border-radius: 999px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+}
+
+/* ---------- 1行目: 操作4ボタン + 既定/対照トグル ---------- */
+
+.mz-place-plays-itself-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.mz-place-plays-itself-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.mz-place-plays-itself-btn {
+  flex: none;
+  padding: 7px 10px;
+  border-radius: 10px;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 11px;
   font-weight: 800;
   color: #5c5c5c;
   cursor: pointer;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s,
+    box-shadow 0.2s;
+}
+.mz-place-plays-itself-btn-arrow {
+  padding: 7px 9px;
+  font-size: 12px;
+}
+.mz-place-plays-itself-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+}
+.mz-place-plays-itself-btn:active:not(:disabled) {
+  transform: scale(1.05, 0.92);
+}
+.mz-place-plays-itself-btn:disabled {
+  cursor: default;
+  color: #c2c2bf;
+  box-shadow: none;
+  opacity: 0.6;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-place-plays-itself.is-active {
-  animation: mz-place-plays-itself-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+.mz-place-plays-itself-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
 }
-@keyframes mz-place-plays-itself-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+.mz-place-plays-itself-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-place-plays-itself-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 権利の返却口: 「再生中」の常設表示 + 「待たせています」の帯 ----------
+   どちらも専用の高さ枠を持たず、条件を満たさないとき要素ごとDOMから外れる
+   (index.tsxの条件レンダリング)。時間では消えない——押されて初めて閉じる。 */
+
+.mz-place-plays-itself-status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mz-place-plays-itself-live {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 10px;
+  font-weight: 800;
+}
+.mz-place-plays-itself-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f5f5f3;
+  animation: mz-place-plays-itself-live-pulse 1s ease-in-out infinite;
+}
+@keyframes mz-place-plays-itself-live-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.mz-place-plays-itself-band {
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-align: left;
+}
+
+/* ---------- 波形の板 ---------- */
+
+.mz-place-plays-itself-panel {
+  width: 340px;
+  box-sizing: border-box;
+  padding: 12px 20px 10px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+}
+
+.mz-place-plays-itself-track {
+  position: relative;
+  margin: 0 auto;
+}
+
+/* ---------- 波形の縦棒。ヘッドより手前(左)は既読=中間トーン ---------- */
+
+.mz-place-plays-itself-bars {
+  position: relative;
+  margin-top: 10px; /* 頭部(丸)ぶんの余白 */
+  height: 72px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+.mz-place-plays-itself-bar {
+  flex: 1 1 auto;
+  margin: 0 1px;
+  min-width: 2px;
+  max-width: 4px;
+  border-radius: 1px 1px 0 0;
+  background: #d6d6d3;
+  transition: background-color 0.15s;
+}
+.mz-place-plays-itself-bar.is-read {
+  background: #8c8c8c;
+}
+
+/* ---------- 再生ヘッド: 位置レイヤー(外側) ----------
+   translateXのみを持つ。幅0の1点として置き、内側の頭部・線はここからの相対位置で描く。
+   既定はtransitionを持たない(index.tsxがinline styleを付けない)。対照だけ
+   inline styleでtransitionが付く(冒頭コメント参照)。 */
+.mz-place-plays-itself-head {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* ---------- 再生ヘッド: 見た目レイヤー(内側・頭部の丸) ----------
+   scale/opacityだけを持つ。data-placeで機械が置いた位置(stopped=中空の輪)と
+   読み手が選んだ位置(chosen=塗りつぶし)を撃ち分ける(index.tsxの答えd)。 */
+.mz-place-plays-itself-knob {
+  position: absolute;
+  left: -5px;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #3d3d3d;
+  box-sizing: border-box;
+  transition:
+    transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.15s;
+}
+.mz-place-plays-itself-knob[data-place='stopped'] {
+  background: #eaeae8;
+}
+.mz-place-plays-itself-knob[data-place='chosen'] {
+  background: #3d3d3d;
+}
+/* 対照は撃ち分けを持たない。両方とも塗りつぶし(同じ担体) */
+.mz-place-plays-itself-knob.is-contrast {
+  background: #3d3d3d;
+}
+.mz-place-plays-itself-knob.is-holding {
+  transform: scale(1.16);
+}
+.mz-place-plays-itself-knob.is-settling {
+  animation: mz-place-plays-itself-settle 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-place-plays-itself-settle {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.6;
   }
   60% {
-    transform: scale(0.9, 1.1);
+    transform: scale(1.14);
+    opacity: 1;
   }
   100% {
-    transform: none;
+    transform: scale(1);
+    opacity: 1;
   }
+}
+
+.mz-place-plays-itself-head-line {
+  position: absolute;
+  left: -1px;
+  top: 10px;
+  width: 2px;
+  height: 72px;
+  background: #3d3d3d;
+}
+
+/* ---------- 時間目盛り ---------- */
+
+.mz-place-plays-itself-ruler {
+  position: relative;
+  height: 14px;
+  margin-top: 6px;
+}
+.mz-place-plays-itself-ruler-mark {
+  position: absolute;
+  top: 0;
+  transform: translateX(-2px);
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
 }
