@@ -993,6 +993,62 @@ const CHOREO = {
     await page.getByRole('button', { name: '翌日ひらく' }).click()
     await sleep(2800) // 読みかけの行にぴったり着地しているのに、新着は1件も見えていない
   },
+
+  'place-offscreen': async (page) => {
+    /* 撮るべきは「現在地は動いていない」こと。だから撮り方も、印を追いかけるのではなく
+       枠を動かして見せる。開いた時点で現在地はもう可視域の外に居る（＝事実は最初から
+       成立している）ので、まず何も押さずに帯が出ていることを見せる */
+    await sleep(1700) // 開いた瞬間から「▼ 現在地は 6行下」。押されて出たのではない
+    for (const _ of [1, 2, 3]) {
+      await page.getByRole('button', { name: '▼ 下へ' }).click()
+      await sleep(800) // 近づくにつれて距離だけが連続に減る。出る／出ないは事実なので離散
+    }
+    await sleep(1200) // 交差した瞬間に帯が消え、現在地の印が行の上に見えている
+    await page.getByRole('button', { name: '▼ 下へ' }).click()
+    await sleep(900)
+    await page.getByRole('button', { name: '▼ 下へ' }).click()
+    await sleep(1600) // 上へ抜けた。印は端で止まらず、行と一緒に外へ出ていく
+    await page.getByRole('button', { name: /現在地へ戻る/ }).click()
+    await sleep(1800) // 押されて初めて閉じる。飛ばずに経路を見せ、尺は距離に依らない
+    // 対照: 印そのものを端に張り付かせる（方角と現在地を1つの担体で兼ねる）
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1000)
+    await page.getByRole('button', { name: '▲ 上へ' }).click()
+    await sleep(700) // 50px の閾値の内側。見えていないのに、まだ何も言わない
+    await page.getByRole('button', { name: '▲ 上へ' }).click()
+    await sleep(1200) // 閾値を越えてから、現在地のふりをした印が端に湧く
+    await sleep(2600) // そして3秒で黙って消える。戻り道が時間で閉じてしまう
+  },
+
+  'view-follows': async (page) => {
+    /* 撮るべきは、同じ「視界が動く」が頼まれ方で逆になること。
+       追随（借りている）は経路を見せず、再開（頼まれた）は見せる。
+       降りる瞬間は指で触るしかないので、ボタンではなくホイールで撮る */
+    const overList = async () => {
+      await page.mouse.move(W / 2, H / 2 + 40)
+    }
+    await sleep(1400) // 「新着に追随中」が出ている。借りていることが画面に出ている状態
+    await page.getByRole('button', { name: '新着を5件' }).click()
+    await sleep(1300) // 末尾に貼り付いたまま。中割りを1枚も見せない（注意を要求しない）
+    await page.getByRole('button', { name: '自動で積む' }).click()
+    await sleep(2200)
+    await overList()
+    await page.mouse.wheel(0, -40) // 読み手が視界に触れる。行為を待たずにここで降りる
+    await sleep(2400) // 帯が出て、積まれ続けても板は1pxも動かない
+    await sleep(2200) // 件数だけが増える。時間では閉じない
+    await page.getByRole('button', { name: /追随を再開/ }).click()
+    await sleep(1800) // 頼まれた移動なので経路を見せる。尺は距離に依らず一定
+    await page.getByRole('button', { name: '自動で積む' }).click()
+    await sleep(700)
+    // 対照: 「末尾から100px以内なら追う」。触れても降りず、次の新着で引き戻される
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await overList()
+    await page.mouse.wheel(0, -40)
+    await sleep(1200) // 降りていない。帯も常設表示も無いので、それが画面から読めない
+    await page.getByRole('button', { name: '新着を1件' }).click()
+    await sleep(2400) // 読んでいた場所が奪われる。動かしてよいのは頼まれたときだけ
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))

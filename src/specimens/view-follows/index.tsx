@@ -108,11 +108,23 @@ import './style.css'
    区別をscrollTopの書き方にも反映させた(resume-stale No.101のpendingScrollRef
    パターンを踏襲)。
 
-   ---- 実装上の判断6: 行の文言は乱数・時計を使わない固定文字列 ----
-   企画書の指示どおり、初期12行・新着行のすべてが同じ文言
-   `[12:00:03] ログを受信`を持つ。この標本の主題は「どの内容が積まれたか」では
-   なく「視界がどう動くか」なので、内容を変数にしない——毎回同じ絵が撮れる
-   (回帰時のスクリーンショット比較にも効く)。行の同一性はidだけで持つ。 */
+   ---- 実装上の判断6(企画側レビューを受けて修正): 行の文言は「全行同一の固定文字列」
+        ではなく「indexから決定的に導出した、全行違う文字列」にする ----
+   初版は全行が同じ文言`[12:00:03] ログを受信`だった(決定性を字面どおりに解釈した
+   結果)。だが実物のスクリーンショットで指摘を受けた——6行の枠に同じ絵が6つ並ぶと、
+   「追随中に末尾へ貼り付いている」「降りたあと1pxも動いていない(C3/C4の0.0px)」
+   「読み手の位置が奪われて引き戻された(対照の35px)」の3つが画面上まったく同じ絵
+   になり、数値では出る差が目に映らない。No.104が「空間を描かないと空間についての
+   主張は動きにならない」でぶつかった穴と同じで、ここは「行を区別して描かないと、
+   行が動いていない/動いたという主張が動きにならない」だった。
+   決定性(乱数・実時計を使わない)と一様性(全行同じ)は別物——直し方はindexから
+   決まる値で全行を違える。通し番号(#000〜。idをそのまま3桁ゼロ埋め)・時刻
+   (12:00:03を起点にidぶん秒を進めた時計。実時計は使わない)・本文(5種の固定語彙
+   をidで巡回)の3つをidだけから合成する(rowLabel関数)。id自体が行の同一性その
+   ものなので、これは「idから見た目を導出する」以上のことをしていない——見た目に
+   状態を持たせていない点は変わらない。可視6行のtextContentが常に相異なることは
+   idの単調増加だけから保証される(通し番号がidそのものを含むため、5種循環の本文
+   が衝突してもテキスト全体としては絶対に衝突しない)。 */
 
 // ---------- 舞台の寸法 ----------
 const ROW_H = 34
@@ -128,8 +140,25 @@ const CONTRAST_FOLLOW_MS = 280 // 対照: 追随中の移動につけるsmooth�
 const RESUME_MS = 320 // 再開の移動。距離に依らず一定(No.106(d))
 const SCROLL_EPS = 0.5 // 自分で書いたscrollTopかどうかを判定する誤差
 
-// 行の文言。乱数・時計を使わない固定文字列(実装上の判断6)
-const ROW_LABEL = '[12:00:03] ログを受信'
+// 行の文言はidから決定的に導出する(実装上の判断6)。乱数・実時計は使わないが、
+// 全行を同じ文字列にはしない——読んでいる行が同じかどうかを目で確かめられる必要がある
+const ROW_TIME_BASE_SEC = 12 * 3600 + 0 * 60 + 3 // 12:00:03を起点に、idぶん秒を進める
+const ROW_BODY_POOL = ['受信 ok', '受信 済', '取得 ok', '取得 済', '同期 ok'] as const // 5種を巡回
+
+function pad(n: number, width: number): string {
+  return String(n).padStart(width, '0')
+}
+
+/** 行の表示文言。idだけから決定的に合成する——通し番号はid自体なので、本文が5種循環で
+    衝突しても行の文字列全体としては(idが単調増加である限り)絶対に衝突しない */
+function rowLabel(id: number): string {
+  const totalSec = ROW_TIME_BASE_SEC + id
+  const hh = Math.floor(totalSec / 3600) % 24
+  const mm = Math.floor(totalSec / 60) % 60
+  const ss = totalSec % 60
+  const body = ROW_BODY_POOL[id % ROW_BODY_POOL.length]
+  return `[${pad(hh, 2)}:${pad(mm, 2)}:${pad(ss, 2)}] #${pad(id, 3)} ${body}`
+}
 
 type Mode = 'default' | 'contrast'
 
@@ -454,7 +483,7 @@ export default function ViewFollows() {
       <div ref={scrollRef} className="mz-view-follows-scroll" role="log" aria-label="ログ" onScroll={handleScroll}>
         {rows.map((row) => (
           <div className="mz-view-follows-row" key={row.id} data-row-id={row.id}>
-            <span className="mz-view-follows-row-label">{ROW_LABEL}</span>
+            <span className="mz-view-follows-row-label">{rowLabel(row.id)}</span>
           </div>
         ))}
       </div>
