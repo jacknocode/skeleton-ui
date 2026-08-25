@@ -105,9 +105,13 @@
 /* ---------- 板(台帳を収める枠。340×204で固定) ---------- */
 
 .mz-place-offscreen-frame {
+  /* 帯(高さ22px)は.frame直下の通常フローの子として上下どちらかに1つだけ積む
+     (実装上の判断5)。frame自体の高さは固定しない――[帯(上)?]+[.scroll(204px固定)]+
+     [帯(下)?]の合計で決まり、帯が無ければ204px、あれば226pxになる。 */
   position: relative;
+  display: flex;
+  flex-direction: column;
   width: 340px;
-  height: 204px;
   border-radius: 14px;
   overflow: hidden;
   background: #fff;
@@ -116,8 +120,9 @@
 
 .mz-place-offscreen-scroll {
   position: relative;
+  flex: none;
   width: 100%;
-  height: 100%;
+  height: 204px;
   overflow-y: auto;
   overflow-anchor: none;
 }
@@ -156,12 +161,14 @@
 }
 
 /* ---------- 方角の帯(枠の子。答え(a)/(b)) ----------
-   縁から染み出す: opacity + 縁の方向へ6pxのtranslateY、160ms。減速のみ(ぷるんを使わない
-   理由はindex.tsx「緩急についての注記」)。押すと戻る(現在地へ戻るを含む名前で発見できる)。 */
+   .frame直下の通常フローの子(実装上の判断5)。行には一切重ならない――絶対配置で
+   .scrollの上に乗せていた初版は末尾の行を隠してしまっていたため、枠の縁の外側に
+   専用の22pxぶんを持つ形に直した。縁から染み出す: opacity + 縁の方向へ6pxのtranslateY、
+   160ms。減速のみ(ぷるんを使わない理由はindex.tsx「緩急についての注記」)。
+   押すと戻る(現在地へ戻るを含む名前で発見できる)。 */
 .mz-place-offscreen-dirband {
-  position: absolute;
-  left: 0;
-  right: 0;
+  flex: none;
+  width: 100%;
   height: 22px;
   display: flex;
   align-items: center;
@@ -172,14 +179,11 @@
   font-size: 10.5px;
   font-weight: 800;
   cursor: pointer;
-  z-index: 2;
 }
 .mz-place-offscreen-dirband.is-up {
-  top: 0;
   animation: mz-place-offscreen-band-in-up 0.16s ease-out both;
 }
 .mz-place-offscreen-dirband.is-down {
-  bottom: 0;
   animation: mz-place-offscreen-band-in-down 0.16s ease-out both;
 }
 @keyframes mz-place-offscreen-band-in-up {

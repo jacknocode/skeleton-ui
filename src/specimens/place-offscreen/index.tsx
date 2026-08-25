@@ -77,6 +77,23 @@ import './style.css'
    マウント直後・モード切替直後・現在地の置き直し直後のいずれで評価しても、レンダーの
    たびに同じ導出(intersects)が走るようになった。
 
+   ---- 実装上の判断5(企画側レビューで発覚・修正): 帯が末尾の行に覆いかぶさっていた ----
+   初版は帯を.frame直下の絶対配置(position:absolute; top:0/bottom:0)で描いていた。これは
+   可視6行の一番端(上端 or 下端)の行に帯(高さ22px)が重なり、その行の文字が数pxしか
+   見えない状態を生む――No.103が欠陥として直した「末尾行が半分に切れている」と同じ絵に
+   なっていた。方角の帯は「見えなくなった現在地について言う」ための担体であって、
+   まだ見えている6行のうちの1行を新たに見えなくしてよい理由は無い。
+   直し方: 帯を.frame直下の通常フロー(flex-direction:columnの子)に置き直した――frame自体を
+   [帯(上)?] + [.scroll(常に204px固定)] + [帯(下)?] という縦積みに変え、帯が出たぶん
+   frameの高さそのものが204→226pxへ伸びる(No.102の帯と同じ考え方: 外形の実測は「帯が
+   出ている最大ケース」で行う)。DOM上の親は変わらず.frame(C6の主張は無傷)。行の矩形計算
+   (rowTop/rowBottom/ROW_H)や述語(intersects)は.scrollの内側だけで完結しており、
+   .scrollの高さ自体は204pxのまま変えていないので、答え(c)の判定ロジックには一切触れて
+   いない――直したのは「どこに置くか」だけで「いつ出すか」ではない。
+   対照の張り付き印(.dockmarker)はこの変更の対象外で、従来どおり.frame直下の絶対配置の
+   まま行に重なる――これは対照が「現在地のふりをした偽物」を行の上に乗せている、という
+   対照側の主張そのものなので、意図的にそのままにした(企画からの指示)。
+
    ---- 実装上の判断3: 対照の「張り付く印」は、実は行の印と同一DOM要素ではいられない ----
    企画は対照を「1つの担体で兼ねる」と書いているが、実装すると見た目の話であって物理的な
    話ではないと分かる。行の印は.rowの通常フローの子として存在し(答え(a)の設計)、対照が
@@ -338,6 +355,22 @@ export default function PlaceOffscreen() {
 
   const dockVisible = mode === 'contrast' && dockPhase !== 'hidden' && dockDir !== null
 
+  // 方角の帯そのもの(枠の子・通常フロー。企画側レビューで「枠の内側に重なると行が
+  // 隠れる」と指摘され、絶対配置での重なりからやめた――下記「実装上の判断5」参照)
+  const bandNode = mode === 'default' && indicator && (
+    <button
+      type="button"
+      key={indicator.dir}
+      className={`mz-place-offscreen-dirband is-${indicator.dir}`}
+      onClick={() => handleReturn(indicator.dir)}
+    >
+      <span aria-hidden="true">
+        {indicator.dir === 'up' ? '▲' : '▼'} 現在地は {indicator.rows}行{indicator.dir === 'up' ? '上' : '下'}
+      </span>
+      <span className="mz-place-offscreen-sr-only">現在地へ戻る</span>
+    </button>
+  )
+
   return (
     <div className="mz-place-offscreen">
       <div className="mz-place-offscreen-row1">
@@ -374,6 +407,7 @@ export default function PlaceOffscreen() {
       </div>
 
       <div className="mz-place-offscreen-frame">
+        {indicator?.dir === 'up' && bandNode}
         <div
           ref={scrollRef}
           className="mz-place-offscreen-scroll"
@@ -398,20 +432,7 @@ export default function PlaceOffscreen() {
             )
           })}
         </div>
-
-        {mode === 'default' && indicator && (
-          <button
-            type="button"
-            key={indicator.dir}
-            className={`mz-place-offscreen-dirband is-${indicator.dir}`}
-            onClick={() => handleReturn(indicator.dir)}
-          >
-            <span aria-hidden="true">
-              {indicator.dir === 'up' ? '▲' : '▼'} 現在地は {indicator.rows}行{indicator.dir === 'up' ? '上' : '下'}
-            </span>
-            <span className="mz-place-offscreen-sr-only">現在地へ戻る</span>
-          </button>
-        )}
+        {indicator?.dir === 'down' && bandNode}
 
         {dockVisible && dockDir && (
           <span
