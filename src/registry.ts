@@ -103,6 +103,9 @@ import ResumeStale from './specimens/resume-stale'
 import NoPlaceYet from './specimens/no-place-yet'
 import PlaceAsRange from './specimens/place-as-range'
 import PlaceWithoutRows from './specimens/place-without-rows'
+import PlacePlaysItself from './specimens/place-plays-itself'
+import PlaceOffscreen from './specimens/place-offscreen'
+import ViewFollows from './specimens/view-follows'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -1371,6 +1374,39 @@ export const specimens: Specimen[] = [
     ecology:
       'No.97 が「現在地は座標ではなく**行の同一性**で持て」と言えたのは、台帳に**行という不変量**があったから。地図・キャンバス・波形のような連続空間には、それに当たるものが1つも無い。**No.97 の答えは、行の無い空間では言い換える先を持たない。** 素朴な答え「見ている中心の座標＋倍率」は No.97 が撃った座標そのもので、図形が動けば同じ座標が別の場所を指す。実測で対照（座標で持つ）は「保存 → 配置が変わった → 復元」のあとワールド座標の偏差 **0.0px**——**完璧に保存されている**のに、指していた `A棟` までの距離は **113.47px** で、現在地は何も無いところに着地した（No.100「座標だけが嘘になる」の、行の無い空間での再演）。既定は現在地を `{基準の id, dx, dy, 倍率}` で持つ。同じ操作で基準との相対ベクトルの偏差は **0.0px**、`A棟` は画面内に見えたまま。ここで実装が1つ、企画に書かれていなかったことを教えた——**「一緒に運ばれる」に専用のコードが要らない**。`screen = (world − viewOrigin) × zoom` はワールド座標に関して線形なので、印のワールド座標が `基準の中心 + {dx,dy}` の導出値である限り、矩形と印に同じ尺の transition を独立に張るだけで、補間の**中割りまで含めて**オフセットが保たれる。**追従を書いたのではなく、追従せざるを得ない持ち方を選んだら結果としてついてきた。** 連続空間には、行の世界に無かった問題が2つある。ひとつは**不動点**。倍率を変えるとき画面のどの点を動かさないかを決めなければならない（No.100 は保つべきものが1つ＝読みかけ行の上端だった）。既定は**読み手が指した点**を不動点にする——実測で倍率 1.0→3.0 の 20 ステップ全部で印の画面座標の最大偏差は **0.0px**、対照（画面中心を不動点にする）では **62.94px** 流れて、指した場所を見失う。もうひとつは**「近い」が倍率で変わる**こと。倍率が上がると、いま基準にしているものは粒度が粗すぎて役に立たなくなる。だから基準は**持ち替わる**。黙って持ち替えると同じ現在地が別の名前で呼ばれるので、引き出し線が旧基準から新基準へ**滑って繋ぎ変わり**（持ち替えをまたぐ21サンプル全部で線の個数は **1**——消えて湧かない）、帯が `"基準をA棟 3F 東に持ち替えました（A棟から）"` と**新旧両方の名前**で名乗る。持ち替えが起きない範囲では帯は**0回**しか語らない（保てているうちは黙る）。持ち替えの閾値は**幅を持つ**（上り 2.5／下り 2.2）。5往復で切り替わりはちょうど **10回**、境界のすぐ上で ±0.05 を往復させると **0回**——単純な閾値ならバタつくところが、状態として持つと止まる。企画が指定しなかった決めを実装が1つ足した。**基準にできるのは、その倍率で画面に出ているものだけ**——細かい粒度の図形の表示条件に、基準選定と**同じ状態**（ヒステリシス付きの1個の真偽値）をそのまま使っている。表示だけを素の閾値で判定すると、下り 2.2〜2.5 のあいだに「見えていないのに基準」という状態が開く。**規則が画面から読めることと、規則が破れないことが、同じ1つの変数で担保されている。** 最後に、この標本には図鑑で初めての担体がある——**世界に固定された薄いグリッド**。連続空間そのものを描く担体で、これが無いと倍率を上げた画面はただの白地になり、**不動点の主張が動きとして見えない**。既定では印が1点に貼り付いたままグリッドだけが流れ、対照ではグリッドごと全部が流れて印が画面外へ出ていく。**空間を描かないと、空間についての主張は動きにならない。**',
     Component: PlaceWithoutRows,
+  },
+  {
+    id: 'place-plays-itself',
+    no: 105,
+    nameJa: '自分で動く現在地',
+    nameEn: 'Place Plays Itself',
+    category: 'ナビゲーション',
+    trigger: 'TODO',
+    principles: ['TODO'],
+    ecology: 'TODO',
+    Component: PlacePlaysItself,
+  },
+  {
+    id: 'place-offscreen',
+    no: 106,
+    nameJa: '見えていない現在地',
+    nameEn: 'Place Offscreen',
+    category: 'ナビゲーション',
+    trigger: 'TODO',
+    principles: ['TODO'],
+    ecology: 'TODO',
+    Component: PlaceOffscreen,
+  },
+  {
+    id: 'view-follows',
+    no: 107,
+    nameJa: '追いかける視界',
+    nameEn: 'View Follows',
+    category: 'ナビゲーション',
+    trigger: 'TODO',
+    principles: ['TODO'],
+    ecology: 'TODO',
+    Component: ViewFollows,
   },
 ]
 
