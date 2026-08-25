@@ -55,7 +55,27 @@ import './style.css'
    scrollTopをプログラムから書き換えてもブラウザは'scroll'イベントを発火するので、
    onScrollハンドラ(setScrollTop)が唯一の経路として状態に反映する。企画書の「スクロールは
    ボタンでも生のスクロールでも起きること(onScrollを見る実装にする)」をそのまま設計に
-   採用した形――経路を二重に持たない。
+   採用した形――経路を二重に持たない。ただしこれは「スクロールが起きたあとは正しい」を
+   保証するだけで、「まだ一度もスクロールが起きていない瞬間」を無条件に保証しない――
+   下記「実装上の判断4」の不具合はまさにこの隙間で起きた。
+
+   ---- 実装上の判断4(企画側レビューで発覚・修正): 述語のはずが「初回はイベント任せ」に
+   なっていた ----
+   答え(c)は「判定は閾値ではなく述語(交差判定)」「述語ならいつ評価しても同じ答えになる」と
+   主張している。初版はこの主張を自ら破っていた: 初期表示を「現在地が見えている」デモに
+   見せたくて、Reactのscrolltop状態を`centeredScrollTop(12)`(=289)で初期化する一方、
+   実際のスクロール可能なDOM要素は生成された瞬間から常にscrollTop=0だった。DOM側へ289を
+   書き込む処理をどこにも書いていなかったため、初回描画の時点で「Reactが信じているscrollTop
+   (289・可視域内)」と「本当のDOM(0・可視域外)」が食い違い、述語(intersects)は嘘の289を
+   材料に「見えている」と答えて方角の帯を出さなかった――事実(現在地は12行目、可視域外)と
+   画面が一致しない状態が、スクロールを1度も起こさない限りずっと残った。原因は「述語の材料
+   (scrollTop)そのものが、初回描画とモード切替の瞬間だけonScrollイベントを経由しない特別
+   ルートで書き換えられていた」こと。直し方は「特別ルートを無くす」――初期値をDOMの本当の
+   初期値と同じ0にし(「見えている」演出そのものをやめる)、モード切替時もDOMとReactの
+   scrollTopを同じ操作の中で0に揃える(el.scrollTopとsetScrollTopを同時に書き、'scroll'
+   イベントの発火とその反映を待たない)。これで述語の材料が常にDOMの実値と一致し、
+   マウント直後・モード切替直後・現在地の置き直し直後のいずれで評価しても、レンダーの
+   たびに同じ導出(intersects)が走るようになった。
 
    ---- 実装上の判断3: 対照の「張り付く印」は、実は行の印と同一DOM要素ではいられない ----
    企画は対照を「1つの担体で兼ねる」と書いているが、実装すると見た目の話であって物理的な
@@ -130,20 +150,63 @@ function makeBezierEase(x1: number, y1: number, x2: number, y2: number) {
 }
 const returnEase = makeBezierEase(0.22, 0.61, 0.36, 1)
 
-// 40行の台帳。文言は"#01"のような固定文字列で作る(乱数を使わない。企画書の指定どおり)
-const ROW_LABELS = Array.from({ length: ROW_COUNT }, (_, i) => `#${String(i + 1).padStart(2, '0')}`)
-
-// 現在地行を可視域の縦中央へ置く初期scrollTop。「置いた直後は見えている」デモ状態から始める
-function centeredScrollTop(place: number): number {
-  const rowTop = (place - 1) * ROW_H
-  return clamp(rowTop - (VISIBLE_H - ROW_H) / 2, 0, MAX_SCROLL_TOP)
-}
+// 40行の台帳。文言は短い固定フレーズで作る(乱数・時計を使わない。企画書の指定どおり)。
+// 板が「読むもの」に見えるよう、行番号だけでなく短い業務語彙を添える(企画側レビューで追加)
+const ROW_TASKS = [
+  '受領の確認',
+  '見積りの送付',
+  '発注書の確認',
+  '検収の記録',
+  '請求書の照合',
+  '経費の申請',
+  '出張報告の提出',
+  '稟議書の起票',
+  '備品の発注',
+  '名刺の印刷依頼',
+  '会議室の予約',
+  '郵便物の仕分け',
+  '来客対応の記録',
+  '電話メモの共有',
+  '資料の印刷',
+  '座席表の更新',
+  '契約書の捺印',
+  '議事録の作成',
+  '資料の配布',
+  '案件の登録',
+  '顧客情報の更新',
+  '見積書の修正',
+  '納品書の発行',
+  '検収書の確認',
+  '支払いの確認',
+  '稟議の承認',
+  '出勤簿の確認',
+  '休暇届の受理',
+  '備品の棚卸し',
+  '掲示物の更新',
+  '名簿の整理',
+  '会議日程の調整',
+  '資料の校正',
+  '議題の整理',
+  '議事の共有',
+  '案内状の送付',
+  '申請書の受付',
+  '承認待ちの確認',
+  '台帳の更新',
+  '記録の保存',
+] as const
+const ROW_LABELS = Array.from(
+  { length: ROW_COUNT },
+  (_, i) => `#${String(i + 1).padStart(2, '0')} ${ROW_TASKS[i % ROW_TASKS.length]}`,
+)
 
 /** 見えていない現在地: 現在地は1pxも動かない。動くのは視界のほう。方角は現在地から生えない。 */
 export default function PlaceOffscreen() {
   const [mode, setMode] = useState<Mode>('default')
   const [place, setPlace] = useState(DEFAULT_PLACE) // 1始まりの行番号。スクロールでは変わらない
-  const [scrollTop, setScrollTop] = useState(() => centeredScrollTop(DEFAULT_PLACE))
+  // 初期値は0。スクロール可能なDOM要素は生成された瞬間からscrollTop=0であり、Reactの状態を
+  // それ以外の値で初期化すると「実際のDOMは0なのにReactは別の値を信じている」という
+  // 状態とDOMの不一致が初回描画の一瞬だけ生まれる(下記「実装上の判断4」で見つかった不具合)
+  const [scrollTop, setScrollTop] = useState(0)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const returnRafRef = useRef<number | null>(null)
@@ -235,10 +298,13 @@ export default function PlaceOffscreen() {
       cancelAnimationFrame(returnRafRef.current)
       returnRafRef.current = null
     }
+    // DOMとReactの状態を同じ操作の中で両方0に揃える(scrollイベント経由の反映を待たない)。
+    // 'scroll'イベントだけに頼ると、DOMへの書き込みとReact状態への反映のあいだに
+    // 一瞬のズレが生じ得る――そのズレの間に方角の担体が事実と異なる答えを返してしまう
+    // (下記「実装上の判断4」参照)。ここは初回マウントと同じ規則(scrollTop=0)に揃える。
     const el = scrollRef.current
-    const top = centeredScrollTop(DEFAULT_PLACE)
-    if (el) el.scrollTop = top // 'scroll'イベント経由でsetScrollTopにも反映される
-    else setScrollTop(top)
+    if (el) el.scrollTop = 0
+    setScrollTop(0)
   }, [])
 
   // 押して戻る(答え(d))。現在地行を可視域の縁に一致させる位置まで、距離に依らず280msで

@@ -66,10 +66,27 @@ import './style.css'
    ---- 実装上の判断3: 「借りている移動」と「頼まれた移動」を同じscrollTopの
         上で作り分ける ----
    既定の追随(借りている)は毎回の新着でel.scrollTopへ即座に代入するだけ(遷移
-   なし)。再開(頼まれた)はrequestAnimationFrameで320ms・ぷるん
-   (cubic-bezier(0.34,1.56,0.64,1)。この回の基本イージング)をかけて手動で
-   補間する。同じ要素の同じプロパティ(scrollTop)が、誰に頼まれた移動かで
-   経路の有無を切り替えている、というのがC9の主張そのもの。
+   なし)。再開(頼まれた)はrequestAnimationFrameで320ms・減速のみのイージング
+   (cubic-bezier(0.16,1,0.3,1)。この回の基本イージング「ぷるん」を使わなかった
+   理由は下記「実装上の判断3.5」)をかけて手動で補間する。同じ要素の同じ
+   プロパティ(scrollTop)が、誰に頼まれた移動かで経路の有無を切り替えている、
+   というのがC9の主張そのもの。
+
+   ---- 実装上の判断3.5(企画書に無い、実装して初めて分かった誤り): 境界へ向かう
+        移動に「ぷるん」は使えない ----
+   再開の移動には当初、この回の基本イージング(cubic-bezier(0.34,1.56,0.64,1))を
+   素直に使っていた。だが実測すると、320msのうち可視の移動は最初の約125msしか
+   無く、残り約200msは見た目上ぴたりと静止していた(距離に依らず一定、という
+   要件そのものは満たしていたが、体感の尺が320msより遥かに短く見える)。原因は
+   このイージングがt=0.55付近でy≈1.10までオーバーシュートする(ぷるん、なので
+   意図的に)ことと、再開の目的地がscrollTopの物理的な最大値であることが噛み
+   合わさったため——y>1の区間はブラウザがscrollTopを最大値で無条件にクランプし、
+   JS側は律儀に(クランプされて画面には出ない)オーバーシュート分を計算し続けて
+   いるだけになる。「行き先が可動域の端」という条件は、他の標本(scale/opacityの
+   ぷるん)には無い、スクロール特有の制約だった。対策として再開だけ減速のみの
+   カーブ(cubic-bezier(0.16,1,0.3,1))に差し替えた——この回の基本イージングを
+   「借りている移動」だけでなく「可動域の端へ向かう頼まれた移動」でも避ける、
+   という追加の但し書きが要ることに、実測して初めて気づいた。
 
    ---- 実装上の判断4(企画書との差分): 対照の「280msのtransition」はCSSの
         scroll-behavior:smoothではなく、既定と同じ仕組み(rAFの手動トゥイーン)で
@@ -231,7 +248,7 @@ export default function ViewFollows() {
     [cancelContrastTween, writeScrollTop],
   )
 
-  // 再開: 頼まれた移動。320ms・ぷるんで経路を見せる。尺は距離に依らず一定
+  // 再開: 頼まれた移動。320ms・減速のみで経路を見せる。尺は距離に依らず一定
   const startResumeTween = useCallback(
     (el: HTMLDivElement, target: number) => {
       cancelResumeTween()
@@ -327,7 +344,7 @@ export default function ViewFollows() {
     el.scrollTop = Math.max(0, el.scrollTop - UP_STEP)
   }, [])
 
-  // 帯: 再開は頼まれた移動なので経路を見せる(320ms・ぷるん)
+  // 帯: 再開は頼まれた移動なので経路を見せる(320ms・減速のみ)
   const handleResume = useCallback(() => {
     const el = scrollRef.current
     if (!el || followingRef.current) return
