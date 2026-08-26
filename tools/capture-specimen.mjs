@@ -1115,6 +1115,26 @@ const CHOREO = {
     await page.getByRole('button', { name: '第1節 適用範囲を開く' }).click()
     await sleep(2000) // 開き直しても現在地は戻らない。畳んだだけで現在地を失っている
   },
+
+  'place-at-live-edge': async (page) => {
+    /* 撮るべきは「追いついたのに未読が残る」1コマ。そこへ行くには
+       追従を外して**5秒以上**待つ必要がある（未読が可視行数を超えないと、
+       追いついた時点で全部見えてしまって未読が 0 になる） */
+    await sleep(2200) // ライブ中。囲みは1個も無く、右下の●LIVEだけが現在地を言う
+    await page.getByRole('button', { name: '▲', exact: true }).click()
+    await page.getByRole('button', { name: '▲', exact: true }).click()
+    await sleep(1800) // ●LIVE が消え、読んでいた行に囲みが立ち、下に戻り道が湧く
+    await sleep(5200) // 台帳は伸び続けるが、囲みの行は1pxも動かない。増えるのは未読の数だけ
+    await page.locator('.is-catch-up').click()
+    await sleep(2600) // 追いついた（●LIVE が戻る）のに、未読の数は消えずに残る＝別の事実
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1400) // 対照はライブ中も最終行に囲みが立つ＝行が増えるたび現在地が飛び移る
+    await page.getByRole('button', { name: '▲', exact: true }).click()
+    await page.getByRole('button', { name: '▲', exact: true }).click()
+    await sleep(4200)
+    await page.locator('.is-catch-up').click()
+    await sleep(2400) // 押した瞬間の末尾へ飛ぶので、着地したときにはもう末尾ではない。件数も消える
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
