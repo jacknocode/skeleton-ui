@@ -1093,6 +1093,28 @@ const CHOREO = {
     }
     await sleep(2000) // 頼んでいない窓まで一緒に動き、2つの窓が同じものを映し続ける
   },
+
+  'place-in-collapsed': async (page) => {
+    /* 撮るべきは「囲みが消えて、別の形の担体が親の行に湧く」瞬間と、
+       その担体が段数を言い直す瞬間。対照は「親に囲みが移る」1カットで足りる */
+    await sleep(1100) // 現在地(適用除外)は見えている。囲み1個
+    await page.getByRole('button', { name: '第1節 適用範囲を畳む' }).click()
+    await sleep(1500) // 囲みが消え、親の行に左の縦棒と「1段内」が湧く(形が違う担体)
+    await page.getByRole('button', { name: '第1章 総則を畳む' }).click()
+    await sleep(1700) // 代弁する親が外側へ移り、数だけが「2段内」に言い直される
+    await page.locator('.is-holds-place').click()
+    await sleep(1900) // 戻り道は担体自身。押すと開いて現在地が枠内に着地する
+    await page.getByRole('button', { name: '第1節 適用範囲を畳む' }).click()
+    await sleep(1200) // もう一度畳む。ここから「畳まれた中の現在地を送る」を見せる
+    await page.getByRole('button', { name: '↓ 現在地を送る' }).click()
+    await sleep(1800) // 現在地は畳まれた外の次の可視行へ出る。担体は囲みへ戻る
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await page.getByRole('button', { name: '第1節 適用範囲を畳む' }).click()
+    await sleep(1600) // 対照は親の行に同じ囲みが立つ＝「親が現在地」と読める
+    await page.getByRole('button', { name: '第1節 適用範囲を開く' }).click()
+    await sleep(2000) // 開き直しても現在地は戻らない。畳んだだけで現在地を失っている
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
