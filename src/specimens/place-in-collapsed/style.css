@@ -1,0 +1,26 @@
+.mz-place-in-collapsed {
+  padding: 12px 24px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  font-weight: 800;
+  color: #5c5c5c;
+  cursor: pointer;
+}
+
+/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
+.mz-place-in-collapsed.is-active {
+  animation: mz-place-in-collapsed-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-place-in-collapsed-pop {
+  30% {
+    transform: scale(1.2, 0.8);
+  }
+  60% {
+    transform: scale(0.9, 1.1);
+  }
+  100% {
+    transform: none;
+  }
+}
