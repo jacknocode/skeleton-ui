@@ -1135,6 +1135,25 @@ const CHOREO = {
     await page.locator('.is-catch-up').click()
     await sleep(2400) // 押した瞬間の末尾へ飛ぶので、着地したときにはもう末尾ではない。件数も消える
   },
+
+  'place-not-loaded': async (page) => {
+    /* 撮るべきは「取り寄せ中は枠のどこも指さない」と「対照は届いた瞬間に囲みが跳ぶ」の2コマ。
+       跳びは 26px しかないので、対照は届く前後をたっぷり静止させて見せる */
+    await sleep(1300) // 現在地は3行目。手元にあるので囲みが立っている
+    await page.getByRole('button', { name: '320行目へ' }).click()
+    await sleep(1500) // 囲みが消え、枠の外の帯が「320行目・取り寄せ中」とだけ名乗る。位置は指さない
+    await sleep(1600) // 届くと帯は方角へ引き継がれる（320行目・314行下）。枠は1pxも動かない
+    await page.locator('.is-place-offscreen').click()
+    await sleep(1900) // 押したときだけ飛ぶ。着地して囲みが立つ
+    await page.getByRole('button', { name: '取り寄せを失敗させる' }).click()
+    await sleep(2000) // 失敗しても現在地は壊れない。再取得の導線は担体自身に載る
+    await page.getByRole('button', { name: '再試行' }).click()
+    await sleep(2000) // 通ると撃ち分けが復帰する。現在地の値は一度も変わっていない
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1000)
+    await page.getByRole('button', { name: '320行目へ' }).click()
+    await sleep(2600) // 対照は骨の上に囲みを置き、届いた瞬間に 26px 跳ぶ＝現在地が動いたと読める
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
