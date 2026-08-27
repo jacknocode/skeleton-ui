@@ -1,26 +1,233 @@
+/* No.111「一度に20個変わる」
+   モノクロ・自己完結。色トークンは図鑑のパレット(#3d3d3d 濃 / #8c8c8c 中 /
+   #d6d6d3 淡 / #eaeae8 背景 / #f5f5f3 反転文字 / #fff)を踏襲。
+
+   確定の拍(mz-resolution-burst-tick)は transform: scaleY() だけで動かす——
+   height/paddingで動かすと行の実効サイズが変わり、後続要素のoffsetTopがずれる
+   (No.99 の再演)。値の着地は基本のぷるん、拍と地の沈みは跳ねない ease-out
+   (「確定は事実であって喜びではない」)。is-instant は追い越しで確定した項目の
+   演出だけを消す印で、状態の意味(is-settled等)には触れない。 */
+
 .mz-resolution-burst {
-  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 340px;
+}
+
+/* ---------- 1行目: 未見バッジ / 件数ラベル + 既定・対照トグル ---------- */
+
+.mz-resolution-burst-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 20px;
+}
+
+.mz-resolution-burst-unseen {
+  padding: 3px 9px;
   border-radius: 999px;
+  background: #eaeae8;
+  color: #5c5c5c;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.mz-resolution-burst-unseen:hover {
+  background: #e0e0dd;
+}
+
+.mz-resolution-burst-count {
+  padding: 3px 9px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #b7b7b3;
+}
+
+.mz-resolution-burst-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-resolution-burst-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-resolution-burst-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 2行目: 操作ボタン ---------- */
+
+.mz-resolution-burst-row2 {
+  display: flex;
+  gap: 5px;
+}
+.mz-resolution-burst-op-btn {
+  flex: 1 1 auto;
+  padding: 6px 4px;
+  border-radius: 9px;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 9.5px;
   font-weight: 800;
   color: #5c5c5c;
   cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s;
+}
+.mz-resolution-burst-op-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+}
+.mz-resolution-burst-op-btn:active {
+  transform: scale(1.03, 0.94);
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-resolution-burst.is-active {
-  animation: mz-resolution-burst-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 盤(17〜6行。段はラベルではなく「間」で語る) ---------- */
+
+.mz-resolution-burst-board {
+  display: flex;
+  flex-direction: column;
+  width: 340px;
+  padding: 4px 0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
 }
-@keyframes mz-resolution-burst-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+
+.mz-resolution-burst-tier {
+  display: flex;
+  flex-direction: column;
+}
+.mz-resolution-burst-tier + .mz-resolution-burst-tier {
+  margin-top: 4px;
+  border-top: 1px solid #eeeeec;
+}
+
+.mz-resolution-burst-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 13px;
+  padding: 0 10px 0 12px;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #8c8c8c;
+  background: transparent;
+}
+
+/* 確定の拍: 左端2pxの縦棒。scaleYのみで動かす(レイアウトに触れない) */
+.mz-resolution-burst-tick {
+  position: absolute;
+  left: 0;
+  top: 1px;
+  bottom: 1px;
+  width: 2px;
+  background: #3d3d3d;
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 90ms ease-out;
+}
+.mz-resolution-burst-row.is-confirmed .mz-resolution-burst-tick {
+  transform: scaleY(1);
+}
+.mz-resolution-burst-row.is-instant .mz-resolution-burst-tick {
+  transition: none;
+}
+
+/* 地の沈み: 確定の瞬間だけ一段沈んで戻る(120ms、跳ねない) */
+.mz-resolution-burst-row.is-confirmed {
+  animation: mz-resolution-burst-dip 120ms ease-out;
+}
+.mz-resolution-burst-row.is-instant {
+  animation: none;
+}
+@keyframes mz-resolution-burst-dip {
+  0% {
+    background: transparent;
   }
-  60% {
-    transform: scale(0.9, 1.1);
+  35% {
+    background: #eaeae8;
   }
   100% {
-    transform: none;
+    background: transparent;
   }
+}
+
+.mz-resolution-burst-row.is-settled {
+  color: #3d3d3d;
+}
+
+.mz-resolution-burst-label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mz-resolution-burst-value {
+  flex: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+/* 値の着地: 変化があった項目だけ、拍の直後に基本のぷるんで動く */
+.mz-resolution-burst-row.is-settled.is-changed .mz-resolution-burst-value {
+  animation: mz-resolution-burst-land 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-resolution-burst-row.is-instant .mz-resolution-burst-value {
+  animation: none;
+}
+@keyframes mz-resolution-burst-land {
+  0% {
+    transform: scale(0.85);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.mz-resolution-burst-delta {
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #8c8c8c;
+}
+.mz-resolution-burst-delta.is-up {
+  color: #3d3d3d;
+}
+
+/* 未見の縁: 確定はしたが読み手がまだ触れていない行。時間では消えない */
+.mz-resolution-burst-row.is-unseen.is-settled {
+  box-shadow: inset 2px 0 0 0 #c7c7c3;
+}
+.mz-resolution-burst-row.is-unseen.is-settled .mz-resolution-burst-label::after {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  margin-left: 5px;
+  border-radius: 999px;
+  background: #b7b7b3;
+  vertical-align: middle;
 }

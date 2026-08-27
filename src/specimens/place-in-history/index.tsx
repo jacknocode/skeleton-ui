@@ -390,7 +390,14 @@ export default function PlaceInHistory() {
           <div className="mz-place-in-history-history" aria-hidden="true">
             {path.map((entry, i) => {
               const kind = i < cursor ? 'past' : i === cursor ? (currentGone ? 'gone' : 'current') : 'future'
-              return <span key={entry.seq} className={`mz-place-in-history-dot is-${kind}`} />
+              /* 受け入れ条件が「担体の個数」で書かれているので、欠けた点には仕様どおりの
+                 名前(is-place-gone)も付ける。数える相手は帯(note)ではなく点のほう1つだけ */
+              return (
+                <span
+                  key={entry.seq}
+                  className={`mz-place-in-history-dot is-${kind}${kind === 'gone' ? ' is-place-gone' : ''}`}
+                />
+              )
             })}
             {truncatingIds &&
               truncatingIds.map((id, i) => (

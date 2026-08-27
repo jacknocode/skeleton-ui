@@ -1154,6 +1154,125 @@ const CHOREO = {
     await page.getByRole('button', { name: '320行目へ' }).click()
     await sleep(2600) // 対照は骨の上に囲みを置き、届いた瞬間に 26px 跳ぶ＝現在地が動いたと読める
   },
+  'resolution-burst': async (page) => {
+    /* 撮るべきは3つ。(1) 既定: 「今週を解決する」で17項目が段の昇順・段の切れ目の
+       「間」で確定し、確定の拍が変化のない項目にも打つこと(未見バッジが増える)。
+       (2) 対照: 同じボタンで、評価額(段4)が真っ先に確定し、変化のない12項目は
+       最後まで拍すら立たない(確定したのか来ていないのか区別できない)まま、
+       待たされる。(3) 既定に戻り、「まとめて確定」で残りが尺ゼロで一気に確定し、
+       未見バッジが跳ね上がること。 */
+    await sleep(500)
+    await page.getByRole('button', { name: '今週を解決する' }).click()
+    await sleep(1900) // 既定: 段の昇順で確定が降りてくる。変化のない項目にも拍が打つ
+    await sleep(900) // 静止: 17件確定・変化5件・未見17件を読ませる
+
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(500)
+    await page.getByRole('button', { name: '今週を解決する' }).click()
+    await sleep(1300) // 対照: 評価額(段4)が真っ先に確定する＝因果と逆順
+    await sleep(2400) // 静止: 12項目が最後まで拍すら立たないまま待たされる
+
+    await page.getByRole('button', { name: '既定', exact: true }).click()
+    await sleep(500)
+    await page.getByRole('button', { name: '今週を解決する' }).click()
+    await sleep(250)
+    await page.getByRole('button', { name: 'まとめて確定' }).click()
+    await sleep(1500) // 既定: 追い越しで尺ゼロ確定、未見バッジが一気に増える
+  },
+  'place-in-history': async (page) => {
+    /* 撮るべきは3つ。(1)「戻る」が尺ゼロで着地し、履歴の点(台帳の外)だけが動くこと。
+       (2) 戻ってから別の行を選ぶと、履歴の先(進む▶)が捨てられること。
+       (3) 消してから戻ると、台帳の囲みは立たず「この位置の行はもうありません」が
+       名乗ること。対照は同じ手順を、台帳の担体だけ(経路を描く移動・黙った破棄・
+       黙ったすり替え)で受け、正反対の意味になる。 */
+    const row = (id) => page.locator(`.mz-place-in-history-row[data-row-id="${id}"]`)
+    const back = () => page.getByRole('button', { name: '◀ 戻る' }).click()
+    const forward = () => page.getByRole('button', { name: '進む ▶' }).click()
+    await sleep(900) // 台帳。履歴の点はまだ1つだけ
+    await row(4).click()
+    await sleep(600)
+    await row(9).click()
+    await sleep(600)
+    await row(16).click()
+    await sleep(1300) // 履歴の点が3つ。台帳の外の帯に居ることを読ませる
+    await back()
+    await sleep(1500) // 尺ゼロで着地。台帳の上を滑らない(囲みが行の中でいきなり湧く)
+    await back()
+    await sleep(1500)
+    await forward()
+    await sleep(1000)
+    await forward()
+    await sleep(1000)
+    // 分岐の破棄: 戻ってから別の行を選ぶ
+    await back()
+    await sleep(500)
+    await back()
+    await sleep(900)
+    await row(20).click()
+    await sleep(1900) // 捨てられる点が折れて消え、同じ瞬間に進む▶が無効になる
+    // 消えた行へ戻る
+    await row(12).click()
+    await sleep(600)
+    await page.getByRole('button', { name: 'この行を消す' }).click()
+    await sleep(700)
+    await back()
+    await sleep(2100) // 台帳の囲みは立たず、欠けた点と帯の文言だけが「もう無い」と言う
+    await forward()
+    await sleep(1300) // 消えた位置からでも進むは効く(履歴の構造自体は壊れていない)
+
+    // 対照: 台帳の担体だけで現在地を描く
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await row(1).click()
+    await sleep(500)
+    await row(8).click()
+    await sleep(1300) // 台帳の上を滑って見える=「戻る」を移動として描いてしまっている
+    await back()
+    await sleep(1300)
+    await row(3).click()
+    await sleep(600) // 黙って分岐を破棄する(捨てたことを言わない)
+    await forward()
+    await sleep(1500) // 進む▶は有効に見えるままなのに、押しても何も起きない(死んだボタン)
+    await row(9).click()
+    await sleep(500)
+    await row(11).click()
+    await sleep(600) // 消す対象(1つ前=9)と代役の候補(10)が同じ画面に収まる位置で消す
+    await page.getByRole('button', { name: 'この行を消す' }).click()
+    await sleep(600)
+    await back()
+    await sleep(1900) // 消えたはずの行へ、隣の行が黙ってすり替わって囲みが立つ
+  },
+  /* No.113: 主題は「再演中に本物が届いたら実演が優先される」こと(C4)なので、
+     既定・対照とも必ず再演の最中に「更新が届く」を押す瞬間を撮る。
+     既定は切って中断の帯が2秒で消えるところまで、対照は切らずに古い値のまま
+     1.3秒近く止まって見えるところまで、どちらも静止をたっぷり取る。 */
+  'replay-not-now': async (page) => {
+    const live = () => page.getByRole('button', { name: '更新が届く' })
+    const replay = () => page.getByRole('button', { name: 'もう一度' })
+    await sleep(700) // 初期状態(まだ何も届いていない)を読ませる間
+    // 既定: 実演 → 再演(帯+破線) → もう一度を再演中に押す(積まずに最初からやり直す)
+    await live().click()
+    await sleep(1500) // 0.30sの着地 + 数字を読む間
+    await replay().click()
+    await sleep(1300) // 破線と「13:42 の更新を再演中」の帯。値の動きは実演と見分けが付かない
+    await replay().click() // 再演中にもう一度: 2つ目が積まれず、最初からやり直る(C6)
+    await sleep(900)
+    // ここが主題: 再演の最中に本物を届かせる。既定は尺ゼロで切り、中断を1回だけ名乗る
+    await replay().click()
+    await sleep(250) // 再演の途中で
+    await live().click()
+    await sleep(2400) // 「再演を中断しました」の帯が2秒で消え、跡が残らないところまで
+    // 対照(ありがちな実装)へ切り替え
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(800)
+    await live().click()
+    await sleep(1400) // 実演は既定と同じ速さ・不透明度で普通に着地する
+    await replay().click()
+    await sleep(350) // 半透明・0.5倍速で古い値へ巻き戻り始める
+    await live().click() // 再演中に本物が届く。対照は切らずキューに積む(壊れ方の芯)
+    await sleep(2200) // 古い値のまま1.3秒近く止まって見える。押しても何も起きていないように読める
+    await sleep(700) // 遅れて実演が始まり、着地するところまで
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
