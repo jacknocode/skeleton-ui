@@ -1,26 +1,263 @@
+/* No.116「戻せない操作」
+   モノクロ・自己完結。色トークンは図鑑のパレット(#3d3d3d 濃 / #8c8c8c 中 /
+   #d6d6d3 淡 / #eaeae8 背景 / #f5f5f3 反転文字 / #fff)を踏襲。対照だけ、この標本の
+   壊れ方そのものとして赤(#c0392b)を持ち込む。
+
+   既定の2つのボタンは.mz-irreversible-step-btnという同一クラスだけを使う。差を
+   作る場所をボタンから履歴の列(strip)へ完全に移すのが主張なので、ここに
+   is-danger的な分岐を1つも書かない。 */
+
 .mz-irreversible-step {
-  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  position: relative;
+}
+
+/* ---------- 1行目: 既定/対照トグル ---------- */
+
+.mz-irreversible-step-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.mz-irreversible-step-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
   border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-irreversible-step-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-irreversible-step-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 操作ボタン(2つ。既定は完全に同じ見た目) ---------- */
+
+.mz-irreversible-step-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mz-irreversible-step-btn {
+  flex: 1 1 0;
+  padding: 12px 10px;
+  border-radius: 12px;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 800;
+  color: #3d3d3d;
+  cursor: pointer;
+  touch-action: none; /* pointerdown中にスクロールへ食われず、座標判定を安定させる */
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s;
+}
+.mz-irreversible-step-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.11);
+}
+.mz-irreversible-step-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.mz-irreversible-step-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+  transform: none;
+  pointer-events: none;
+}
+
+/* 対照だけが持つ壊れ方: 赤くて大きい。既定側には一切対応するクラスが無い */
+.mz-irreversible-step-btn.is-contrast-danger {
+  padding: 16px 10px;
+  background: #c0392b;
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 10px 22px rgba(192, 57, 43, 0.35);
+}
+.mz-irreversible-step-btn.is-contrast-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(192, 57, 43, 0.4);
+}
+
+/* ---------- 履歴の列(strip)。可逆/不可逆の差はここにしか出ない ---------- */
+
+.mz-irreversible-step-strip {
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+}
+
+.mz-irreversible-step-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #d6d6d3;
+  border: 1.5px solid transparent;
+}
+.mz-irreversible-step-dot.is-past {
+  background: #d6d6d3;
+}
+.mz-irreversible-step-dot.is-current {
+  width: 10px;
+  height: 10px;
+  background: #3d3d3d;
+}
+/* 対照: 過去/現在の塗り分けをしない(可逆性について何も言わない、が芯) */
+.mz-irreversible-step-dot.is-flat {
+  width: 9px;
+  height: 9px;
+  background: #b3b3b3;
+}
+
+/* 既定: 空席(可逆の予告)。No.114の予告の担体と同じ語彙——破線の輪郭・尺ゼロ・
+   現れ方はopacityだけ(90ms linear)。塗りの点(is-current/is-past)とは形も
+   描き方も違うので、実点と見間違えない */
+.mz-irreversible-step-seat {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: 1.5px dashed #b3b3b3;
+  background: transparent;
+  animation: mz-irreversible-step-seat-in 0.09s linear;
+}
+@keyframes mz-irreversible-step-seat-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* 既定: 締め線(不可逆の予告→引かれる→確定)。予告時は破線の縦線がopacityだけで
+   現れる(90ms linear)。押している間(is-armed)は内側の塗り(seal-fill)が
+   transform:scaleYで0→1、0.24s。離した瞬間の受理(data-week)はJS側で同期的に
+   決まるので、このtransitionの完了を待たない——短押しでも受理は即座、絵だけが
+   追いついてくる。確定後(is-committed)は同じtransitionのまま満タンで固定され、
+   永続する「ここから後ろは無い」の印になる。跳ねない(位置を写す担体には
+   基本イージングを使わない図鑑の規約どおり、線を引く動きも祝祭ではない)。 */
+.mz-irreversible-step-seal {
+  position: relative;
+  flex: none;
+  width: 3px;
+  height: 12px;
+  border-left: 1.5px dashed #b3b3b3;
+  animation: mz-irreversible-step-seat-in 0.09s linear;
+}
+.mz-irreversible-step-seal.is-committed {
+  border-left-style: solid;
+  border-left-color: #3d3d3d;
+}
+.mz-irreversible-step-seal-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1.5px;
+  height: 100%;
+  background: #3d3d3d;
+  transform-origin: top;
+  transform: scaleY(0);
+  transition: transform 0.24s ease-out;
+}
+.mz-irreversible-step-seal[data-armed='1'] .mz-irreversible-step-seal-fill,
+.mz-irreversible-step-seal.is-committed .mz-irreversible-step-seal-fill {
+  transform: scaleY(1);
+}
+
+/* ---------- 3行目: 戻る + 現在地の帯 ---------- */
+
+.mz-irreversible-step-row3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mz-irreversible-step-back-btn {
+  flex: none;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #eaeae8;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #5c5c5c;
+  cursor: pointer;
+  transition:
+    opacity 0.2s,
+    background-color 0.2s;
+}
+.mz-irreversible-step-back-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.mz-irreversible-step-note {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+
+/* ---------- 対照: 確認ダイアログ(動きの敗北——読み手を止めて文章を読ませる) ---------- */
+
+.mz-irreversible-step-dialog-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(61, 61, 61, 0.35);
+  border-radius: 14px;
+  z-index: 2;
+}
+
+.mz-irreversible-step-dialog {
+  width: 240px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+}
+.mz-irreversible-step-dialog-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #3d3d3d;
+  margin-bottom: 12px;
+}
+.mz-irreversible-step-dialog-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.mz-irreversible-step-dialog-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #eaeae8;
+  font-size: 11px;
   font-weight: 800;
   color: #5c5c5c;
   cursor: pointer;
 }
-
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-irreversible-step.is-active {
-  animation: mz-irreversible-step-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-@keyframes mz-irreversible-step-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-irreversible-step-dialog-btn.is-primary {
+  background: #c0392b;
+  color: #fff;
 }

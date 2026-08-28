@@ -1273,6 +1273,63 @@ const CHOREO = {
     await sleep(2200) // 古い値のまま1.3秒近く止まって見える。押しても何も起きていないように読める
     await sleep(700) // 遅れて実演が始まり、着地するところまで
   },
+  'irreversible-step': async (page) => {
+    /* 撮るべきは「差が履歴の列にしか出ない」こと。ボタンは2つとも同じ見た目なので、
+       主題はボタンの側では一切写らない——写るのは列の末尾だけ。
+       順序に1つ制約がある。確定すると両ボタンが disabled になるので、
+       可逆側の実演(点が増える/戻る)は**確定より前**に撮らないと撮れない。 */
+    const reversible = () => page.getByRole('button', { name: '配分を変える' })
+    const irreversible = () => page.getByRole('button', { name: '週を確定する' })
+    const back = () => page.getByRole('button', { name: '◀ 戻る' })
+    const center = async (loc) => {
+      const b = await loc.boundingBox()
+      return [b.x + b.width / 2, b.y + b.height / 2]
+    }
+    await sleep(900) // 静止。2つのボタンが同じ見た目であることを先に刷り込む
+    /* 順序をここで決めている。先に点を積んでから予告を見せる——
+       列が空のままホバーを撮ると、担体が地の色に浮くだけで**主張が読めない**
+       (実物を目視して分かった。数値条件は空でも通る)。列は、点が在って初めて列に見える。 */
+    for (const _ of [1, 2, 3]) {
+      await reversible().click()
+      await sleep(520) // 1操作 = 1点。可逆な操作は履歴に積まれる
+    }
+    await back().click()
+    await sleep(1200) // 押せる。点が1つ減る＝戻れる
+    // 押す前の予告。同じ場所(列の末尾)に、別の形が出る
+    await reversible().hover()
+    await sleep(1200) // 空席(破線の丸)が1個。「次はここに積まれる」
+    await irreversible().hover()
+    await sleep(1300) // 空席が消え、縦の締め線に入れ替わる。両方が出るコマは1枚も無い
+    await page.mouse.move(20, 20)
+    await sleep(700)
+    // ここが主題の芯: 押しているあいだは、まだ起きていない
+    const irr = await center(irreversible())
+    await page.mouse.move(...irr)
+    await sleep(400)
+    await page.mouse.down()
+    await sleep(800) // 締め線が引かれていく。週の数字はまだ動かない
+    await glide(page, irr, [irr[0] + 120, irr[1] + 90], 500) // 外へずらす
+    await page.mouse.up()
+    await sleep(1400) // 締め線が引き戻る。何も起きなかった＝引き返せた
+    // 短く押しても確定する（じらしではない。時間を人質に取っていない）
+    await page.mouse.move(...irr)
+    await sleep(500)
+    await page.mouse.down()
+    await sleep(60) // 60ms。長押しの閾値は無い
+    await page.mouse.up()
+    await sleep(2200) // 締め線が残り、週が+1。点は1つも増えず、◀戻る が無効になる
+    await page.mouse.move(20, 20)
+    await sleep(900) // 締め切られた列だけが画面に残る
+    // 対照: 赤く大きいボタンと確認ダイアログ。履歴の列には何の差も出ない
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1000)
+    await reversible().click()
+    await sleep(700)
+    await irreversible().click()
+    await sleep(1300) // ダイアログが出る。読み手は止められ、文章を読まされる
+    await page.getByRole('button', { name: 'はい' }).click()
+    await sleep(2200) // 点が1つ増えるだけ。戻れないことは画面のどこにも残らない
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
