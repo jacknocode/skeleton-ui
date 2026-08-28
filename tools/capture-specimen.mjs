@@ -1273,6 +1273,60 @@ const CHOREO = {
     await sleep(2200) // 古い値のまま1.3秒近く止まって見える。押しても何も起きていないように読める
     await sleep(700) // 遅れて実演が始まり、着地するところまで
   },
+  'preview-not-yet': async (page) => {
+    /* 撮るべきは3つ。ひとつ、握っているあいだ**事実の塗りが1pxも動かない**こと。
+       ふたつ、輪郭が**中割りを作らずに**つまみへ追従すること（尺ゼロ＝出来事ではない）。
+       みっつ、離す場所で「やめた」と「確定した」が分かれること。
+       確定へ向かうときは**真下へ垂直に**運ぶ。斜めに切ると、運んでいる途中に
+       ネイティブの range が値を書き換えてしまう（実装が掘り当てた罠。下記 index.tsx 参照）。 */
+    const slider = page.locator('.mz-preview-not-yet-slider')
+    const confirm = page.getByRole('button', { name: 'この配分で確定' })
+    const at = async (loc, u) => {
+      const b = await loc.boundingBox()
+      return [Math.round(b.x + b.width * u), Math.round(b.y + b.height / 2)]
+    }
+    const confirmCenter = async () => {
+      const b = await confirm.boundingBox()
+      return [Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2)]
+    }
+    await sleep(900) // 待機。予告は0個。事実の塗りだけが在る
+    // 1回目: 握って動かし、台の上で離す ＝「やめた」
+    const p0 = await at(slider, 0.34)
+    await page.mouse.move(...p0)
+    await page.mouse.down()
+    await sleep(700) // 破線の輪郭が opacity だけで現れる（幅は最初から行き先）
+    const p1 = await at(slider, 0.66)
+    await glide(page, p0, p1, 900) // 輪郭は中割りを作らずに追従する。塗りは動かない
+    await sleep(900)
+    await page.mouse.up()
+    await sleep(1500) // 輪郭は幅を変えずに消える。塗りは1pxも動かない＝「値は減っていない」
+    // 2回目: 握って動かし、握ったまま真下へ運んで確定ボタンの上で離す ＝「確定した」
+    const q0 = await at(slider, 0.3)
+    await page.mouse.move(...q0)
+    await page.mouse.down()
+    await sleep(600)
+    const q1 = await at(slider, 0.78)
+    await glide(page, q0, q1, 1000)
+    await sleep(700)
+    const c = await confirmCenter()
+    await glide(page, q1, [q1[0], c[1]], 400) // X を変えずに真下へ（値を動かさない）
+    await sleep(800) // 確定ボタンが光る＝「ここで離すと確定」
+    await page.mouse.up()
+    await sleep(2600) // 輪郭は消えず、塗りが輪郭の中を満たしにいく。評価額だけ中心では止まらない
+    await sleep(1200) // 外れた予告の跡が残っている（次に握るまで消えない）
+    // 対照: 事実の棒そのものを予告値まで伸ばして半透明にする
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    const r0 = await at(slider, 0.3)
+    await page.mouse.move(...r0)
+    await page.mouse.down()
+    await sleep(500)
+    const r1 = await at(slider, 0.78)
+    await glide(page, r0, r1, 1000) // 棒そのものが動く＝「もう起きた」と読める
+    await sleep(800)
+    await page.mouse.up()
+    await sleep(2200) // 離すと棒が元の値まで戻る＝「値が減った」と読める
+  },
   'compare-two-futures': async (page) => {
     /* 撮るべきは2つ。ひとつ、A を留め置いたまま B へポインタを移すあいだ
        **Aの輪郭が一度も消えない**こと(対照はここで必ず0個の隙間が空く)。
