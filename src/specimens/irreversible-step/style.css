@@ -5,7 +5,16 @@
 
    既定の2つのボタンは.mz-irreversible-step-btnという同一クラスだけを使う。差を
    作る場所をボタンから履歴の列(strip)へ完全に移すのが主張なので、ここに
-   is-danger的な分岐を1つも書かない。 */
+   is-danger的な分岐を1つも書かない。
+
+   ---- 追記: レール(場所の提示)----
+   履歴の列には点が0個の状態(=標本を開いた直後)がありうる。この標本の主張
+   「差は履歴の列にしか出ない」は、その空の状態でも列の位置・範囲が読め、かつ
+   空席/締め線のホバー予告が地の色に対して十分な濃さで読めて初めて成立する
+   (数値条件が通っていても目視で読めなければ主張が死ぬ、という図鑑の既存の
+   教訓の再演)。#c7c7c4のレール(場所だけを言う・事実は言わない・
+   No.95の担体には数えない)を敷き、その上に乗る空席/締め線の線色を
+   #b3b3b3→#6e6e6eへ、線幅を1.5px→2pxへ上げた。 */
 
 .mz-irreversible-step {
   display: flex;
@@ -99,6 +108,7 @@
 /* ---------- 履歴の列(strip)。可逆/不可逆の差はここにしか出ない ---------- */
 
 .mz-irreversible-step-strip {
+  position: relative;
   min-height: 26px;
   display: flex;
   align-items: center;
@@ -106,7 +116,26 @@
   padding: 2px 4px;
 }
 
+/* レール(場所の提示だけ。事実は何も言わない=No.95の担体ではない)。
+   点が0個でも「ここが履歴の列だ」を言うための土台。点・空席・締め線より
+   確実に弱い見た目(細い・薄い)にしつつ、地の色(#eaeae8)に対して常に
+   視認できる濃さ(#c7c7c4)を選ぶ。z-indexで確実に点たちの下に敷く。 */
+.mz-irreversible-step-rail {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 50%;
+  height: 2px;
+  border-radius: 999px;
+  background: #c7c7c4;
+  transform: translateY(-50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
 .mz-irreversible-step-dot {
+  position: relative;
+  z-index: 1;
   flex: none;
   width: 8px;
   height: 8px;
@@ -131,13 +160,16 @@
 
 /* 既定: 空席(可逆の予告)。No.114の予告の担体と同じ語彙——破線の輪郭・尺ゼロ・
    現れ方はopacityだけ(90ms linear)。塗りの点(is-current/is-past)とは形も
-   描き方も違うので、実点と見間違えない */
+   描き方も違うので、実点と見間違えない。線の色はレール(#c7c7c4)より確実に
+   濃い#6e6e6eにして、点が0個(=レールしか無い)状態でも形(丸)が読めるようにする */
 .mz-irreversible-step-seat {
+  position: relative;
+  z-index: 1;
   flex: none;
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  border: 1.5px dashed #b3b3b3;
+  border: 2px dashed #6e6e6e;
   background: transparent;
   animation: mz-irreversible-step-seat-in 0.09s linear;
 }
@@ -159,10 +191,11 @@
    基本イージングを使わない図鑑の規約どおり、線を引く動きも祝祭ではない)。 */
 .mz-irreversible-step-seal {
   position: relative;
+  z-index: 1;
   flex: none;
   width: 3px;
-  height: 12px;
-  border-left: 1.5px dashed #b3b3b3;
+  height: 13px;
+  border-left: 2px dashed #6e6e6e;
   animation: mz-irreversible-step-seat-in 0.09s linear;
 }
 .mz-irreversible-step-seal.is-committed {
@@ -173,7 +206,7 @@
   position: absolute;
   left: 0;
   top: 0;
-  width: 1.5px;
+  width: 2px;
   height: 100%;
   background: #3d3d3d;
   transform-origin: top;

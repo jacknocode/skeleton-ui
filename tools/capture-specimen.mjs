@@ -1273,6 +1273,49 @@ const CHOREO = {
     await sleep(2200) // 古い値のまま1.3秒近く止まって見える。押しても何も起きていないように読める
     await sleep(700) // 遅れて実演が始まり、着地するところまで
   },
+  'compare-two-futures': async (page) => {
+    /* 撮るべきは2つ。ひとつ、A を留め置いたまま B へポインタを移すあいだ
+       **Aの輪郭が一度も消えない**こと(対照はここで必ず0個の隙間が空く)。
+       ふたつ、決めたあと**塗りが伸び切ってから**もう片方が端から欠けること。
+       どちらも「移動の途中」が主題なので、ポインタは飛ばさず glide で運ぶ。 */
+    const hand = (c) => page.locator(`[data-hand][data-candidate="${c}"]`)
+    const center = async (loc) => {
+      const b = await loc.boundingBox()
+      return [b.x + b.width / 2, b.y + b.height / 2]
+    }
+    const A = await center(hand('a'))
+    const B = await center(hand('b'))
+    await sleep(900) // 待機。輪郭は0個。事実の塗りだけが在る
+    await page.mouse.move(...A)
+    await sleep(800) // 仮の予告が1個。触っているあいだだけ
+    await page.mouse.down()
+    await page.mouse.up()
+    await sleep(900) // 留め置く。ピンの印が付くが、形は輪郭のまま(濃くしない)
+    await glide(page, A, B, 700) // ここが芯: 移動のあいだ A の輪郭は消えない
+    await sleep(900)
+    await page.mouse.down()
+    await page.mouse.up()
+    await sleep(600)
+    await page.mouse.move(30, 330) // 舞台の外へ逃がして仮ホバーを消す
+    await sleep(2200) // 2つの未来が同じ形・同じ濃さ・同じ原点で並ぶ。比べている時間
+    await page.getByRole('button', { name: 'Aに決める' }).click()
+    await sleep(520) // 事実の塗りが A の輪郭の中を満たしにいく。B は微動だにしない
+    await sleep(900) // 満たし終えてから、B が端から欠けていく(幅は変えない)
+    await sleep(1600)
+    await page.getByRole('button', { name: 'やり直す' }).click()
+    await sleep(1000)
+    // 対照: ホバー中しか出ない。留め置けないので、比べるには記憶が要る
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await page.mouse.move(...A)
+    await sleep(900) // A の予告
+    await glide(page, A, B, 700) // 移動のあいだ予告が0個になる。比較が途切れる
+    await sleep(900) // B の予告。A はもう画面に無い
+    await glide(page, B, A, 700)
+    await sleep(1000) // 見比べるには、片方を覚えておくしかない
+    await page.getByRole('button', { name: 'Aに決める' }).click()
+    await sleep(2000)
+  },
   'irreversible-step': async (page) => {
     /* 撮るべきは「差が履歴の列にしか出ない」こと。ボタンは2つとも同じ見た目なので、
        主題はボタンの側では一切写らない——写るのは列の末尾だけ。

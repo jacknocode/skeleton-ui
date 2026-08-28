@@ -178,7 +178,13 @@ export default function PreviewNotYet() {
     const el = sliderRef.current
     if (!el) return true
     const r = el.getBoundingClientRect()
-    return clientY >= r.top - 10 && clientY <= r.bottom + 10
+    // 判定帯はサムの中心からごく細く取る(±4px)。<input>要素の見た目の高さ(26px)を
+    // そのまま帯にすると、確定ボタンへ斜めに向かう間ずっと「まだ台上」と判定され続け、
+    // その間もネイティブの値はXだけで動き続けるので、帯を出るまでの間にXがかなり
+    // 動いてしまう(踏んだ罠を参照)。帯を細くするほど「まだ台上と誤認する時間」が
+    // 短くなり、確定される値は離す直前の意図に近づく。
+    const cy = r.top + r.height / 2
+    return Math.abs(clientY - cy) <= 4
   }, [])
 
   const handlePointerDown = useCallback(() => {
