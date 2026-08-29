@@ -1154,25 +1154,25 @@ const CHOREO = {
   'place-reordered': async (page) => {
     /* 撮るべきは「現在地の行だけが動かず、周りが流れるコマ」と、
        束ねの窓が閉じた瞬間に位置と順位の数字が同時に変わること */
-    const arrive = page.getByRole('button', { name: /更新が届く/ })
-    const outside = page.getByRole('button', { name: /外で更新/ })
+    const arrive = page.getByRole('button', { name: '更新が届く', exact: true })
+    const outside = page.getByRole('button', { name: '外で更新が届く', exact: true })
+    const bundle = page.getByRole('button', { name: '3件まとめて届く', exact: true })
     await sleep(1100) // 現在地は真ん中あたりの行。左に順位の数字
     await arrive.click()
-    await sleep(1700) // 周りが滑り、現在地の行は1pxも動かない。数字だけが変わる
-    await arrive.click()
-    await sleep(1700)
+    await sleep(1800) // 周りが滑り、現在地の行は1pxも動かない。数字だけが変わる
     await outside.click()
-    await sleep(1900) // 画面外で起きた並べ替えは、縁の気配で「外で N件」と言う
-    await page.getByRole('button', { name: /まとめて/ }).click()
-    await sleep(2400) // 3件が続けて届いても、行が動くのは1回だけ（束ね）
-    await sleep(1200)
-    // 対照: 素直に並べ替える（補正なし・束ねなし・数字なし）
+    await sleep(2000) // 画面外で起きた並べ替えは、縁の気配で「外で N件」と言う
+    await bundle.click()
+    await sleep(2600) // 3件が続けて届いても、行が動くのは1回だけ（束ね）
+    await arrive.click()
+    await sleep(2200) // 現在地自身が更新されて先頭へ。守れない端では帯で言う
+    // 対照: 素直に並べ替える（補正なし・束ねなし・数字なし・気配なし）
     await page.getByRole('button', { name: '対照', exact: true }).click()
     await sleep(900)
     await arrive.click()
-    await sleep(1500) // 読みかけの行が枠内を流れていく
-    await page.getByRole('button', { name: /まとめて/ }).click()
-    await sleep(2600) // 束ねが無いので3回跳ね、どこを読んでいたか見失う
+    await sleep(1600) // 読みかけの行が枠内を流れていく
+    await bundle.click()
+    await sleep(2800) // 束ねが無いので3回跳ね、どこを読んでいたか見失う
   },
 }
 
