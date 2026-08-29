@@ -1,26 +1,262 @@
+/* No.110「順番のほうが変わる」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+   色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #8c8c8c 中 / #d6d6d3 淡 / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。
+
+   行(.mz-place-reordered-row)は絶対配置(position:absolute)で、DOM上の並び順は
+   ROWS配列のid順に固定——並べ替えはReactのkey並べ替えではなくtransform: translateYの
+   1プロパティだけで表現する(index.tsxの実装メモ4)。位置の層(このtransform)と
+   見た目の層(中身のテキスト)を分けているので、rank数字の<span key={rank}>が
+   remountでkeyframeを再生しても、行自身の位置(transform)には触れない。
+
+   .mz-place-reordered-row のtransitionルールは既定/対照で完全に同一(このファイル内に
+   is-contrast限定のtransition上書きは無い)。既定と対照の差はJS側の振る舞い
+   (scrollTopを書くか・束ねるか)だけで、CSSは尺・緩急・レイアウトを両者で共有する。 */
+
 .mz-place-reordered {
-  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+}
+
+/* ---------- 1行目: 既定/対照トグル ---------- */
+
+.mz-place-reordered-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.mz-place-reordered-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
   border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-place-reordered-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-place-reordered-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 操作: 5ボタン。flex-wrapで2行に折り返す(340px幅に収めるため) ---------- */
+
+.mz-place-reordered-ops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.mz-place-reordered-op-btn {
+  flex: 1 1 auto;
+  padding: 6px 7px;
+  border-radius: 9px;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 9.5px;
   font-weight: 800;
   color: #5c5c5c;
   cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s,
+    box-shadow 0.2s;
+}
+.mz-place-reordered-op-btn[data-op] {
+  flex: 0 1 auto;
+  min-width: 58px;
+}
+.mz-place-reordered-op-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+}
+.mz-place-reordered-op-btn:active:not(:disabled) {
+  transform: scale(1.05, 0.92);
+}
+.mz-place-reordered-op-btn:disabled {
+  cursor: default;
+  color: #c2c2bf;
+  box-shadow: none;
+  opacity: 0.6;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-place-reordered.is-active {
-  animation: mz-place-reordered-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 板(340×204で固定) ---------- */
+
+.mz-place-reordered-frame {
+  position: relative;
+  width: 340px;
+  height: 204px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
 }
-@keyframes mz-place-reordered-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
+
+.mz-place-reordered-scroll {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-anchor: none; /* 自前でscrollTopを補正するので、ブラウザの自動補正は切る */
+}
+
+/* 行はabsoluteなのでscrollHeightに寄与しない。この空のsizerだけがスクロール範囲を作る */
+.mz-place-reordered-sizer {
+  width: 1px;
+}
+
+.mz-place-reordered-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  height: var(--mz-pr-row-h, 34px);
+  padding: 0 14px 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #f0f0ee;
+  background: #fff;
+  /* 既定/対照で共有する唯一のtransitionルール。ここがC11(尺・緩急が既定/対照で
+     一致する)の根拠そのもの——is-contrastによる上書きは無い */
+  transition: transform var(--mz-pr-duration, 420ms) var(--mz-pr-ease, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.mz-place-reordered-rank {
+  flex: none;
+  width: 18px;
+  font-size: 10.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: #8c8c8c;
+  border-radius: 4px;
+  /* その場で差し替えて短く光らせるだけ(スロットは転がさない)。keyがrank変化ごとに
+     変わるのでこのanimationは毎回リマウントで再生される(index.tsxの(b)参照) */
+  animation: mz-place-reordered-rank-flash 0.5s ease-out;
+}
+@keyframes mz-place-reordered-rank-flash {
+  0% {
+    background: #3d3d3d;
+    color: #f5f5f3;
   }
   100% {
-    transform: none;
+    background: transparent;
+    color: #8c8c8c;
   }
 }
+
+.mz-place-reordered-label {
+  flex: 1 1 auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #5c5c5c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 現在地の囲み(座標を守る担体) ---------- */
+.mz-place-reordered-ring {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  right: 3px;
+  bottom: 3px;
+  box-sizing: border-box;
+  pointer-events: none;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 2px #3d3d3d;
+}
+
+/* ---------- 縁の気配(画面外の原因/束ね待ち。(c)(d)共通の担体) ---------- */
+.mz-place-reordered-hint {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: var(--mz-pr-row-h, 34px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 0 0 8px 8px;
+  animation: mz-place-reordered-hint-in 0.14s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-place-reordered-hint-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---------- 帯(守れなかったことを言う。(e)) ----------
+   高さは行1つぶん(var(--mz-pr-row-h))きっかりにする。半端な高さだと下の行の一部が
+   透けて重なって見える(place-offscreenのdir担体と同じ理由でROW_H一致にした)。 */
+.mz-place-reordered-clamped {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  height: var(--mz-pr-row-h, 34px);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  background: #d6d6d3;
+  color: #3d3d3d;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  animation: mz-place-reordered-clamped-in 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-place-reordered-clamped-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- 注記行 ---------- */
+.mz-place-reordered-note {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 動きを控えたい人へ ----------
+   グローバル側(src/styles/global.css)がtransition-duration/animation-durationを
+   一律0.01msに潰す。行のtransitionはCSSなのでそこで速くなる。rAFで手書きしている
+   scrollTop同期(index.tsx runScrollSync)はCSSのdurationとは独立したJS側の
+   DURATION_MS定数を使うが、この標本の主題(現在地を守る/守れない端を帯で言う)は
+   速さに依存しない構造なので、place-lost(No.93)と同じ理由で個別対応は不要 */
