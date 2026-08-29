@@ -1093,6 +1093,87 @@ const CHOREO = {
     }
     await sleep(2000) // 頼んでいない窓まで一緒に動き、2つの窓が同じものを映し続ける
   },
+
+  'place-in-collapsed': async (page) => {
+    /* 撮るべきは「囲みが代弁の印へ渡る瞬間」と「代弁が内側の親から外側の親へ渡る瞬間」。
+       印が2つ並ぶコマは1枚も無い——同じ1つの探索関数の裏表だから構造的に出ない */
+    const toggles = page.locator('.mz-place-in-collapsed-toggle')
+    const holder = page.locator('.mz-place-in-collapsed-holder')
+    await sleep(1000) // 現在地は深い孫の行。担体は囲みだけ
+    await toggles.nth(1).click()
+    await sleep(1800) // 行が描かれなくなり、囲みが消えて代弁の印が親の行に湧く
+    await toggles.nth(0).click()
+    await sleep(1900) // さらに外側を畳む。印は消えずに、外側の親の行へ滑って渡る
+    await sleep(1400) // 放っておいても開かない。時間では戻らない
+    await holder.click()
+    await sleep(2000) // 押すと閉じた親が全部開き、囲みが同じ行に戻る（枠内yも同じ）
+    await toggles.nth(1).click()
+    await sleep(1500) // もう一度畳んで、今度はキーで出てみる
+    await page.getByRole('button', { name: /現在地を送る/ }).click()
+    await sleep(2000) // 中から出て、閉じた親の次の描かれた行に立つ（＝移動したと言い切る）
+    // 対照: 畳んだら現在地を親へ移す（よくある実装）
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await toggles.nth(1).click()
+    await sleep(1700) // 畳んだ瞬間、現在地が親の行に書き換わる
+    await toggles.nth(1).click()
+    await sleep(2200) // 開き直しても戻らない。読み手は畳んだだけなのに現在地を失った
+  },
+
+  'place-at-live-edge': async (page) => {
+    /* 撮るべきは「境界の担体が1pxも動かないまま行だけが増えること」と、
+       追従を外した瞬間に境界の現在地が行の現在地へ渡ること */
+    const arrive = page.getByRole('button', { name: /1件届く/ })
+    await sleep(1200) // 末尾に居る。担体は最終行ではなく、終端の境界線に載っている
+    for (const _ of [1, 2, 3, 4]) {
+      await arrive.click()
+      await sleep(520) // 行は増えるが、境界の担体は同じ場所に居続ける
+    }
+    await sleep(1200)
+    await page.mouse.move(280, 240)
+    await page.mouse.wheel(0, -150)
+    await sleep(1800) // 追従が外れ、境界の担体が消えて読みかけの行に囲みが湧く
+    for (const _ of [1, 2, 3]) {
+      await arrive.click()
+      await sleep(560) // 末尾は伸び続ける。読みかけの行は1pxも動かない
+    }
+    await sleep(1600) // 帯は時間では消えない。件数だけが増えていく
+    await page.locator('[data-mark="behind"]').click()
+    await sleep(2200) // 戻る先は座標ではなく状態。着地までに増えた行も末尾に含む
+    // 対照: 末尾の「行」に印を置き、上へ逃げても引き戻す
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(800)
+    for (const _ of [1, 2, 3]) {
+      await arrive.click()
+      await sleep(560) // 1件増えるたび印が別の行へ飛ぶ＝現在地が動いたように見える
+    }
+    await page.mouse.wheel(0, -150)
+    await sleep(2200) // 上へ逃げても引き戻される。読み手が枠を取り返せない
+  },
+
+  'place-reordered': async (page) => {
+    /* 撮るべきは「現在地の行だけが動かず、周りが流れるコマ」と、
+       束ねの窓が閉じた瞬間に位置と順位の数字が同時に変わること */
+    const arrive = page.getByRole('button', { name: /更新が届く/ })
+    const outside = page.getByRole('button', { name: /外で更新/ })
+    await sleep(1100) // 現在地は真ん中あたりの行。左に順位の数字
+    await arrive.click()
+    await sleep(1700) // 周りが滑り、現在地の行は1pxも動かない。数字だけが変わる
+    await arrive.click()
+    await sleep(1700)
+    await outside.click()
+    await sleep(1900) // 画面外で起きた並べ替えは、縁の気配で「外で N件」と言う
+    await page.getByRole('button', { name: /まとめて/ }).click()
+    await sleep(2400) // 3件が続けて届いても、行が動くのは1回だけ（束ね）
+    await sleep(1200)
+    // 対照: 素直に並べ替える（補正なし・束ねなし・数字なし）
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await arrive.click()
+    await sleep(1500) // 読みかけの行が枠内を流れていく
+    await page.getByRole('button', { name: /まとめて/ }).click()
+    await sleep(2600) // 束ねが無いので3回跳ね、どこを読んでいたか見失う
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
