@@ -1,26 +1,279 @@
+/* No.109「逃げ続ける末尾」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+   色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡2 / #d6d6d3 淡 /
+   #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。
+
+   板は幅340px固定、可視6行×行高32px=192px。境界の担体(.mz-place-at-live-edge-edge-wrap)は
+   行の配列の外側、スクロールする台帳の**最後の要素**として置く——transformは一切持たず、
+   documentの流れとscrollTopだけで位置が決まる。追従が効いているあいだindex.tsx側が
+   毎フレームscrollTopを末尾へ揃え直すので、この要素のgetBoundingClientRect()は
+   常に同じ値に落ち着く(位置と見た目を分ける。実装上の判断2)。 */
+
 .mz-place-at-live-edge {
-  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+}
+
+/* ---------- 1行目: 自動トグル + 既定/対照 ---------- */
+
+.mz-place-at-live-edge-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.mz-place-at-live-edge-auto-btn {
+  flex: none;
+  padding: 5px 10px;
   border-radius: 999px;
+  background: #eaeae8;
+  font-size: 10px;
+  font-weight: 800;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-place-at-live-edge-auto-btn.is-on {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+.mz-place-at-live-edge-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-place-at-live-edge-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-place-at-live-edge-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 2行目: 操作3ボタン ---------- */
+
+.mz-place-at-live-edge-row2 {
+  display: flex;
+  gap: 6px;
+}
+.mz-place-at-live-edge-op-btn {
+  flex: 1 1 auto;
+  padding: 7px 6px;
+  border-radius: 10px;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 11px;
   font-weight: 800;
   color: #5c5c5c;
   cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s,
+    box-shadow 0.2s;
+}
+.mz-place-at-live-edge-op-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+}
+.mz-place-at-live-edge-op-btn:active:not(:disabled) {
+  transform: scale(1.05, 0.92);
+}
+.mz-place-at-live-edge-op-btn:disabled {
+  cursor: default;
+  color: #c2c2bf;
+  box-shadow: none;
+  opacity: 0.6;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-place-at-live-edge.is-active {
-  animation: mz-place-at-live-edge-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 板(340×192で固定。border-radius/box-shadow/背景はここだけに持たせる) ---------- */
+
+.mz-place-at-live-edge-frame {
+  position: relative;
+  width: 340px;
+  height: 192px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
 }
-@keyframes mz-place-at-live-edge-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+
+.mz-place-at-live-edge-scroll {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-anchor: none;
+}
+
+.mz-place-at-live-edge-row {
+  position: relative;
+  box-sizing: border-box;
+  height: var(--mz-pale-row-h, 32px);
+  padding: 0 12px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #f0f0ee;
+}
+.mz-place-at-live-edge-row-tag {
+  flex: none;
+  width: 26px;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #b3b3b3;
+}
+.mz-place-at-live-edge-row-text {
+  flex: 1 1 auto;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #5c5c5c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 新着行の湧き: 出発地の無い出現(No.102の答え)。opacityとscaleだけを動かし、
+   translateYは使わない——上から/下から滑り込ませると「そこから移動してきた」に読めてしまう。
+   行はtransformを他の用途に使っていないので、この一時的なscaleが後に残る心配は無い */
+.mz-place-at-live-edge-row.is-entering {
+  animation: mz-place-at-live-edge-row-in var(--mz-pale-row-enter-ms, 220ms) cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-place-at-live-edge-row-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
   }
-  60% {
-    transform: scale(0.9, 1.1);
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
-  100% {
-    transform: none;
+}
+
+/* ---------- 囲み担体(rowの現在地) ----------
+   行自身(position:relative)の内側に3px inset。行が現在地であるあいだしかDOMに存在しない。 */
+.mz-place-at-live-edge-ring {
+  position: absolute;
+  box-sizing: border-box;
+  top: 3px;
+  left: 3px;
+  right: 3px;
+  bottom: 3px;
+  pointer-events: none;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 2px #3d3d3d;
+  animation: mz-place-at-live-edge-ring-in var(--mz-pale-handoff-ms, 140ms) cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-place-at-live-edge-ring-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---------- 境界の担体(edgeの現在地) ----------
+   -edge-wrap: 位置だけを持つ層。transformを一切使わない(実装上の判断2)。台帳の最後の
+   要素として、行の並びの延長に置く——「最終行の下に張り付く線」という企画書の言葉どおり。
+   -edge-inner: 見た目(湧きのscale/opacity)だけを持つ層。ここにtransformを寄せることで、
+   -edge-wrap自身のgetBoundingClientRect()は湧きの最中も1px足りとも動かない。 */
+.mz-place-at-live-edge-edge-wrap {
+  box-sizing: border-box;
+  height: var(--mz-pale-edge-h, 26px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mz-place-at-live-edge-edge-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: mz-place-at-live-edge-edge-in var(--mz-pale-handoff-ms, 140ms) cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.mz-place-at-live-edge-edge-line {
+  width: 28px;
+  height: 2px;
+  background: #3d3d3d;
+  border-radius: 1px;
+}
+.mz-place-at-live-edge-edge-label {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #8c8c8c;
+  letter-spacing: 0.02em;
+}
+@keyframes mz-place-at-live-edge-edge-in {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---------- 対照専用の囲み(常に最終行に付く) ---------- */
+.mode-contrast .mz-place-at-live-edge-ring {
+  border-radius: 4px;
+}
+
+/* ---------- 帯(追従が外れているあいだだけ1本。枠に浮かせて高さを食わない) ----------
+   position:absoluteで枠上部に浮かせるので、帯の有無で.mz-place-at-live-edge-frameの
+   高さが変わらない(外形340×330の実測を安定させる)。中央寄せはleft:0/right:0+
+   margin:0 autoで行い、transformはentranceのtranslateYだけに使う(2つの要求が
+   同じtransformプロパティを取り合わないようにする)。 */
+.mz-place-at-live-edge-band {
+  /* 帯は枠の「下」の縁に置く。理由は2つあって、どちらも目視で分かった。
+     ひとつ、追従が外れた瞬間の現在地は「いちばん上に見えている行」なので、
+     上に置くと**読み手がいま読んでいる行そのものを覆う**（初稿はこれで、
+     囲みの中の文字が帯に隠れていた）。ふたつ、帯が指している末尾は下にある——
+     No.106 が「方角の担体は出て行った縁の側に置く」と言ったのと同じ筋で、
+     ▾ と同じ向きの縁に置くほうが、押したときにどちらへ着地するかが読める */
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  width: max-content;
+  margin: 0 auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  animation: mz-place-at-live-edge-band-in var(--mz-pale-band-ms, 180ms) ease-out both;
+}
+@keyframes mz-place-at-live-edge-band-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px); /* 下の縁から湧く（帯が置かれている縁の側から） */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
