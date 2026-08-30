@@ -48,7 +48,7 @@
   transform-origin: center;
 }
 .mz-radar-morph-dot.is-pop {
-  animation: mz-radar-morph-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: mz-radar-morph-pop 0.35s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
 }
 @keyframes mz-radar-morph-pop {
   from {
@@ -65,7 +65,7 @@
   stroke: #fff;
   transform-box: fill-box;
   transform-origin: center;
-  animation: mz-radar-morph-spark 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: mz-radar-morph-spark 0.35s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
 }
 @keyframes mz-radar-morph-spark {
   from {
@@ -111,7 +111,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .mz-radar-morph-actions button:hover {
   transform: translateY(-2px);

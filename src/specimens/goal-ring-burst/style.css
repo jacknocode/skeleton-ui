@@ -20,7 +20,7 @@
   height: 120px;
 }
 .mz-goal-ring-burst-stage.is-done {
-  animation: mz-goal-ring-burst-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: mz-goal-ring-burst-pop 0.55s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 @keyframes mz-goal-ring-burst-pop {
   0% {
@@ -86,7 +86,7 @@
   stroke-linejoin: round;
   stroke-dasharray: 100;
   stroke-dashoffset: 100;
-  animation: mz-goal-ring-burst-draw 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards;
+  animation: mz-goal-ring-burst-draw 0.4s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) 0.15s forwards;
 }
 @keyframes mz-goal-ring-burst-draw {
   to {
@@ -144,7 +144,7 @@
   font-size: 12px;
   font-weight: 800;
   color: #4c4c4c;
-  animation: mz-goal-ring-burst-caption 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s backwards;
+  animation: mz-goal-ring-burst-caption 0.5s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) 0.2s backwards;
 }
 @keyframes mz-goal-ring-burst-caption {
   0% {
@@ -173,7 +173,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .mz-goal-ring-burst-actions button:hover {
   transform: translateY(-2px);

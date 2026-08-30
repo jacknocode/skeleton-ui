@@ -101,7 +101,7 @@
   font-weight: 800;
   fill: #3d3d3d;
   font-variant-numeric: tabular-nums;
-  transition: opacity 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.2s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
 }
 /* ツールチップと重なる位置のときだけ譲る */
 .mz-area-tide-label.is-dim {
@@ -123,7 +123,7 @@
   white-space: nowrap;
   pointer-events: none;
   transform: translate(-50%, 0);
-  animation: mz-area-tide-tip-in 0.34s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: mz-area-tide-tip-in 0.34s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
 }
 @keyframes mz-area-tide-tip-in {
   from {
@@ -152,8 +152,8 @@
   color: #6e6e6e;
   cursor: pointer;
   transition:
-    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-    color 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    color 0.3s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
 }
 .mz-area-tide-actions button:hover {
   transform: translateY(-2px);

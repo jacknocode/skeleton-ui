@@ -141,7 +141,7 @@
 /* 遠距離ジャンプの到着だけに鳴らす合図。経路は語れない距離だから、代わりに
    「ここに着いた」とだけ言う一度きりのパルス。減速のみで行き過ぎたあと素直に収まる */
 .mz-focus-travel-ring-frame.is-arriving {
-  animation: mz-focus-travel-arrive 120ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation: mz-focus-travel-arrive 120ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1));
 }
 @keyframes mz-focus-travel-arrive {
   0% {
@@ -169,7 +169,7 @@
   color: #4a4a48;
   cursor: pointer;
   transition:
-    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
     opacity 0.2s;
 }
 .mz-focus-travel-ctrl-btn:hover {

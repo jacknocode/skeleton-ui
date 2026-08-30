@@ -1,7 +1,7 @@
 /* No.71「さかのぼり訂正」
    確定済みに見えていた過去の2本（W3=上方向、W6=下方向）が、押した瞬間に書き換わる。
    消して差し替えるのではなく、旧い値の位置に上辺1pxの輪郭を残し、新しい実体が
-   同じ緩急（上げも下げも cubic-bezier(0.22,1,0.36,1)）でその外／内へ滑り込む。
+   同じ緩急（上げも下げも var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1))）でその外／内へ滑り込む。
    動きが終われば訂正の跡は残さない——濃度差もアスタリスクも付けない。
    モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。 */
 
@@ -49,7 +49,7 @@
   border-radius: 3px 3px 0 0;
   background: #8c8c8c;
   /* 上げも下げも同じ緩急・同じ0.6s。訂正は祝い事でも事故でもないので速さを変えない */
-  transition: height 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: height 0.6s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
 /* 一度だけ低く鳴る「たわみ」。訂正される棒だけに掛かる別プロパティ(transform)のアニメーション
@@ -180,7 +180,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .mz-revised-past-actions button:hover:not(:disabled) {
   transform: translateY(-2px);

@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react'
 import { CATEGORIES, specimens, sourceOf, type Category, type Specimen } from './registry'
 import { IDEA_STATUS_LABEL, ideas, type IdeaStatus } from './ideas'
+import { MOTION_PRESETS, applyMotionPreset } from './motion'
 
 type Filter = Category | 'すべて'
 
 export default function App() {
   const [filter, setFilter] = useState<Filter>('すべて')
   const [selected, setSelected] = useState<Specimen | null>(null)
+  const [preset, setPreset] = useState(MOTION_PRESETS[0])
+
+  useEffect(() => {
+    applyMotionPreset(preset)
+  }, [preset])
 
   const visible = filter === 'すべて' ? specimens : specimens.filter((s) => s.category === filter)
 
@@ -38,6 +44,23 @@ export default function App() {
             </button>
           ))}
         </nav>
+        <nav className="zk-filters zk-motion" aria-label="モーションプリセットを切り替える">
+          <span className="zk-motion-label">緩急</span>
+          {MOTION_PRESETS.map((p) => (
+            <button
+              key={p.id}
+              className={`zk-chip${preset.id === p.id ? ' is-active' : ''}`}
+              title={p.feel}
+              onClick={() => setPreset(p)}
+            >
+              {p.label}
+            </button>
+          ))}
+        </nav>
+        <p className="zk-motion-values">
+          {preset.feel} — spring <code>{preset.tokens.spring}</code> / glide{' '}
+          <code>{preset.tokens.glide}</code> / swift <code>{preset.tokens.swift}</code>
+        </p>
       </header>
 
       <main className="zk-grid">

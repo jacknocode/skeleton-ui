@@ -2,9 +2,9 @@
    眺めているだけで他者のカーソルが行を巡り、値を書き換えていく標本。モノクロ・自己完結。
 
    ==== 強弱で語る（企画書 共通則1） ====
-   自分が触れる場所（行のホバー）は 0.3s のオーバーシュート（cubic-bezier(0.34,1.56,0.64,1)）。
+   自分が触れる場所（行のホバー）は 0.3s のオーバーシュート（var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1))）。
    他者が起こす動き（カーソルの巡回・値の書き換え・帯・輪）はすべて跳ねない
-   cubic-bezier(0.22,1,0.36,1) を使い、0.34〜0.6s と自分の応答よりゆっくりにしている。
+   var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) を使い、0.34〜0.6s と自分の応答よりゆっくりにしている。
    これ以外に「これは他人の変更です」と説明する文字は一切置かない。
 
    ==== 未確定の合図は強く出さない（企画書 共通則5） ====
@@ -44,7 +44,7 @@
   border-radius: 10px;
   background: #f5f5f3;
   transition:
-    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
     box-shadow 0.3s ease-out;
 }
 /* 自分のホバーは強い：0.3s ぷるんで2px持ち上がる（他者の緩急との対比がその場で読める）。
@@ -68,7 +68,7 @@
   transform: translateY(-50%);
   border-radius: 1px;
   background: rgba(61, 61, 61, 0.45);
-  animation: mz-others-hand-flag-band 1.94s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: mz-others-hand-flag-band 1.94s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) both;
   pointer-events: none;
 }
 @keyframes mz-others-hand-flag-band {
@@ -110,7 +110,7 @@
 /* 他者の書き換え（弱い）：0.55s ease-outで差し替わる。跳ねない。
    is-entering は ghostToken>0（＝実際に書き換えが起きた回）のときだけキー付け替えで再生される */
 .mz-others-hand-value.is-entering {
-  animation: mz-others-hand-value-in 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: mz-others-hand-value-in 0.55s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
 }
 @keyframes mz-others-hand-value-in {
   0% {
@@ -162,7 +162,7 @@
   font-variant-numeric: tabular-nums;
   opacity: 0;
   pointer-events: none;
-  animation: mz-others-hand-pending-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: mz-others-hand-pending-in 0.4s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
 }
 @keyframes mz-others-hand-pending-in {
   from {
@@ -183,8 +183,8 @@
   pointer-events: none;
   z-index: 4;
   transition:
-    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+    transform 0.34s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)),
+    opacity 0.34s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
 }
 .mz-others-hand-cursor-arrow {
   position: absolute;
@@ -223,7 +223,7 @@
   border-radius: 50%;
   border: 1px solid rgba(61, 61, 61, 0.35);
   pointer-events: none;
-  animation: mz-others-hand-ripple-out 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: mz-others-hand-ripple-out 0.6s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
 }
 @keyframes mz-others-hand-ripple-out {
   0% {

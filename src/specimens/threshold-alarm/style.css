@@ -73,7 +73,7 @@
 }
 /* 戻ったとき: 震えではなく、ひとつ息をついて元の細さに収まる */
 .mz-threshold-alarm-line.is-relief {
-  animation: mz-threshold-alarm-relief 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: mz-threshold-alarm-relief 0.9s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) both;
 }
 @keyframes mz-threshold-alarm-relief {
   0% {
@@ -102,7 +102,7 @@
   stroke-width: 1.5;
   transform-origin: center;
   transform-box: fill-box;
-  animation: mz-threshold-alarm-ring-out 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: mz-threshold-alarm-ring-out 0.85s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) both;
 }
 @keyframes mz-threshold-alarm-ring-out {
   0% {
@@ -123,7 +123,7 @@
   transform-box: fill-box;
   transition:
     fill 0.35s ease-out,
-    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform 0.35s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 /* 大きさは r 属性ではなく scale で変える(r のトランジションは環境差が大きい) */
 .mz-threshold-alarm-dot.is-over {
@@ -144,7 +144,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .mz-threshold-alarm-actions button:hover {
   transform: translateY(-2px);

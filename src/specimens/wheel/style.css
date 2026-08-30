@@ -41,7 +41,7 @@
 }
 /* 止まり際だけ、ぷるんと行き過ぎて吸い付く */
 .mz-wheel-disc.is-settle {
-  transition: transform 0.62s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.62s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 /* 中心のハブ */
 .mz-wheel-disc::after {
@@ -110,12 +110,12 @@
   letter-spacing: 0.1em;
   white-space: nowrap;
   pointer-events: none;
-  animation: mz-wheel-resultpop 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: mz-wheel-resultpop 1.6s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) forwards;
 }
 .mz-wheel-result.is-jackpot {
   background: #3d3d3d;
   animation:
-    mz-wheel-resultpop 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+    mz-wheel-resultpop 1.6s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) forwards,
     mz-wheel-jackpot 0.4s linear 2;
 }
 @keyframes mz-wheel-resultpop {

@@ -44,7 +44,7 @@
 
 /* 消費：ぷちんと潰れてから、ふくらんで蒸発する */
 .mz-energy-drop.did-use {
-  animation: mz-energy-evaporate 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: mz-energy-evaporate 0.55s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
 }
 @keyframes mz-energy-evaporate {
   0% {
@@ -63,7 +63,7 @@
 
 /* 回復：上からぽたっと落ちて、ぷるんと着地する */
 .mz-energy-slot.is-full .mz-energy-drop.did-gain {
-  animation: mz-energy-refill 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: mz-energy-refill 0.6s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 @keyframes mz-energy-refill {
   0% {
@@ -115,7 +115,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .mz-energy-actions button:hover {
   transform: translateY(-2px);

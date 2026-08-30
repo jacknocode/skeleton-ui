@@ -23,7 +23,7 @@
   transform: scale(1.05, 0.92);
 }
 .mz-pn-target.is-hit {
-  animation: mz-pn-squash 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: mz-pn-squash 0.45s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 @keyframes mz-pn-squash {
   0% {
@@ -80,7 +80,7 @@
   color: #5c5c5c;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
-  animation: mz-pn-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: mz-pn-rise 0.8s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
 }
 .mz-pn-pop small {
   font-size: 8px;
@@ -91,7 +91,7 @@
 .mz-pn-pop.is-crit {
   font-size: 34px;
   color: #3d3d3d;
-  animation: mz-pn-crit 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: mz-pn-crit 1s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
 }
 @keyframes mz-pn-rise {
   0% {
