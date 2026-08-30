@@ -1427,6 +1427,107 @@ const CHOREO = {
     await page.getByRole('button', { name: 'はい' }).click()
     await sleep(2200) // 点が1つ増えるだけ。戻れないことは画面のどこにも残らない
   },
+
+  'preview-out-of-date': async (page) => {
+    /* 撮るべきは3つ。ひとつ、握って動かしているあいだ**予告が置いていかれる**こと
+       （輪郭は握った時点の値に留まり、係留線だけが伸びる）。ふたつ、**手を止めると
+       ズレが 0 になる**こと（輪郭はジャンプする＝中割りを作らない）。みっつ、対照では
+       輪郭が**後戻りする**こと（応答の到着順が入れ替わるため）。
+       ゆっくり動かすと着地が追いついてしまうので、**係留線が伸びる速さで**動かす。 */
+    const slider = page.locator('.mz-preview-out-of-date-slider')
+    const at = async (u) => {
+      const b = await slider.boundingBox()
+      return [Math.round(b.x + b.width * u), Math.round(b.y + b.height / 2)]
+    }
+    await sleep(800) // 待機。予告は0個。事実の塗りだけが在る
+    // 1回目（既定）: 握って動かす → 置いていかれる → 手を止める → 追いつく
+    const a0 = await at(0.3)
+    await page.mouse.move(...a0)
+    await page.mouse.down()
+    await sleep(600) // 輪郭が現れる（幅は最初から行き先。緩急は付かない）
+    await glide(page, a0, await at(0.86), 1100) // 係留線が伸びる＝予告が古くなる
+    await sleep(1400) // 手を止める。最新の応答が着地して係留線が 0 になる
+    await glide(page, await at(0.86), await at(0.5), 900) // 戻す向きでも同じ
+    await sleep(1300)
+    await page.mouse.up() // やめた: 輪郭は幅を変えずに消える。塗りは1pxも動かない
+    await sleep(1400)
+    // 2回目（対照）: 届いた順にそのまま差し替える
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(700)
+    const b0 = await at(0.3)
+    await page.mouse.move(...b0)
+    await page.mouse.down()
+    await sleep(500)
+    await glide(page, b0, await at(0.9), 1600) // つまみは前へ。予告は後戻りする
+    await sleep(1200)
+    await page.mouse.up() // 離しても、保留中の取り寄せが遅れて届いて動き続ける
+    await sleep(1600)
+  },
+
+  'preview-missed': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**塗りが輪郭まで来ない／通り過ぎる**こと（確定は成功している）。
+       ふたつ、**外れが次の予告の幅になる**こと（4px → 26px → 48px と輪郭が太る）。
+       みっつ、下振れと上振れで**跡がまったく同じ**であること。
+       対照では輪郭が消え、下振れのときだけ赤くなる（上振れは何も言われない）。
+       3週を通しで撮る。1週だけでは「幅が育つ」が写らない。 */
+    const pick = () => page.getByRole('button', { name: '手を選ぶ' })
+    const commit = () => page.getByRole('button', { name: 'この配分で確定する' })
+    const nextWeek = () => page.getByRole('button', { name: '次の週へ' })
+    const play = async () => {
+      await pick().click()
+      await sleep(900) // 予告の輪郭が出る（幅＝これまでの外れの累計）
+      await commit().click()
+      await sleep(1500) // 塗りが伸びる。輪郭まで来ない（1週目）／突き抜ける（2週目）
+      await nextWeek().click()
+      await sleep(700)
+      await commit().click()
+      await sleep(1500)
+      await nextWeek().click()
+      await sleep(900) // 3週目の輪郭はいちばん太い＝いちばん当てにならない
+      await commit().click()
+      await sleep(1600) // 的中。塗りが輪郭の中を満たし、跡は残らない
+    }
+    await sleep(800)
+    await play()
+    await sleep(900)
+    // 対照: 外れたら予告を消して、下振れだけ赤く警告する
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await play()
+    await sleep(1200)
+  },
+
+  'expired-by-doing-nothing': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**失効の瞬間に機会は1pxも動かない**こと
+       （動くのは現在地の縦線だけ。通り過ぎたことは位置関係でしか言われない）。
+       ふたつ、**取った機会と失効した機会の差**（履歴の点は取ったぶんだけ増える）。
+       みっつ、対照では**カードが消えてトーストが出る**こと——そして
+       トーストが消えたあと、閉じたことが画面のどこにも残らないこと。
+       先に片方を「取る」。取った側と放置した側を同じ画面に並べないと差が写らない。 */
+    const next = page.getByRole('button', { name: /次の週/ })
+    const take = (i) => page.locator('.mz-expired-by-doing-nothing-take-btn').nth(i)
+    await sleep(900)
+    await take(1).click() // 出展枠を取る: 履歴の点が +1、帯に「取った」印が入る
+    await sleep(1100)
+    // 人を採る（2〜4週）は触らない。週を1つずつ進めて、縦線が右端を越えるのを見る
+    for (let i = 0; i < 3; i++) {
+      await next.click()
+      await sleep(900)
+    }
+    await sleep(700) // 4→5週: 失効した瞬間。帯は動かない。履歴の点も増えない
+    await next.click()
+    await sleep(1400) // もう1週。ここで初めて畳まれる（失効そのものは動きの起点にしない）
+    await next.click()
+    await sleep(1600) // 跡は残ったまま。時間では消えない
+    // 対照: 期限切れでカードが消え、トーストが出て、やがて何も残らない
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1000)
+    for (let i = 0; i < 4; i++) {
+      await next.click()
+      await sleep(800)
+    }
+    await sleep(2600) // トーストが消える。閉じたことは画面のどこにも残らない
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
