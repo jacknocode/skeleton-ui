@@ -266,10 +266,16 @@ export default function PreviewMissed() {
       </div>
 
       <div className="mz-preview-missed-status" role="status">
+        {/* 既定は外れを名乗らない。的中でも外れでも文言は同一で、違いは輪郭と塗りの
+            位置関係にしか出ない（この標本の芯1）。対照は逆に、下振れのときだけ
+            文章で警告する——同じ大きさの上振れは何も言われないので、
+            読み手の確度の見積もりは片側にしか育たない。 */}
         {phase === 'settled'
-          ? isHit
-            ? '確定は成功。予告どおりでした'
-            : '確定は成功。ただし予告どおりには来ませんでした'
+          ? mode === 'default'
+            ? '確定しました'
+            : contrastWarn
+              ? '⚠ 予測を下回りました'
+              : '確定は成功。予告どおりでした'
           : phase === 'previewing'
             ? '確定すると塗りが伸びます'
             : '手を選んでください'}

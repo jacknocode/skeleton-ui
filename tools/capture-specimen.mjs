@@ -1464,6 +1464,39 @@ const CHOREO = {
     await sleep(1600)
   },
 
+  'preview-missed': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**塗りが輪郭まで来ない／通り過ぎる**こと（確定は成功している）。
+       ふたつ、**外れが次の予告の幅になる**こと（4px → 26px → 48px と輪郭が太る）。
+       みっつ、下振れと上振れで**跡がまったく同じ**であること。
+       対照では輪郭が消え、下振れのときだけ赤くなる（上振れは何も言われない）。
+       3週を通しで撮る。1週だけでは「幅が育つ」が写らない。 */
+    const pick = () => page.getByRole('button', { name: '手を選ぶ' })
+    const commit = () => page.getByRole('button', { name: 'この配分で確定する' })
+    const nextWeek = () => page.getByRole('button', { name: '次の週へ' })
+    const play = async () => {
+      await pick().click()
+      await sleep(900) // 予告の輪郭が出る（幅＝これまでの外れの累計）
+      await commit().click()
+      await sleep(1500) // 塗りが伸びる。輪郭まで来ない（1週目）／突き抜ける（2週目）
+      await nextWeek().click()
+      await sleep(700)
+      await commit().click()
+      await sleep(1500)
+      await nextWeek().click()
+      await sleep(900) // 3週目の輪郭はいちばん太い＝いちばん当てにならない
+      await commit().click()
+      await sleep(1600) // 的中。塗りが輪郭の中を満たし、跡は残らない
+    }
+    await sleep(800)
+    await play()
+    await sleep(900)
+    // 対照: 外れたら予告を消して、下振れだけ赤く警告する
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await play()
+    await sleep(1200)
+  },
+
   'expired-by-doing-nothing': async (page) => {
     /* 撮るべきは3つ。ひとつ、**失効の瞬間に機会は1pxも動かない**こと
        （動くのは現在地の縦線だけ。通り過ぎたことは位置関係でしか言われない）。
