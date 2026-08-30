@@ -57,7 +57,7 @@
 }
 /* 3. 異常値のとき、数字がバッと太く濃くなって0.6sで元に戻る */
 .mz-sparkline-ecg-value.is-alert {
-  animation: mz-sparkline-ecg-value 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: mz-sparkline-ecg-value 0.6s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) both;
 }
 @keyframes mz-sparkline-ecg-value {
   0% {
@@ -133,7 +133,7 @@
   transform-box: view-box;
 }
 .mz-sparkline-ecg-tip.is-alert {
-  animation: mz-sparkline-ecg-twitch 0.34s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: mz-sparkline-ecg-twitch 0.34s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
 }
 @keyframes mz-sparkline-ecg-twitch {
   from {
@@ -172,7 +172,7 @@
   transform-box: view-box;
 }
 .mz-sparkline-ecg-tipmark.is-alert {
-  animation: mz-sparkline-ecg-tipmark 0.34s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: mz-sparkline-ecg-tipmark 0.34s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
 }
 @keyframes mz-sparkline-ecg-tipmark {
   from {
@@ -191,7 +191,7 @@
 }
 /* 3. 着点は一瞬 1.5 倍のスパイク点になってから収まる */
 .mz-sparkline-ecg-spike.is-new {
-  animation: mz-sparkline-ecg-spike 0.36s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: mz-sparkline-ecg-spike 0.36s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
 }
 @keyframes mz-sparkline-ecg-spike {
   from {
@@ -253,7 +253,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .mz-sparkline-ecg-actions button:hover {
   transform: translateY(-2px);

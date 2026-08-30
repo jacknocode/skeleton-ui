@@ -192,7 +192,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
   transform: translateX(0);
   /* 往路: 0.42s ぷるん（表の t=0 行そのまま） */
-  transition: transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.42s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .mz-optimistic-rollback-switch.is-on .mz-optimistic-rollback-knob {
   transform: translateX(22px);
@@ -254,7 +254,7 @@
 }
 /* 増える＝下から入ってくる。押した瞬間の楽観の勢いと同じ向き（0.42s ぷるん） */
 .mz-optimistic-rollback-counter-num.is-rising {
-  animation: mz-optimistic-rollback-num-up 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: mz-optimistic-rollback-num-up 0.42s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 @keyframes mz-optimistic-rollback-num-up {
   0% {
@@ -320,7 +320,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .mz-optimistic-rollback-actions button:hover {
   transform: translateY(-2px);

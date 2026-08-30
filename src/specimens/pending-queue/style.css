@@ -56,7 +56,7 @@
   font-weight: 700;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.14);
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .mz-pending-queue-send:hover {
   transform: translateY(-2px);
@@ -169,7 +169,7 @@
   color: #3d3d3d;
   /* 積む：自分が起こした動き（強い）。translateX(14px) scale(0.7) から
      0.32s ぷるんで着地。着地に scale(1.12, 0.88) の潰れを挟む */
-  animation: mz-pending-queue-enter 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: mz-pending-queue-enter 0.32s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
 }
 @keyframes mz-pending-queue-enter {
   0% {
@@ -189,9 +189,9 @@
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.14);
 }
 
-/* 抜ける：向こうが起こした動き（弱い・跳ねない）。0.5s cubic-bezier(0.22,1,0.36,1) */
+/* 抜ける：向こうが起こした動き（弱い・跳ねない）。0.5s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) */
 .mz-pending-queue-ticket.is-leaving {
-  animation: mz-pending-queue-exit 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: mz-pending-queue-exit 0.5s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
 }
 @keyframes mz-pending-queue-exit {
   from {

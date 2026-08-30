@@ -23,7 +23,7 @@
 }
 /* 閉じ切った瞬間、一度だけぷるんと脈打つ */
 .mz-donut-pour-ring.is-done {
-  animation: mz-donut-pour-pulse 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: mz-donut-pour-pulse 0.5s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 @keyframes mz-donut-pour-pulse {
   0% {
@@ -97,7 +97,7 @@
 .is-on .mz-donut-pour-row {
   opacity: 1;
   transform: none;
-  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.35s ease, transform 0.35s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
 .mz-donut-pour-dot {
@@ -128,7 +128,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .mz-donut-pour-actions button:hover {
   transform: translateY(-2px);

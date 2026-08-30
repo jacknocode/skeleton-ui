@@ -60,8 +60,8 @@
   height: 24px;
   border-radius: 5px;
   transition:
-    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    transform 0.2s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)),
+    box-shadow 0.2s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
 }
 .mz-heatmap-conduction-cellwrap:hover {
   z-index: 4;
@@ -76,15 +76,15 @@
   border-radius: 5px;
   background: #f0f0ee;
   animation:
-    mz-heatmap-conduction-warm 0.5s cubic-bezier(0.22, 1, 0.36, 1) var(--mz-hc-d, 0ms) both,
-    mz-heatmap-conduction-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) var(--mz-hc-d, 0ms) both;
+    mz-heatmap-conduction-warm 0.5s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) var(--mz-hc-d, 0ms) both,
+    mz-heatmap-conduction-pop 0.4s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) var(--mz-hc-d, 0ms) both;
 }
 
 /* 熱源セルは全体が温まりきったあと、ゆっくり鼓動し続ける */
 .mz-heatmap-conduction-cell.is-source {
   animation:
-    mz-heatmap-conduction-warm 0.5s cubic-bezier(0.22, 1, 0.36, 1) var(--mz-hc-d, 0ms) both,
-    mz-heatmap-conduction-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) var(--mz-hc-d, 0ms) both,
+    mz-heatmap-conduction-warm 0.5s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) var(--mz-hc-d, 0ms) both,
+    mz-heatmap-conduction-pop 0.4s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) var(--mz-hc-d, 0ms) both,
     /* fill-mode なし = 待機中は pop の結果が残り、開始後に鼓動が引き継ぐ */
       mz-heatmap-conduction-pulse 1.6s ease-in-out var(--mz-hc-pd, 0ms) infinite;
 }
@@ -145,8 +145,8 @@
   opacity: 0;
   transform: translateX(-50%) translateY(4px);
   transition:
-    opacity 0.25s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.25s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)),
+    transform 0.25s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
 }
 .mz-heatmap-conduction-tip b {
   font-weight: 800;
@@ -172,7 +172,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .mz-heatmap-conduction-actions button:hover {
   transform: translateY(-2px);

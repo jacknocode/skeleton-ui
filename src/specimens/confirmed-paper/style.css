@@ -27,7 +27,7 @@
 }
 /* 着弾のぷるん。増えたことを祝うのではなく、数字が「今ここに収まった」重みを一度だけ言う */
 .mz-confirmed-paper-amount.is-landed {
-  animation: mz-cp-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: mz-cp-pop 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 @keyframes mz-cp-pop {
   0% {
@@ -121,7 +121,7 @@
 }
 /* 締め: 最後の一拍だけ、バー全体が一度きゅっと締まる。1回のみ・繰り返さない */
 .mz-confirmed-paper-bar.is-done {
-  animation: mz-cp-squeeze 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: mz-cp-squeeze 0.36s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
 }
 @keyframes mz-cp-squeeze {
   0% {
@@ -267,7 +267,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .mz-confirmed-paper-actions button:hover:not(:disabled) {
   transform: translateY(-2px);

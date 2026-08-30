@@ -75,7 +75,7 @@
   fill: #5c5c5c;
 }
 .mz-gc-card.is-flipped .mz-gc-front svg {
-  animation: mz-gc-star 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s backwards;
+  animation: mz-gc-star 0.6s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) 0.3s backwards;
 }
 @keyframes mz-gc-star {
   0% {

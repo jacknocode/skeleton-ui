@@ -46,7 +46,7 @@
   transition:
     background-color 0.2s,
     color 0.2s,
-    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .mz-no-place-yet-scene-btn:hover {
   transform: translateY(-1px);
@@ -97,7 +97,7 @@
   color: #5c5c5c;
   cursor: pointer;
   transition:
-    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.25s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
     opacity 0.2s,
     box-shadow 0.2s;
 }
@@ -276,7 +276,7 @@
   display: flex;
   align-items: center;
   pointer-events: none;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.2s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .mz-no-place-yet-marker.is-entering-slide {
   animation: mz-no-place-yet-slide-in 0.2s ease-out both;
@@ -303,7 +303,7 @@
   background: #3d3d3d;
 }
 .mz-no-place-yet-marker-bar.is-entering-pop {
-  animation: mz-no-place-yet-pop-in 0.14s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: mz-no-place-yet-pop-in 0.14s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
 }
 @keyframes mz-no-place-yet-pop-in {
   from {

@@ -63,7 +63,7 @@
   background: #fff;
 }
 .mz-share-dilute-slice.is-moving + .mz-share-dilute-slice::before {
-  animation: mz-share-dilute-seam 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: mz-share-dilute-seam 0.5s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
 }
 @keyframes mz-share-dilute-seam {
   0% {
@@ -87,7 +87,7 @@
 
 /* 新入りの層: 幅0の楔から割り込む。to を書かないので終点はインラインの実幅になる */
 .mz-share-dilute-slice.is-new {
-  animation: mz-share-dilute-wedge 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: mz-share-dilute-wedge 0.62s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) both;
 }
 @keyframes mz-share-dilute-wedge {
   from {
@@ -151,7 +151,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .mz-share-dilute-actions button:hover:not(:disabled) {
   transform: translateY(-2px);
