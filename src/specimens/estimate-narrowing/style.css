@@ -43,7 +43,7 @@
   /* 測定回数nの数字が増えるときだけ、下から6px湧く。測った回数は事実なので、
      推定の帯(オーバーシュート禁止)と違って、図鑑既定のやわらかい緩急を使ってよい
      ——この標本で唯一そのイージングが許されている場所。 */
-  animation: mz-estimate-narrowing-n-pop 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+  animation: mz-estimate-narrowing-n-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 @keyframes mz-estimate-narrowing-n-pop {
   from {
@@ -88,7 +88,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  transition: opacity 200ms var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
+  transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .mz-estimate-narrowing-tick {
   position: absolute;
@@ -107,9 +107,9 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   /* 実体化のときだけ下から6pxで湧く。ここもオーバーシュートは使わない
-     (帯そのものと同じ緩急=var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)))。数値は幅の言い換えで
+     (帯そのものと同じ緩急=cubic-bezier(0.22,1,0.36,1))。数値は幅の言い換えで
      あって「やった」演出の対象ではないため。 */
-  transition: transform 200ms var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ---------- 軸 ---------- */
@@ -150,7 +150,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-estimate-narrowing-actions button:hover:not(:disabled) {
   transform: translateY(-2px);

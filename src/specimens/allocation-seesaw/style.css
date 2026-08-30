@@ -83,7 +83,7 @@
   border-radius: 999px;
   background: #8c8c8c;
   transition:
-    width 0.44s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)),
+    width 0.44s cubic-bezier(0.22, 1, 0.36, 1),
     background-color 0.3s ease-out;
 }
 .mz-allocation-seesaw-fill.is-gain {
@@ -121,7 +121,7 @@
   font-weight: 800;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-allocation-seesaw-plus:hover {
   transform: translateY(-2px);
@@ -169,7 +169,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-allocation-seesaw-actions button:hover {
   transform: translateY(-2px);

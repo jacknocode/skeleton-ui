@@ -18,11 +18,11 @@
    (outline-widthのような強弱を持たない)③既定では260ms+220msで遅れて届く、の3点で
    自分の担体から明確に切り離している。
 
-   緩急の約束: 減速のみ var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1))。跳ねる方は使わない——
+   緩急の約束: 減速のみ cubic-bezier(0.22, 0.61, 0.36, 1)。跳ねる方は使わない——
    ここが提示するのは「どこに居るか」であって「いま起きた」の合図ではないため。 */
 
 .mz-others-place {
-  --mz-others-place-ease: var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1));
+  --mz-others-place-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   display: flex;
   flex-direction: column;
   gap: 4px;

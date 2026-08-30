@@ -107,7 +107,7 @@
    潰すだけモードでは .is-flatten が animation-duration を 0.01ms に潰し、
    跳ねが見えなくなる(数字だけは変わる) */
 .mz-quiet-mode-t1-box.is-bump {
-  animation: mz-quiet-mode-bump 320ms var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  animation: mz-quiet-mode-bump 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes mz-quiet-mode-bump {
   0% {
@@ -171,7 +171,7 @@
   width: 0%;
   border-radius: 4px;
   background: #3d3d3d;
-  transition: width 260ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1));
+  transition: width 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
   /* transition-delay はJSXから行ごとに(0/120/240ms)inlineで与える */
 }
 .mz-quiet-mode-t2-fill.is-grown {
@@ -259,7 +259,7 @@
   color: #4a4a48;
   cursor: pointer;
   transition:
-    transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.2s;
 }
 .mz-quiet-mode-play:hover {

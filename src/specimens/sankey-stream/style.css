@@ -18,22 +18,22 @@
   opacity: 1;
   cursor: pointer;
   transition:
-    fill 0.42s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)),
-    opacity 0.42s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
+    fill 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .mz-sankey-stream-ribbon.is-active {
   fill: #3d3d3d;
   opacity: 1;
   transition:
-    fill 0.28s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
-    opacity 0.28s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+    fill 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-sankey-stream-ribbon.is-faded {
   fill: #c6c6c4;
   opacity: 0.25;
   transition:
-    fill 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
-    opacity 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+    fill 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* ---- 粒の群れ ----
@@ -41,15 +41,15 @@
    （@keyframesのoffset-distance）が常時回り続けているので、ここでは邪魔しない */
 .mz-sankey-stream-flow {
   opacity: 0.8;
-  transition: opacity 0.42s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
+  transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .mz-sankey-stream-flow.is-active {
   opacity: 1;
-  transition: opacity 0.28s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: opacity 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-sankey-stream-flow.is-faded {
   opacity: 0.3;
-  transition: opacity 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* 粒そのもの。単色図鑑なので「濃い点」＝ライトバンドの上のダークドット。
@@ -84,20 +84,20 @@
   fill: #8c8c8c;
   opacity: 1;
   transition:
-    fill 0.42s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)),
-    opacity 0.42s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
+    fill 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .mz-sankey-stream-node-bar.is-lit {
   fill: #3d3d3d;
   transition:
-    fill 0.28s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
-    opacity 0.28s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+    fill 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-sankey-stream-node-bar.is-dim {
   opacity: 0.5;
   transition:
-    fill 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
-    opacity 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+    fill 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .mz-sankey-stream-node-label {

@@ -28,7 +28,7 @@
 .mz-check.is-checked .mz-check-box {
   background: #6e6e6e;
   border-color: #6e6e6e;
-  animation: mz-check-pop 0.5s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  animation: mz-check-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes mz-check-pop {
   0% {

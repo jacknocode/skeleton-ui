@@ -18,7 +18,7 @@
   font-weight: 600;
   color: #555;
   cursor: pointer;
-  transition: transform 0.35s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-select-trigger:active {
   transform: scale(1.04, 0.9);
@@ -27,7 +27,7 @@
 /* 選び直すと値がぽんっと跳ねる */
 .mz-select-value {
   display: inline-block;
-  animation: mz-select-pop 0.45s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  animation: mz-select-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes mz-select-pop {
   0% {
@@ -50,7 +50,7 @@
   stroke-linejoin: round;
   fill: none;
   flex: none;
-  transition: transform 0.45s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-select.is-open .mz-select-chevron {
   transform: rotate(-180deg);
@@ -74,7 +74,7 @@
   opacity: 0;
   pointer-events: none;
   transition:
-    transform 0.5s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
     opacity 0.22s;
 }
 .mz-select.is-open .mz-select-list {
@@ -89,7 +89,7 @@
   transform: translateY(-10px);
   transition:
     opacity 0.25s,
-    transform 0.4s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+    transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   transition-delay: inherit;
 }
 .mz-select.is-open .mz-select-list li {

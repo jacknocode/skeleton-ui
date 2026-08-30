@@ -13,7 +13,7 @@
   gap: 10px;
 }
 .mz-pending-commit-row.is-tightening {
-  animation: mz-pending-commit-tighten 0.42s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) both;
+  animation: mz-pending-commit-tighten 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: var(--mz-pc-tighten, 0ms);
 }
 @keyframes mz-pending-commit-tighten {
@@ -118,7 +118,7 @@
   background: #3d3d3d;
   color: #fff;
   transform: translate(-50%, -50%);
-  animation: mz-pending-commit-stamp-in 0.38s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) both;
+  animation: mz-pending-commit-stamp-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes mz-pending-commit-stamp-in {
   0% {
@@ -141,7 +141,7 @@
   inset: 0;
   border-radius: 50%;
   border: 2px solid #3d3d3d;
-  animation: mz-pending-commit-ink 0.5s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) both;
+  animation: mz-pending-commit-ink 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: inherit;
 }
 @keyframes mz-pending-commit-ink {
@@ -198,7 +198,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-pending-commit-actions button:hover:not(:disabled) {
   transform: translateY(-2px);

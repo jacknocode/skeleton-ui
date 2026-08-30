@@ -106,7 +106,7 @@
    単発の返事そのものは左右で同一でなければならない */
 
 .mz-coalesce-repeat-badge.is-control.is-hit {
-  animation: mz-coalesce-repeat-control-bounce 340ms var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  animation: mz-coalesce-repeat-control-bounce 340ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes mz-coalesce-repeat-control-bounce {
   0% {
@@ -127,7 +127,7 @@
    を amp=6px（先頭の跳ね）と amp=-0.8px（62%の戻り過ぎ）に代入しただけ——
    手段はkeyframesだが、影が語っている量は標本とまったく同じ関係式 */
 .mz-coalesce-repeat-shadow.is-control.is-hit {
-  animation: mz-coalesce-repeat-control-shadow 340ms var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  animation: mz-coalesce-repeat-control-shadow 340ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes mz-coalesce-repeat-control-shadow {
   0% {
@@ -158,11 +158,11 @@
 }
 .mz-coalesce-repeat-stage.is-specimen {
   /* 先頭の1回はここで340ms・遅延ゼロの跳ねになる。以後の育ちも同じ式を使う */
-  transition: --amp 340ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1));
+  transition: --amp 340ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 /* 窓が閉じたときだけ着地用の尺に差し替える。跳ね返さない・260msでゆっくり */
 .mz-coalesce-repeat-stage.is-specimen.is-landing {
-  transition: --amp 260ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1));
+  transition: --amp 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 /* ---------- 発火ボタン ---------- */

@@ -69,7 +69,7 @@
   cursor: pointer;
   white-space: nowrap;
   transition:
-    transform 0.25s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
     opacity 0.2s,
     box-shadow 0.2s;
 }
@@ -139,7 +139,7 @@
   pointer-events: none;
   border-radius: 8px;
   box-shadow: inset 0 0 0 2px #3d3d3d;
-  animation: mz-place-offscreen-ring-in 0.12s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+  animation: mz-place-offscreen-ring-in 0.12s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 .mz-place-offscreen-ring--row {
   top: 3px;
@@ -162,7 +162,7 @@
   pointer-events: none;
 }
 .mz-place-offscreen-ring-wrap--sticky {
-  transition: transform 0.2s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes mz-place-offscreen-ring-in {
   from {
@@ -197,7 +197,7 @@
   background: #3d3d3d;
   color: #f5f5f3;
   cursor: pointer;
-  animation: mz-place-offscreen-badge-in var(--mz-po-handoff-ms, 140ms) var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+  animation: mz-place-offscreen-badge-in var(--mz-po-handoff-ms, 140ms) cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 .mz-place-offscreen-dir[data-dir='up'] {
   top: 0;

@@ -64,7 +64,7 @@
   display: inline-block;
   height: 1em;
   overflow: hidden;
-  animation: mz-cnt-born 0.4s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  animation: mz-cnt-born 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-cnt-drum {
   display: flex;
@@ -96,7 +96,7 @@
   font-weight: 800;
   color: #8c8c8c;
   pointer-events: none;
-  animation: mz-cnt-float 0.9s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
+  animation: mz-cnt-float 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 @keyframes mz-cnt-float {
   0% {
@@ -127,7 +127,7 @@
   color: #6e6e6e;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
-  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-cnt-actions button:hover {
   transform: translateY(-2px);

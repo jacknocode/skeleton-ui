@@ -67,7 +67,7 @@
   border: 4.5px solid #757575;
   border-top: none;
   border-radius: 0 0 21px 21px;
-  transition: transform 0.4s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-voice.is-on .mz-voice-cradle {
   animation: mz-voice-nod 1.15s ease-in-out infinite;

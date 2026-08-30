@@ -142,7 +142,7 @@
    跳ねるのは行(is-bouncing)だけ。カウントの補間はindex.tsx側でrequestAnimationFrameが
    currentの数字そのものを書き換えているので、ここでは跳ねの見た目だけを持てばよい */
 .mz-missed-while-away-row.is-bouncing {
-  animation: mz-missed-while-away-bounce 320ms var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  animation: mz-missed-while-away-bounce 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes mz-missed-while-away-bounce {
   0% {

@@ -10,12 +10,12 @@
      outline-widthとoutline-colorだけを主役状態で切り替える（index.tsxの設計判断2）
    ・ポインタ（指す）は.mz-two-cursors-pointer。▸の三角形はborderで作る
 
-   この回の緩急の約束: 減速のみ var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1))。跳ねる方
-   var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1))（ぷるん）はこの標本では一度も使わない——
+   この回の緩急の約束: 減速のみ cubic-bezier(0.22, 0.61, 0.36, 1)。跳ねる方
+   cubic-bezier(0.34, 1.56, 0.64, 1)（ぷるん）はこの標本では一度も使わない——
    ここが提示するのは「どこに居るか」であって「いま起きた」の合図ではないため。 */
 
 .mz-two-cursors {
-  --mz-two-cursors-ease: var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1));
+  --mz-two-cursors-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   display: flex;
   flex-direction: column;
   gap: 4px;

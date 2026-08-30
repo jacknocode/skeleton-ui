@@ -68,7 +68,7 @@
   background: #c2c2c0;
   transform: scaleX(0);
   transform-origin: left;
-  animation: mz-line-measure-fill 0.26s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) both;
+  animation: mz-line-measure-fill 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 /* 増えたぶんは、満ちた先へ継ぎ足して灯る(No.16 経験値バーの語彙) */
 .mz-line-measure-tip {
@@ -86,7 +86,7 @@
 .mz-line-measure-row.is-down .mz-line-measure-tip {
   background: repeating-linear-gradient(-45deg, #b3b3b3 0 3px, #e4e4e2 3px 6px);
   transform: none;
-  animation: mz-line-measure-ghost 0.44s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) both;
+  animation: mz-line-measure-ghost 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes mz-line-measure-fill {
   from {
@@ -121,7 +121,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-line-measure-actions button:hover {
   transform: translateY(-2px);

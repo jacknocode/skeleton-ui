@@ -148,7 +148,7 @@
 /* 上向き・横ばいの数字は素直に現れるだけ（下向きだけ別の余韻を持つ） */
 .mz-diff-arrow-diff.is-up.is-live .mz-diff-arrow-text,
 .mz-diff-arrow-diff.is-flat.is-live .mz-diff-arrow-text {
-  animation: mz-diff-arrow-text-in 0.4s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) both;
+  animation: mz-diff-arrow-text-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes mz-diff-arrow-text-in {
   from {
@@ -170,7 +170,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-diff-arrow-actions button:hover {
   transform: translateY(-2px);

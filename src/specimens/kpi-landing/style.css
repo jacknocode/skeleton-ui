@@ -34,7 +34,7 @@
 }
 /* 着地の瞬間、ぷるんとひと揺れ */
 .mz-kpi-landing-value.is-landed {
-  animation: mz-kpi-landing-squash 0.35s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  animation: mz-kpi-landing-squash 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes mz-kpi-landing-squash {
   0% {
@@ -83,7 +83,7 @@
 /* 上昇: 下からぴょこんと跳ねて登場 */
 .mz-kpi-landing-badge.is-up {
   background: #4c4c4c;
-  animation: mz-kpi-landing-hop 0.45s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+  animation: mz-kpi-landing-hop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 @keyframes mz-kpi-landing-hop {
   0% {
@@ -101,7 +101,7 @@
 }
 /* 上昇の矢印は一拍おいてもう一度小さく跳ねる（二次アクション） */
 .mz-kpi-landing-badge.is-up .mz-kpi-landing-arrow {
-  animation: mz-kpi-landing-arrow-hop 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) 0.3s both;
+  animation: mz-kpi-landing-arrow-hop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
 }
 @keyframes mz-kpi-landing-arrow-hop {
   0% {
@@ -118,7 +118,7 @@
 /* 下降: 跳ねずに上からぽとりと沈んで登場 */
 .mz-kpi-landing-badge.is-down {
   background: #b3b3b3;
-  animation: mz-kpi-landing-sink 0.5s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) both;
+  animation: mz-kpi-landing-sink 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes mz-kpi-landing-sink {
   0% {
@@ -164,7 +164,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-kpi-landing-actions button:hover {
   transform: translateY(-2px);

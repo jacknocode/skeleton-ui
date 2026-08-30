@@ -131,7 +131,7 @@
 /* 到着のパルス。この回の緩急の約束の例外枠——「いま・ここに着いた」の合図専用、
    尺は120msに抑える。跳ねる緩急(0.34,1.56,0.64,1)は使わない、減速のみ */
 .mz-taken-there-item.is-pulsing {
-  animation: mz-taken-there-arrive 120ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1));
+  animation: mz-taken-there-arrive 120ms cubic-bezier(0.22, 0.61, 0.36, 1);
   transform-origin: center;
 }
 @keyframes mz-taken-there-arrive {
@@ -159,7 +159,7 @@
 }
 .mz-taken-there-bookmark.is-fading {
   opacity: 0;
-  transition: opacity 200ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1));
+  transition: opacity 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .mz-taken-there-bookmark-line {
@@ -200,7 +200,7 @@
   padding: 9px 14px;
   background: #3d3d3d;
   cursor: pointer;
-  animation: mz-taken-there-band-in 200ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1)) both;
+  animation: mz-taken-there-band-in 200ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 @keyframes mz-taken-there-band-in {
   from {
@@ -246,7 +246,7 @@
   cursor: pointer;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   transition:
-    transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
     opacity 0.2s;
 }
 .mz-taken-there-submit:hover:not(:disabled) {
@@ -269,7 +269,7 @@
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
-  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-taken-there-reset:hover {
   transform: translateY(-2px);
