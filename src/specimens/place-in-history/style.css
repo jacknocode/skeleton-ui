@@ -1,0 +1,259 @@
+/* No.112「履歴の中の現在地」
+   モノクロ・自己完結。色トークンは図鑑のパレット(#3d3d3d 濃 / #8c8c8c 中 /
+   #d6d6d3 淡 / #eaeae8 背景 / #f5f5f3 反転文字 / #fff)を踏襲。
+
+   台帳の現在地(囲み、行の中)と履歴の現在地(点、枠の外の帯)は常に別のDOM・
+   別のクラスで、同じ形になるフレームが無い(C7)。既定の囲みはtransitionを
+   一切張らない(尺ゼロ)——湧くときだけ0.14sのscaleで現れる。対照の囲みは
+   逆に、行indexから求めたtopをCSS transitionで滑らせる(=移動として見せて
+   しまう、という壊れ方そのもの)。 */
+
+.mz-place-in-history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+}
+
+/* ---------- 1行目: 既定/対照トグル ---------- */
+
+.mz-place-in-history-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.mz-place-in-history-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-place-in-history-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-place-in-history-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 2行目: 操作ボタン ---------- */
+
+.mz-place-in-history-row2 {
+  display: flex;
+  gap: 6px;
+}
+.mz-place-in-history-op-btn {
+  flex: 1 1 auto;
+  padding: 6px 4px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 10px;
+  font-weight: 800;
+  color: #5c5c5c;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s,
+    opacity 0.2s;
+}
+.mz-place-in-history-op-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+}
+.mz-place-in-history-op-btn:active:not(:disabled) {
+  transform: scale(1.03, 0.94);
+}
+.mz-place-in-history-op-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+}
+.mz-place-in-history-op-btn.is-danger {
+  color: #8c8c8c;
+}
+
+/* ---------- 枠(340×200固定) ---------- */
+
+.mz-place-in-history-frame-outer {
+  position: relative;
+  width: 340px;
+  height: 200px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+}
+
+.mz-place-in-history-frame {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-anchor: none;
+}
+
+.mz-place-in-history-content {
+  position: relative;
+}
+
+.mz-place-in-history-row {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #5c5c5c;
+  text-align: left;
+  border-bottom: 1px solid #f0f0ee;
+  cursor: pointer;
+}
+.mz-place-in-history-row:hover {
+  background: #fafaf9;
+}
+
+.mz-place-in-history-row-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 既定: 台帳の囲み。行の中に収まる内側の枠だけ(position/topは一切動かさない=尺ゼロ)。
+   湧くときだけscaleでポップする(No.106の受け渡しの語彙)。跳ねてよい(位置の移動では
+   なく単なる出現の演出のため)。 */
+.mz-place-in-history-ring {
+  position: absolute;
+  inset: 1px;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 2px #3d3d3d,
+    inset 0 0 0 999px rgba(61, 61, 61, 0.05);
+  z-index: 1;
+  animation: mz-place-in-history-pop 0.14s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 対照: 台帳の担体だけで現在地を描く。行indexから求めたtopへCSS transitionで
+   滑らせる——「戻る」を移動として見せてしまう、この標本が撃つ壊れ方そのもの。
+   跳ねさせない(位置を写す担体には基本イージングを使わない、という図鑑の規約)。 */
+.mz-place-in-history-ring--contrast {
+  inset: auto;
+  left: 1px;
+  right: 1px;
+  height: 18px;
+  border-radius: 4px;
+  animation: none;
+  transition: top 0.3s ease-out;
+}
+
+/* ---------- 履歴の帯(枠の外。台帳の外にあることそのものが主張) ---------- */
+
+.mz-place-in-history-band {
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+}
+
+.mz-place-in-history-history {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 4px;
+}
+.mz-place-in-history-history--absent {
+  /* 対照: 履歴の担体そのものを作らない。高さだけ揃えて空けておく */
+  min-height: 8px;
+}
+
+.mz-place-in-history-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1.5px solid transparent;
+  transition:
+    background-color 0.2s ease-out,
+    border-color 0.2s ease-out,
+    width 0.2s ease-out,
+    height 0.2s ease-out;
+}
+/* 通ってきた過去: 淡い塗り */
+.mz-place-in-history-dot.is-past {
+  background: #d6d6d3;
+}
+/* いま居る点: 濃い塗り。台帳の囲みとは別の形(丸)なので、C7の「同じ形にならない」が成立する */
+.mz-place-in-history-dot.is-current {
+  width: 10px;
+  height: 10px;
+  background: #3d3d3d;
+}
+/* 進める先(右側): 輪郭のみ */
+.mz-place-in-history-dot.is-future {
+  border-color: #b3b3b3;
+}
+/* 消えた行に着地した現在地: 欠けた点(輪郭だけ、破線=「壊れている」の印) */
+.mz-place-in-history-dot.is-gone {
+  width: 10px;
+  height: 10px;
+  border-color: #8c8c8c;
+  border-style: dashed;
+}
+
+/* 分岐の破棄: 捨てられる点が右から順に0.24sで折れて消える。跳ねない(巻き戻しは喜びではない) */
+.mz-place-in-history-dot-ghost {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1.5px solid #b3b3b3;
+  transform-origin: center;
+}
+.mz-place-in-history-dot-ghost.is-truncating {
+  animation: mz-place-in-history-fold 0.24s ease-out forwards;
+}
+@keyframes mz-place-in-history-fold {
+  0% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+}
+
+@keyframes mz-place-in-history-pop {
+  0% {
+    transform: scale(0.92);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ---------- 現在地の帯(行番号ではなく、いま台帳のどこに居るかを短く名乗る) ---------- */
+
+.mz-place-in-history-note {
+  min-height: 16px;
+  padding: 0 2px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+.mz-place-in-history-note.is-gone {
+  color: #3d3d3d;
+}

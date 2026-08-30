@@ -1,0 +1,280 @@
+/* No.108「畳まれた中の現在地」
+   モノクロ・自己完結。フォルダ単体で他プロジェクトへコピーしても動く。
+   色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡 /
+   #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。外形は340×330px以内。
+
+   担体は2つで、同時に出るフレームは無い(index.tsxでholdsPlaceTargetIdとplaceの
+   可視性から排他に導出):
+   ・囲み(.mz-place-in-collapsed-row.is-cursor) … 行の内側、box-shadow inset。
+     行が描画されているときにしか出ない(=畳まれて描画されなくなれば0個)。
+   ・代弁(.mz-place-in-collapsed-holds.is-holds-place) … 行の左端の縦棒＋
+     右端の小さな文字タグ。囲みとは別要素・別の形(inset box-shadowで行全体を
+     包む囲みに対し、こちらは行の一部に貼りつく帯)。当たり判定は行いっぱいに
+     広げ、見た目の小ささと押しやすさを分けた。 */
+
+.mz-place-in-collapsed {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 340px;
+}
+
+/* ---------- 1行目: 文脈のひとこと + 既定/対照トグル ---------- */
+
+.mz-place-in-collapsed-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.mz-place-in-collapsed-caption {
+  font-size: 10px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+}
+
+.mz-place-in-collapsed-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-place-in-collapsed-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-place-in-collapsed-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 2行目: 現在地の送り(↑↓) ----------
+   畳む/開くは各行の▸/▾で行うので、ここは「見えている行だけを巡る」ための
+   2ボタンだけでよい(企画のC7が言う移動そのもの)。 */
+
+.mz-place-in-collapsed-row2 {
+  display: flex;
+  gap: 6px;
+}
+
+.mz-place-in-collapsed-op-btn {
+  flex: 1 1 auto;
+  padding: 6px 6px;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 11px;
+  font-weight: 800;
+  color: #5c5c5c;
+  cursor: pointer;
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s,
+    opacity 0.2s;
+}
+.mz-place-in-collapsed-op-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+}
+.mz-place-in-collapsed-op-btn:active:not(:disabled) {
+  transform: scale(1.05, 0.92);
+}
+.mz-place-in-collapsed-op-btn:disabled {
+  cursor: default;
+  color: #c2c2bf;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+/* ---------- 枠(可視5行=140px固定) ----------
+   borderは枠に持たせず、box-shadowで縁取りの見た目だけを作る(No.99の罠を避ける:
+   borderを枠に持たせるとborder-box内側の実効高さがズレて行のyがずれる)。 */
+
+.mz-place-in-collapsed-frame {
+  height: 140px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 0 0 1px #d6d6d3;
+  overflow: hidden;
+}
+
+.mz-place-in-collapsed-scroll {
+  height: 140px;
+  overflow-y: auto;
+  overflow-anchor: none;
+}
+.mz-place-in-collapsed-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* ---------- 行 ----------
+   position:relativeにして、代弁の担体(絶対配置)を行の内側にオーバーレイできる
+   ようにする。これで代弁が湧いても行そのものの高さ・位置は1pxも動かない(C8)。 */
+
+.mz-place-in-collapsed-row {
+  position: relative;
+  box-sizing: border-box;
+  height: 28px;
+  padding-right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #f0f0ee;
+  transition: box-shadow 0.15s ease-out;
+}
+
+.mz-place-in-collapsed-toggle {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: #8c8c8c;
+  font-size: 9px;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+.mz-place-in-collapsed-toggle:hover {
+  background: #eaeae8;
+  color: #3d3d3d;
+}
+.mz-place-in-collapsed-toggle-spacer {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.mz-place-in-collapsed-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 深さ0(章)・深さ1(節)は少し濃くして骨格を強調。深さ2(項)は淡いまま */
+.mz-place-in-collapsed-row[data-depth='0'] .mz-place-in-collapsed-label {
+  color: #5c5c5c;
+  font-weight: 800;
+}
+.mz-place-in-collapsed-row[data-depth='1'] .mz-place-in-collapsed-label {
+  color: #6e6e6e;
+}
+
+/* 囲み(現在地)。行の内側、insetのbox-shadow。行が描画されなければ存在自体が
+   消える(=畳まれたら0個)——これがこの標本の芯(難所a)。 */
+.mz-place-in-collapsed-row.is-cursor {
+  box-shadow: inset 0 0 0 2px #3d3d3d;
+  background: #f5f5f3;
+}
+.mz-place-in-collapsed-row.is-cursor .mz-place-in-collapsed-label {
+  color: #3d3d3d;
+  font-weight: 800;
+}
+
+/* ---------- 代弁の担体 ----------
+   囲みとは別要素・別の形: 左端の縦棒(常時表示の帯)＋右端の小さな文字タグ。
+   当たり判定(button本体)は行いっぱいに広げて押しやすくする一方、見た目の
+   要素自体は左端の細い帯と右端の小さなタグの2つだけに留める。
+   湧くときは140〜200msでscaleとopacityだけが動く(基本イージング)。
+   絶対配置なので、これが湧いても行の高さ・他の行のoffsetTopには影響しない。 */
+
+.mz-place-in-collapsed-holds {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.mz-place-in-collapsed-holds-bar {
+  flex: none;
+  align-self: stretch;
+  width: 3px;
+  margin: 3px 0;
+  border-radius: 2px;
+  background: #3d3d3d;
+  transform-origin: center;
+  animation: mz-place-in-collapsed-bar-in 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.mz-place-in-collapsed-holds-tag {
+  margin-left: auto;
+  margin-right: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  transform-origin: right center;
+  animation: mz-place-in-collapsed-tag-in 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes mz-place-in-collapsed-bar-in {
+  from {
+    opacity: 0;
+    transform: scaleY(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+@keyframes mz-place-in-collapsed-tag-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---------- 注記行 ---------- */
+
+.mz-place-in-collapsed-note {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #5c5c5c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 動きを控えたい人へ ----------
+   グローバルCSS(src/styles/global.css)の`*`ルールがtransition/animationの尺を
+   潰す。企画側の申し送りどおりここでも個別対応はしない(標本フォルダ単体で
+   コピーされた場合でも既存標本群と同じ扱いに揃える)。 */
+@media (prefers-reduced-motion: reduce) {
+  .mz-place-in-collapsed-op-btn,
+  .mz-place-in-collapsed-mode-btn,
+  .mz-place-in-collapsed-row,
+  .mz-place-in-collapsed-toggle,
+  .mz-place-in-collapsed-holds-bar,
+  .mz-place-in-collapsed-holds-tag {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

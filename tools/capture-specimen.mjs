@@ -1093,6 +1093,340 @@ const CHOREO = {
     }
     await sleep(2000) // 頼んでいない窓まで一緒に動き、2つの窓が同じものを映し続ける
   },
+
+  'place-in-collapsed': async (page) => {
+    /* 撮るべきは「囲みが消えて、別の形の担体が親の行に湧く」瞬間と、
+       その担体が段数を言い直す瞬間。対照は「親に囲みが移る」1カットで足りる */
+    await sleep(1100) // 現在地(適用除外)は見えている。囲み1個
+    await page.getByRole('button', { name: '第1節 適用範囲を畳む' }).click()
+    await sleep(1500) // 囲みが消え、親の行に左の縦棒と「1段内」が湧く(形が違う担体)
+    await page.getByRole('button', { name: '第1章 総則を畳む' }).click()
+    await sleep(1700) // 代弁する親が外側へ移り、数だけが「2段内」に言い直される
+    await page.locator('.is-holds-place').click()
+    await sleep(1900) // 戻り道は担体自身。押すと開いて現在地が枠内に着地する
+    await page.getByRole('button', { name: '第1節 適用範囲を畳む' }).click()
+    await sleep(1200) // もう一度畳む。ここから「畳まれた中の現在地を送る」を見せる
+    await page.getByRole('button', { name: '↓ 現在地を送る' }).click()
+    await sleep(1800) // 現在地は畳まれた外の次の可視行へ出る。担体は囲みへ戻る
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await page.getByRole('button', { name: '第1節 適用範囲を畳む' }).click()
+    await sleep(1600) // 対照は親の行に同じ囲みが立つ＝「親が現在地」と読める
+    await page.getByRole('button', { name: '第1節 適用範囲を開く' }).click()
+    await sleep(2000) // 開き直しても現在地は戻らない。畳んだだけで現在地を失っている
+  },
+
+  'place-at-live-edge': async (page) => {
+    /* 撮るべきは「追いついたのに未読が残る」1コマ。そこへ行くには
+       追従を外して**5秒以上**待つ必要がある（未読が可視行数を超えないと、
+       追いついた時点で全部見えてしまって未読が 0 になる） */
+    await sleep(2200) // ライブ中。囲みは1個も無く、右下の●LIVEだけが現在地を言う
+    await page.getByRole('button', { name: '▲', exact: true }).click()
+    await page.getByRole('button', { name: '▲', exact: true }).click()
+    await sleep(1800) // ●LIVE が消え、読んでいた行に囲みが立ち、下に戻り道が湧く
+    await sleep(5200) // 台帳は伸び続けるが、囲みの行は1pxも動かない。増えるのは未読の数だけ
+    await page.locator('.is-catch-up').click()
+    await sleep(2600) // 追いついた（●LIVE が戻る）のに、未読の数は消えずに残る＝別の事実
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1400) // 対照はライブ中も最終行に囲みが立つ＝行が増えるたび現在地が飛び移る
+    await page.getByRole('button', { name: '▲', exact: true }).click()
+    await page.getByRole('button', { name: '▲', exact: true }).click()
+    await sleep(4200)
+    await page.locator('.is-catch-up').click()
+    await sleep(2400) // 押した瞬間の末尾へ飛ぶので、着地したときにはもう末尾ではない。件数も消える
+  },
+
+  'place-not-loaded': async (page) => {
+    /* 撮るべきは「取り寄せ中は枠のどこも指さない」と「対照は届いた瞬間に囲みが跳ぶ」の2コマ。
+       跳びは 26px しかないので、対照は届く前後をたっぷり静止させて見せる */
+    await sleep(1300) // 現在地は3行目。手元にあるので囲みが立っている
+    await page.getByRole('button', { name: '320行目へ' }).click()
+    await sleep(1500) // 囲みが消え、枠の外の帯が「320行目・取り寄せ中」とだけ名乗る。位置は指さない
+    await sleep(1600) // 届くと帯は方角へ引き継がれる（320行目・314行下）。枠は1pxも動かない
+    await page.locator('.is-place-offscreen').click()
+    await sleep(1900) // 押したときだけ飛ぶ。着地して囲みが立つ
+    await page.getByRole('button', { name: '取り寄せを失敗させる' }).click()
+    await sleep(2000) // 失敗しても現在地は壊れない。再取得の導線は担体自身に載る
+    await page.getByRole('button', { name: '再試行' }).click()
+    await sleep(2000) // 通ると撃ち分けが復帰する。現在地の値は一度も変わっていない
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1000)
+    await page.getByRole('button', { name: '320行目へ' }).click()
+    await sleep(2600) // 対照は骨の上に囲みを置き、届いた瞬間に 26px 跳ぶ＝現在地が動いたと読める
+  },
+  'resolution-burst': async (page) => {
+    /* 撮るべきは3つ。(1) 既定: 「今週を解決する」で17項目が段の昇順・段の切れ目の
+       「間」で確定し、確定の拍が変化のない項目にも打つこと(未見バッジが増える)。
+       (2) 対照: 同じボタンで、評価額(段4)が真っ先に確定し、変化のない12項目は
+       最後まで拍すら立たない(確定したのか来ていないのか区別できない)まま、
+       待たされる。(3) 既定に戻り、「まとめて確定」で残りが尺ゼロで一気に確定し、
+       未見バッジが跳ね上がること。 */
+    await sleep(500)
+    await page.getByRole('button', { name: '今週を解決する' }).click()
+    await sleep(1900) // 既定: 段の昇順で確定が降りてくる。変化のない項目にも拍が打つ
+    await sleep(900) // 静止: 17件確定・変化5件・未見17件を読ませる
+
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(500)
+    await page.getByRole('button', { name: '今週を解決する' }).click()
+    await sleep(1300) // 対照: 評価額(段4)が真っ先に確定する＝因果と逆順
+    await sleep(2400) // 静止: 12項目が最後まで拍すら立たないまま待たされる
+
+    await page.getByRole('button', { name: '既定', exact: true }).click()
+    await sleep(500)
+    await page.getByRole('button', { name: '今週を解決する' }).click()
+    await sleep(250)
+    await page.getByRole('button', { name: 'まとめて確定' }).click()
+    await sleep(1500) // 既定: 追い越しで尺ゼロ確定、未見バッジが一気に増える
+  },
+  'place-in-history': async (page) => {
+    /* 撮るべきは3つ。(1)「戻る」が尺ゼロで着地し、履歴の点(台帳の外)だけが動くこと。
+       (2) 戻ってから別の行を選ぶと、履歴の先(進む▶)が捨てられること。
+       (3) 消してから戻ると、台帳の囲みは立たず「この位置の行はもうありません」が
+       名乗ること。対照は同じ手順を、台帳の担体だけ(経路を描く移動・黙った破棄・
+       黙ったすり替え)で受け、正反対の意味になる。 */
+    const row = (id) => page.locator(`.mz-place-in-history-row[data-row-id="${id}"]`)
+    const back = () => page.getByRole('button', { name: '◀ 戻る' }).click()
+    const forward = () => page.getByRole('button', { name: '進む ▶' }).click()
+    await sleep(900) // 台帳。履歴の点はまだ1つだけ
+    await row(4).click()
+    await sleep(600)
+    await row(9).click()
+    await sleep(600)
+    await row(16).click()
+    await sleep(1300) // 履歴の点が3つ。台帳の外の帯に居ることを読ませる
+    await back()
+    await sleep(1500) // 尺ゼロで着地。台帳の上を滑らない(囲みが行の中でいきなり湧く)
+    await back()
+    await sleep(1500)
+    await forward()
+    await sleep(1000)
+    await forward()
+    await sleep(1000)
+    // 分岐の破棄: 戻ってから別の行を選ぶ
+    await back()
+    await sleep(500)
+    await back()
+    await sleep(900)
+    await row(20).click()
+    await sleep(1900) // 捨てられる点が折れて消え、同じ瞬間に進む▶が無効になる
+    // 消えた行へ戻る
+    await row(12).click()
+    await sleep(600)
+    await page.getByRole('button', { name: 'この行を消す' }).click()
+    await sleep(700)
+    await back()
+    await sleep(2100) // 台帳の囲みは立たず、欠けた点と帯の文言だけが「もう無い」と言う
+    await forward()
+    await sleep(1300) // 消えた位置からでも進むは効く(履歴の構造自体は壊れていない)
+
+    // 対照: 台帳の担体だけで現在地を描く
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await row(1).click()
+    await sleep(500)
+    await row(8).click()
+    await sleep(1300) // 台帳の上を滑って見える=「戻る」を移動として描いてしまっている
+    await back()
+    await sleep(1300)
+    await row(3).click()
+    await sleep(600) // 黙って分岐を破棄する(捨てたことを言わない)
+    await forward()
+    await sleep(1500) // 進む▶は有効に見えるままなのに、押しても何も起きない(死んだボタン)
+    await row(9).click()
+    await sleep(500)
+    await row(11).click()
+    await sleep(600) // 消す対象(1つ前=9)と代役の候補(10)が同じ画面に収まる位置で消す
+    await page.getByRole('button', { name: 'この行を消す' }).click()
+    await sleep(600)
+    await back()
+    await sleep(1900) // 消えたはずの行へ、隣の行が黙ってすり替わって囲みが立つ
+  },
+  /* No.113: 主題は「再演中に本物が届いたら実演が優先される」こと(C4)なので、
+     既定・対照とも必ず再演の最中に「更新が届く」を押す瞬間を撮る。
+     既定は切って中断の帯が2秒で消えるところまで、対照は切らずに古い値のまま
+     1.3秒近く止まって見えるところまで、どちらも静止をたっぷり取る。 */
+  'replay-not-now': async (page) => {
+    const live = () => page.getByRole('button', { name: '更新が届く' })
+    const replay = () => page.getByRole('button', { name: 'もう一度' })
+    await sleep(700) // 初期状態(まだ何も届いていない)を読ませる間
+    // 既定: 実演 → 再演(帯+破線) → もう一度を再演中に押す(積まずに最初からやり直す)
+    await live().click()
+    await sleep(1500) // 0.30sの着地 + 数字を読む間
+    await replay().click()
+    await sleep(1300) // 破線と「13:42 の更新を再演中」の帯。値の動きは実演と見分けが付かない
+    await replay().click() // 再演中にもう一度: 2つ目が積まれず、最初からやり直る(C6)
+    await sleep(900)
+    // ここが主題: 再演の最中に本物を届かせる。既定は尺ゼロで切り、中断を1回だけ名乗る
+    await replay().click()
+    await sleep(250) // 再演の途中で
+    await live().click()
+    await sleep(2400) // 「再演を中断しました」の帯が2秒で消え、跡が残らないところまで
+    // 対照(ありがちな実装)へ切り替え
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(800)
+    await live().click()
+    await sleep(1400) // 実演は既定と同じ速さ・不透明度で普通に着地する
+    await replay().click()
+    await sleep(350) // 半透明・0.5倍速で古い値へ巻き戻り始める
+    await live().click() // 再演中に本物が届く。対照は切らずキューに積む(壊れ方の芯)
+    await sleep(2200) // 古い値のまま1.3秒近く止まって見える。押しても何も起きていないように読める
+    await sleep(700) // 遅れて実演が始まり、着地するところまで
+  },
+  'preview-not-yet': async (page) => {
+    /* 撮るべきは3つ。ひとつ、握っているあいだ**事実の塗りが1pxも動かない**こと。
+       ふたつ、輪郭が**中割りを作らずに**つまみへ追従すること（尺ゼロ＝出来事ではない）。
+       みっつ、離す場所で「やめた」と「確定した」が分かれること。
+       確定へ向かうときは**真下へ垂直に**運ぶ。斜めに切ると、運んでいる途中に
+       ネイティブの range が値を書き換えてしまう（実装が掘り当てた罠。下記 index.tsx 参照）。 */
+    const slider = page.locator('.mz-preview-not-yet-slider')
+    const confirm = page.getByRole('button', { name: 'この配分で確定' })
+    const at = async (loc, u) => {
+      const b = await loc.boundingBox()
+      return [Math.round(b.x + b.width * u), Math.round(b.y + b.height / 2)]
+    }
+    const confirmCenter = async () => {
+      const b = await confirm.boundingBox()
+      return [Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2)]
+    }
+    await sleep(900) // 待機。予告は0個。事実の塗りだけが在る
+    // 1回目: 握って動かし、台の上で離す ＝「やめた」
+    const p0 = await at(slider, 0.34)
+    await page.mouse.move(...p0)
+    await page.mouse.down()
+    await sleep(700) // 破線の輪郭が opacity だけで現れる（幅は最初から行き先）
+    const p1 = await at(slider, 0.66)
+    await glide(page, p0, p1, 900) // 輪郭は中割りを作らずに追従する。塗りは動かない
+    await sleep(900)
+    await page.mouse.up()
+    await sleep(1500) // 輪郭は幅を変えずに消える。塗りは1pxも動かない＝「値は減っていない」
+    // 2回目: 握って動かし、握ったまま真下へ運んで確定ボタンの上で離す ＝「確定した」
+    const q0 = await at(slider, 0.3)
+    await page.mouse.move(...q0)
+    await page.mouse.down()
+    await sleep(600)
+    const q1 = await at(slider, 0.78)
+    await glide(page, q0, q1, 1000)
+    await sleep(700)
+    const c = await confirmCenter()
+    await glide(page, q1, [q1[0], c[1]], 400) // X を変えずに真下へ（値を動かさない）
+    await sleep(800) // 確定ボタンが光る＝「ここで離すと確定」
+    await page.mouse.up()
+    await sleep(2600) // 輪郭は消えず、塗りが輪郭の中を満たしにいく。評価額だけ中心では止まらない
+    await sleep(1200) // 外れた予告の跡が残っている（次に握るまで消えない）
+    // 対照: 事実の棒そのものを予告値まで伸ばして半透明にする
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    const r0 = await at(slider, 0.3)
+    await page.mouse.move(...r0)
+    await page.mouse.down()
+    await sleep(500)
+    const r1 = await at(slider, 0.78)
+    await glide(page, r0, r1, 1000) // 棒そのものが動く＝「もう起きた」と読める
+    await sleep(800)
+    await page.mouse.up()
+    await sleep(2200) // 離すと棒が元の値まで戻る＝「値が減った」と読める
+  },
+  'compare-two-futures': async (page) => {
+    /* 撮るべきは2つ。ひとつ、A を留め置いたまま B へポインタを移すあいだ
+       **Aの輪郭が一度も消えない**こと(対照はここで必ず0個の隙間が空く)。
+       ふたつ、決めたあと**塗りが伸び切ってから**もう片方が端から欠けること。
+       どちらも「移動の途中」が主題なので、ポインタは飛ばさず glide で運ぶ。 */
+    const hand = (c) => page.locator(`[data-hand][data-candidate="${c}"]`)
+    const center = async (loc) => {
+      const b = await loc.boundingBox()
+      return [b.x + b.width / 2, b.y + b.height / 2]
+    }
+    const A = await center(hand('a'))
+    const B = await center(hand('b'))
+    await sleep(900) // 待機。輪郭は0個。事実の塗りだけが在る
+    await page.mouse.move(...A)
+    await sleep(800) // 仮の予告が1個。触っているあいだだけ
+    await page.mouse.down()
+    await page.mouse.up()
+    await sleep(900) // 留め置く。ピンの印が付くが、形は輪郭のまま(濃くしない)
+    await glide(page, A, B, 700) // ここが芯: 移動のあいだ A の輪郭は消えない
+    await sleep(900)
+    await page.mouse.down()
+    await page.mouse.up()
+    await sleep(600)
+    await page.mouse.move(30, 330) // 舞台の外へ逃がして仮ホバーを消す
+    await sleep(2200) // 2つの未来が同じ形・同じ濃さ・同じ原点で並ぶ。比べている時間
+    await page.getByRole('button', { name: 'Aに決める' }).click()
+    await sleep(520) // 事実の塗りが A の輪郭の中を満たしにいく。B は微動だにしない
+    await sleep(900) // 満たし終えてから、B が端から欠けていく(幅は変えない)
+    await sleep(1600)
+    await page.getByRole('button', { name: 'やり直す' }).click()
+    await sleep(1000)
+    // 対照: ホバー中しか出ない。留め置けないので、比べるには記憶が要る
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await page.mouse.move(...A)
+    await sleep(900) // A の予告
+    await glide(page, A, B, 700) // 移動のあいだ予告が0個になる。比較が途切れる
+    await sleep(900) // B の予告。A はもう画面に無い
+    await glide(page, B, A, 700)
+    await sleep(1000) // 見比べるには、片方を覚えておくしかない
+    await page.getByRole('button', { name: 'Aに決める' }).click()
+    await sleep(2000)
+  },
+  'irreversible-step': async (page) => {
+    /* 撮るべきは「差が履歴の列にしか出ない」こと。ボタンは2つとも同じ見た目なので、
+       主題はボタンの側では一切写らない——写るのは列の末尾だけ。
+       順序に1つ制約がある。確定すると両ボタンが disabled になるので、
+       可逆側の実演(点が増える/戻る)は**確定より前**に撮らないと撮れない。 */
+    const reversible = () => page.getByRole('button', { name: '配分を変える' })
+    const irreversible = () => page.getByRole('button', { name: '週を確定する' })
+    const back = () => page.getByRole('button', { name: '◀ 戻る' })
+    const center = async (loc) => {
+      const b = await loc.boundingBox()
+      return [b.x + b.width / 2, b.y + b.height / 2]
+    }
+    await sleep(900) // 静止。2つのボタンが同じ見た目であることを先に刷り込む
+    /* 順序をここで決めている。先に点を積んでから予告を見せる——
+       列が空のままホバーを撮ると、担体が地の色に浮くだけで**主張が読めない**
+       (実物を目視して分かった。数値条件は空でも通る)。列は、点が在って初めて列に見える。 */
+    for (const _ of [1, 2, 3]) {
+      await reversible().click()
+      await sleep(520) // 1操作 = 1点。可逆な操作は履歴に積まれる
+    }
+    await back().click()
+    await sleep(1200) // 押せる。点が1つ減る＝戻れる
+    // 押す前の予告。同じ場所(列の末尾)に、別の形が出る
+    await reversible().hover()
+    await sleep(1200) // 空席(破線の丸)が1個。「次はここに積まれる」
+    await irreversible().hover()
+    await sleep(1300) // 空席が消え、縦の締め線に入れ替わる。両方が出るコマは1枚も無い
+    await page.mouse.move(20, 20)
+    await sleep(700)
+    // ここが主題の芯: 押しているあいだは、まだ起きていない
+    const irr = await center(irreversible())
+    await page.mouse.move(...irr)
+    await sleep(400)
+    await page.mouse.down()
+    await sleep(800) // 締め線が引かれていく。週の数字はまだ動かない
+    await glide(page, irr, [irr[0] + 120, irr[1] + 90], 500) // 外へずらす
+    await page.mouse.up()
+    await sleep(1400) // 締め線が引き戻る。何も起きなかった＝引き返せた
+    // 短く押しても確定する（じらしではない。時間を人質に取っていない）
+    await page.mouse.move(...irr)
+    await sleep(500)
+    await page.mouse.down()
+    await sleep(60) // 60ms。長押しの閾値は無い
+    await page.mouse.up()
+    await sleep(2200) // 締め線が残り、週が+1。点は1つも増えず、◀戻る が無効になる
+    await page.mouse.move(20, 20)
+    await sleep(900) // 締め切られた列だけが画面に残る
+    // 対照: 赤く大きいボタンと確認ダイアログ。履歴の列には何の差も出ない
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1000)
+    await reversible().click()
+    await sleep(700)
+    await irreversible().click()
+    await sleep(1300) // ダイアログが出る。読み手は止められ、文章を読まされる
+    await page.getByRole('button', { name: 'はい' }).click()
+    await sleep(2200) // 点が1つ増えるだけ。戻れないことは画面のどこにも残らない
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
