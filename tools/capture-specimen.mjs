@@ -1427,6 +1427,42 @@ const CHOREO = {
     await page.getByRole('button', { name: 'はい' }).click()
     await sleep(2200) // 点が1つ増えるだけ。戻れないことは画面のどこにも残らない
   },
+
+  'preview-out-of-date': async (page) => {
+    /* 撮るべきは3つ。ひとつ、握って動かしているあいだ**予告が置いていかれる**こと
+       （輪郭は握った時点の値に留まり、係留線だけが伸びる）。ふたつ、**手を止めると
+       ズレが 0 になる**こと（輪郭はジャンプする＝中割りを作らない）。みっつ、対照では
+       輪郭が**後戻りする**こと（応答の到着順が入れ替わるため）。
+       ゆっくり動かすと着地が追いついてしまうので、**係留線が伸びる速さで**動かす。 */
+    const slider = page.locator('.mz-preview-out-of-date-slider')
+    const at = async (u) => {
+      const b = await slider.boundingBox()
+      return [Math.round(b.x + b.width * u), Math.round(b.y + b.height / 2)]
+    }
+    await sleep(800) // 待機。予告は0個。事実の塗りだけが在る
+    // 1回目（既定）: 握って動かす → 置いていかれる → 手を止める → 追いつく
+    const a0 = await at(0.3)
+    await page.mouse.move(...a0)
+    await page.mouse.down()
+    await sleep(600) // 輪郭が現れる（幅は最初から行き先。緩急は付かない）
+    await glide(page, a0, await at(0.86), 1100) // 係留線が伸びる＝予告が古くなる
+    await sleep(1400) // 手を止める。最新の応答が着地して係留線が 0 になる
+    await glide(page, await at(0.86), await at(0.5), 900) // 戻す向きでも同じ
+    await sleep(1300)
+    await page.mouse.up() // やめた: 輪郭は幅を変えずに消える。塗りは1pxも動かない
+    await sleep(1400)
+    // 2回目（対照）: 届いた順にそのまま差し替える
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(700)
+    const b0 = await at(0.3)
+    await page.mouse.move(...b0)
+    await page.mouse.down()
+    await sleep(500)
+    await glide(page, b0, await at(0.9), 1600) // つまみは前へ。予告は後戻りする
+    await sleep(1200)
+    await page.mouse.up() // 離しても、保留中の取り寄せが遅れて届いて動き続ける
+    await sleep(1600)
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))

@@ -1,26 +1,404 @@
+/* No.119「何もしなかったことで閉じる」
+   モノクロ・自己完結。色トークンは図鑑のパレット(#3d3d3d 濃 / #6e6e6e 濃中 /
+   #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡 / #c7c7c4 レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)を踏襲。対照だけ赤(#c0392b)を持ち込む(=対照の壊れ方)。
+
+   芯: 機会のspan(.mz-expired-by-doing-nothing-span)は、open→expired→(1週おいて)
+   is-foldedのどの状態でもleft/width/opacityが変わらない。差が付くのはis-foldedが
+   付いてから先の見た目(斜線オーバーレイ・跡マーク・ラベルの減光)だけで、open⇔expired
+   (folded前)の間はCSS上ここに書かれたルールだけを見る限り**完全に同一**——分岐で
+   隠しているのではなく、is-foldedというクラスがまだ付いていないので参照するルール
+   自体が無い、という状態を作っている(index.tsxの難所コメント参照)。 */
+
 .mz-expired-by-doing-nothing {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 320px;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-expired-by-doing-nothing.is-active {
-  animation: mz-expired-by-doing-nothing-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: 操作ヒント + 既定/対照トグル ---------- */
+
+.mz-expired-by-doing-nothing-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-expired-by-doing-nothing-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+.mz-expired-by-doing-nothing-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-expired-by-doing-nothing-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-expired-by-doing-nothing-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-expired-by-doing-nothing-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 既定: 週の定規 ---------- */
+
+.mz-expired-by-doing-nothing-ruler {
+  position: relative;
+  padding: 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 週の目盛り。ここは事実(時間そのもの)なので、常に一定の見た目 */
+.mz-expired-by-doing-nothing-ticks {
+  position: relative;
+  height: 8px;
+}
+.mz-expired-by-doing-nothing-tick {
+  position: absolute;
+  top: 0;
+  width: 1.5px;
+  height: 7px;
+  background: #d6d6d3;
+  transform: translateX(-50%);
+}
+
+.mz-expired-by-doing-nothing-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mz-expired-by-doing-nothing-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mz-expired-by-doing-nothing-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #5c5c5c;
+  transition: color 0.2s;
+}
+/* 畳み: 詳しさを落とす側の変化(ラベルを弱める)。open/expired(畳み前)には一切効かない
+   ——is-foldedが付くのはFOLD_DELAY_WEEKS分遅れてからなので、失効の瞬間とは別フレーム */
+.mz-expired-by-doing-nothing-row.is-folded .mz-expired-by-doing-nothing-label {
+  color: #b3b3b3;
+}
+
+.mz-expired-by-doing-nothing-take-btn {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  font-size: 10px;
+  font-weight: 800;
+  color: #3d3d3d;
+  cursor: pointer;
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s;
+}
+.mz-expired-by-doing-nothing-take-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-expired-by-doing-nothing-take-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+}
+
+.mz-expired-by-doing-nothing-track {
+  position: relative;
+  height: 16px;
+}
+/* レール: 場所の提示だけ(No.116と同じ考え方)。事実は言わない */
+.mz-expired-by-doing-nothing-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  border-radius: 999px;
+  background: #c7c7c4;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 機会のspan本体。open/expired(畳み前)のどちらでもここに書かれたルールだけが効く
+   ——left/width/opacityは一度置いたら二度と変わらない(C1/C2/C4の実体)。 */
+.mz-expired-by-doing-nothing-span {
+  position: absolute;
+  top: 0;
+  height: 16px;
+  z-index: 1;
+  border-radius: 8px;
+  background: #d3d3d0;
+  border: 1.5px solid #6e6e6e;
+  opacity: 1;
+}
+
+/* 取った: 実際のユーザー操作(クリック)がトリガーなので、ここは動いてよい */
+.mz-expired-by-doing-nothing-span[data-status='taken'] {
+  background: #3d3d3d;
+  border-color: #3d3d3d;
+  animation: mz-expired-by-doing-nothing-taken-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-expired-by-doing-nothing-taken-pop {
+  0% {
+    transform: scale(0.85, 1.25);
   }
   60% {
-    transform: scale(0.9, 1.1);
+    transform: scale(1.06, 0.92);
   }
   100% {
     transform: none;
   }
+}
+.mz-expired-by-doing-nothing-taken-mark {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 900;
+  color: #f5f5f3;
+}
+
+/* 畳み: is-foldedが付いてから先だけの見た目。斜線オーバーレイ+跡マーク。
+   失効の瞬間には付かない(FOLD_DELAY_WEEKS分遅れる)ので、これがどれだけ濃くても
+   C1/C4のサンプリングフレームには一切登場しない。 */
+.mz-expired-by-doing-nothing-span.is-folded {
+  border-color: #b3b3b3;
+}
+.mz-expired-by-doing-nothing-span.is-folded::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 7px;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(110, 110, 110, 0.28) 0,
+    rgba(110, 110, 110, 0.28) 2px,
+    transparent 2px,
+    transparent 6px
+  );
+}
+.mz-expired-by-doing-nothing-trace {
+  position: absolute;
+  right: -4px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  transform: translate(50%, -50%) rotate(45deg);
+  background: #6e6e6e;
+  z-index: 2;
+}
+
+/* 現在地の印。定規を縦に貫く。動くのはこれだけ(C2)——だから唯一transitionを持つ */
+.mz-expired-by-doing-nothing-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  transform: translateX(-50%);
+  z-index: 3;
+  transition: left 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+.mz-expired-by-doing-nothing-marker::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: #3d3d3d;
+  border-radius: 2px;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+/* ---------- 対照: カードのリスト(退場の語彙をそのまま使う=壊れ方1) ---------- */
+
+.mz-expired-by-doing-nothing-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mz-expired-by-doing-nothing-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.07);
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.32s ease-in,
+    transform 0.32s ease-in;
+}
+.mz-expired-by-doing-nothing-card.is-closing {
+  opacity: 0;
+  transform: translateY(6px) scale(0.96);
+}
+.mz-expired-by-doing-nothing-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mz-expired-by-doing-nothing-card-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #3d3d3d;
+}
+.mz-expired-by-doing-nothing-card-range {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+.mz-expired-by-doing-nothing-card-btn {
+  flex: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #eaeae8;
+  font-size: 10px;
+  font-weight: 800;
+  color: #3d3d3d;
+  cursor: pointer;
+}
+.mz-expired-by-doing-nothing-card-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.mz-expired-by-doing-nothing-card.is-taken {
+  background: #3d3d3d;
+}
+.mz-expired-by-doing-nothing-card.is-taken .mz-expired-by-doing-nothing-card-label,
+.mz-expired-by-doing-nothing-card.is-taken .mz-expired-by-doing-nothing-card-range {
+  color: #f5f5f3;
+}
+/* 壊れ方3: 残り1週だけに専用の警告担体(点滅)を足す。既定はこの概念自体を持たない */
+.mz-expired-by-doing-nothing-card.is-urgent {
+  animation: mz-expired-by-doing-nothing-urgent-blink 0.8s ease-in-out infinite;
+}
+@keyframes mz-expired-by-doing-nothing-urgent-blink {
+  0%,
+  100% {
+    background: #fff;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.07);
+  }
+  50% {
+    background: #fdecea;
+    box-shadow: 0 6px 16px rgba(192, 57, 43, 0.25);
+  }
+}
+.mz-expired-by-doing-nothing-card.is-urgent .mz-expired-by-doing-nothing-card-label {
+  color: #c0392b;
+}
+
+/* 壊れ方2: 時間で消えるトースト。見ていなかった読み手には何も残らない */
+.mz-expired-by-doing-nothing-toast {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 44px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 10.5px;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  animation: mz-expired-by-doing-nothing-toast-in 0.2s ease-out;
+  z-index: 4;
+}
+@keyframes mz-expired-by-doing-nothing-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- 週送り + 履歴の列 ---------- */
+
+.mz-expired-by-doing-nothing-control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mz-expired-by-doing-nothing-next-btn {
+  flex: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-expired-by-doing-nothing-next-btn:active {
+  transform: scale(0.96);
+}
+.mz-expired-by-doing-nothing-week-note {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 履歴: 「取った」ときだけ点が増える。失効はここに一切触れない(C3) */
+.mz-expired-by-doing-nothing-strip {
+  position: relative;
+  min-height: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 2px;
+}
+.mz-expired-by-doing-nothing-strip-rail {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 50%;
+  height: 2px;
+  border-radius: 999px;
+  background: #c7c7c4;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+.mz-expired-by-doing-nothing-dot {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #3d3d3d;
 }
