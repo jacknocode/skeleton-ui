@@ -46,7 +46,7 @@
   }
 }
 .mz-sling-target.is-hit {
-  animation: mz-sling-squash 0.55s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  animation: mz-sling-squash 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes mz-sling-squash {
   0% {
@@ -72,7 +72,7 @@
   letter-spacing: 0.14em;
   color: #3d3d3d;
   pointer-events: none;
-  animation: mz-sling-hitpop 0.8s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
+  animation: mz-sling-hitpop 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 @keyframes mz-sling-hitpop {
   0% {
@@ -139,7 +139,7 @@
 }
 /* 帰還。定位置にぽんっと復活する */
 .mz-sling-ball.is-back {
-  animation: mz-sling-respawn 0.46s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  animation: mz-sling-respawn 0.46s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes mz-sling-respawn {
   0% {

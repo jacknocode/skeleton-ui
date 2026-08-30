@@ -98,7 +98,7 @@
 .mz-offscreen-arrivals-seat {
   height: 52px; /* 行44px + 間8px */
   overflow: hidden;
-  transition: height 200ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1));
+  transition: height 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 /* 挿入直後の1フレーム目はここで高さ0（=閉じた状態）。JS側が2フレーム後にこのクラスを
    外すことで、通常状態の height:52px へtransitionが発火し「開く」動きになる */
@@ -116,8 +116,8 @@
   background: #fff;
   border-radius: 10px;
   transition:
-    opacity 160ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1)),
-    transform 160ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1));
+    opacity 160ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 160ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 /* 中身のにじみ出し: 席が開くのと同じ瞬間に開始、席より短い160msでopacity/位置を戻す。
    「席の開き(200ms)」と「中身の滲み(160ms)」を別尺にしているのは、開き切る直前に
@@ -178,14 +178,14 @@
    「上から順に」という順序だけは残る（No.86の帰結をそのまま踏襲） */
 .mz-offscreen-arrivals-content.is-fading .mz-offscreen-arrivals-bar {
   opacity: 0;
-  transition: opacity 900ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1));
+  transition: opacity 900ms cubic-bezier(0.22, 0.61, 0.36, 1);
   transition-delay: var(--mz-oa-fade-delay, 0ms);
 }
 
 /* ---------- 気配(pill) ----------
    リスト枠の上端に重ねて置く絶対配置。外の出来事は「いま・ここ」より弱く鳴らす
-   （共通設計則1）——だから跳ねる緩急(var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)))は使わず、
-   減速のみのvar(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1))に統一してある。 */
+   （共通設計則1）——だから跳ねる緩急(cubic-bezier(0.34,1.56,0.64,1))は使わず、
+   減速のみのcubic-bezier(0.22,0.61,0.36,1)に統一してある。 */
 
 .mz-offscreen-arrivals-pill {
   position: absolute;
@@ -207,10 +207,10 @@
   opacity: 1;
   /* 初出時だけ再生される登場アニメーション。件数だけが増える2件目以降は、この要素自体が
      DOMに留まり続けるので再発火しない＝「pill自体は上下に動かさない」が構造上そのまま保証される */
-  animation: mz-offscreen-arrivals-pill-in 160ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1)) both;
+  animation: mz-offscreen-arrivals-pill-in 160ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
   transition:
-    transform 140ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1)),
-    opacity 140ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1));
+    transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 140ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 @keyframes mz-offscreen-arrivals-pill-in {
   from {
@@ -247,10 +247,10 @@
 /* 件数だけのスロット送り。拍を増やさない(pillは動かない)ぶん、情報そのものである件数は
    数字で運ぶ——共通設計則3の実装そのもの */
 .mz-offscreen-arrivals-pill-digit.is-out {
-  animation: mz-offscreen-arrivals-digit-out 120ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1)) both;
+  animation: mz-offscreen-arrivals-digit-out 120ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 .mz-offscreen-arrivals-pill-digit.is-in {
-  animation: mz-offscreen-arrivals-digit-in 120ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1)) both;
+  animation: mz-offscreen-arrivals-digit-in 120ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 @keyframes mz-offscreen-arrivals-digit-out {
   from {

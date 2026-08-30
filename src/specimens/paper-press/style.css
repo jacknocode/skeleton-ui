@@ -42,7 +42,7 @@
   display: inline-block;
 }
 .mz-paper-press-jelly span.is-boing {
-  animation: mz-paper-press-boing 0.5s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  animation: mz-paper-press-boing 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes mz-paper-press-boing {
   30% {

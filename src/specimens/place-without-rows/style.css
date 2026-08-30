@@ -43,7 +43,7 @@
   white-space: nowrap;
   cursor: pointer;
   transition:
-    transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
     opacity 0.2s;
 }
 .mz-place-without-rows-btn:hover:not(:disabled) {
@@ -106,7 +106,7 @@
   border-radius: 50%;
   background: #3d3d3d;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-place-without-rows-slider:active::-webkit-slider-thumb {
   transform: scale(1.15);
@@ -295,7 +295,7 @@
    一切動かさず、拡大率だけを0.4→1へ)。キーはJS側でクリックのたびに増やし、要素を
    毎回作り直すことでアニメーションを再生させている(return-changedのpulseと同じ手口) */
 .mz-place-without-rows-marker-glyph.is-appear {
-  animation: mz-place-without-rows-marker-appear 140ms var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+  animation: mz-place-without-rows-marker-appear 140ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 @keyframes mz-place-without-rows-marker-appear {
   0% {
@@ -310,7 +310,7 @@
 
 /* 復元の着地: 尺ゼロで移動した直後、1度だけ脈打つ(位置は動かさない) */
 .mz-place-without-rows-marker-glyph.is-pulse {
-  animation: mz-place-without-rows-marker-pulse 180ms var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+  animation: mz-place-without-rows-marker-pulse 180ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 @keyframes mz-place-without-rows-marker-pulse {
   0% {

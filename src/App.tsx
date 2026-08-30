@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { CATEGORIES, specimens, sourceOf, type Category, type Specimen } from './registry'
 import { IDEA_STATUS_LABEL, ideas, type IdeaStatus } from './ideas'
 import { MOTION_PRESETS, applyMotionPreset } from './motion'
@@ -145,6 +145,53 @@ function IdeaNursery({ onOpenSpecimen }: { onOpenSpecimen: (specimenId: string) 
   )
 }
 
+/** 標本がステージ幅に収まらないとき（スマホ等）だけ、まるごと縮小して収める。
+    標本側のレイアウトには手を入れない */
+function FitStage({ className, children }: { className: string; children: ReactNode }) {
+  const outerRef = useRef<HTMLDivElement>(null)
+  const innerRef = useRef<HTMLDivElement>(null)
+  // shift: はみ出す標本はグリッドが中央寄せしてくれないため、layout 上も手で中央に置く
+  const [fit, setFit] = useState({ scale: 1, shift: 0 })
+
+  useLayoutEffect(() => {
+    const outer = outerRef.current
+    const inner = innerRef.current
+    if (!outer || !inner) return
+    const update = () => {
+      const styles = getComputedStyle(outer)
+      const avail =
+        outer.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight)
+      const natural = inner.offsetWidth
+      if (avail > 0 && natural > avail) {
+        setFit({ scale: avail / natural, shift: (avail - natural) / 2 })
+      } else {
+        setFit({ scale: 1, shift: 0 })
+      }
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(outer)
+    ro.observe(inner)
+    return () => ro.disconnect()
+  }, [])
+
+  return (
+    <div className={className} ref={outerRef}>
+      <div
+        className="zk-fit"
+        ref={innerRef}
+        style={
+          fit.scale < 1
+            ? { transform: `scale(${fit.scale})`, marginLeft: fit.shift, marginRight: fit.shift }
+            : undefined
+        }
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
 function SpecimenCard({ specimen, onOpen }: { specimen: Specimen; onOpen: () => void }) {
   const { Component } = specimen
   return (
@@ -159,9 +206,9 @@ function SpecimenCard({ specimen, onOpen }: { specimen: Specimen; onOpen: () => 
           </svg>
         </button>
       </header>
-      <div className="zk-card-stage">
+      <FitStage className="zk-card-stage">
         <Component />
-      </div>
+      </FitStage>
       <footer className="zk-card-foot">
         <h2>{specimen.nameJa}</h2>
         <span>{specimen.nameEn}</span>
@@ -229,9 +276,9 @@ function DetailOverlay({ specimen, onClose }: { specimen: Specimen; onClose: () 
           </div>
         </div>
 
-        <div className="zk-sheet-stage">
+        <FitStage className="zk-sheet-stage">
           <Component />
-        </div>
+        </FitStage>
 
         <dl className="zk-sheet-notes">
           <div>

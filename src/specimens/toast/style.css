@@ -23,7 +23,7 @@
   border-radius: 18px;
   background: #fff;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
-  animation: mz-toast-in 0.65s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  animation: mz-toast-in 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes mz-toast-in {
   0% {
@@ -84,7 +84,7 @@
   font-size: 13px;
   font-weight: 800;
   color: #5c5c5c;
-  animation: mz-toast-slide 0.5s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) 0.35s backwards;
+  animation: mz-toast-slide 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.35s backwards;
 }
 .mz-toast-text small {
   font-size: 9px;
@@ -112,7 +112,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-toast-btn:hover {
   transform: translateY(-2px);

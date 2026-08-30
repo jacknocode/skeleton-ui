@@ -16,7 +16,7 @@
   place-items: center;
   cursor: pointer;
   overflow: hidden;
-  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-cd-skill:not(.is-cooling):hover {
   transform: translateY(-2px);
@@ -26,7 +26,7 @@
 }
 /* 発動の瞬間、ボタン自身がバチンと弾ける */
 .mz-cd-skill.is-cooling {
-  animation: mz-cd-fire 0.4s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  animation: mz-cd-fire 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   cursor: default;
 }
 @keyframes mz-cd-fire {
@@ -75,7 +75,7 @@
 
 /* 影が晴れきった合図：ぷるんと跳ねて、輪っかが広がる */
 .mz-cd-skill.is-ready {
-  animation: mz-cd-pop 0.55s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  animation: mz-cd-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes mz-cd-pop {
   0% {

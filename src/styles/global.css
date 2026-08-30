@@ -250,6 +250,13 @@ body {
   padding: 18px 0;
 }
 
+/* FitStage の内側。標本の自然な幅で測り、収まらないときだけ transform で縮む */
+.zk-fit {
+  width: max-content;
+  max-width: none;
+  transform-origin: center;
+}
+
 .zk-card-foot {
   text-align: center;
 }

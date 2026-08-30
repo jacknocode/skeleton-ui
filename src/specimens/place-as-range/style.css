@@ -41,7 +41,7 @@
     background-color 0.2s,
     color 0.2s,
     opacity 0.2s,
-    transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-place-as-range-filter-btn:hover:not(:disabled) {
   transform: translateY(-1px);
@@ -92,7 +92,7 @@
   color: #5c5c5c;
   cursor: pointer;
   transition:
-    transform 0.25s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.2s;
 }
 .mz-place-as-range-op-btn:hover {
@@ -159,8 +159,8 @@
   overflow: hidden;
   transition:
     background-color var(--mz-par-collapse-ms, 160ms),
-    height var(--mz-par-split-ms, 220ms) var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
-    padding var(--mz-par-split-ms, 220ms) var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    height var(--mz-par-split-ms, 220ms) cubic-bezier(0.34, 1.56, 0.64, 1),
+    padding var(--mz-par-split-ms, 220ms) cubic-bezier(0.34, 1.56, 0.64, 1),
     opacity var(--mz-par-split-ms, 220ms) ease-out,
     border-color var(--mz-par-split-ms, 220ms),
     border-bottom-width var(--mz-par-split-ms, 220ms);
@@ -216,7 +216,7 @@
    (index.tsxがinline styleでtransform-originを渡す)。既存の行(is-selectedのまま留まる行)
    にはこのanimationは掛からない——1回性のクラスなので再レンダーのたびに再生されはしない */
 .mz-place-as-range-row.is-growing {
-  animation: mz-place-as-range-grow var(--mz-par-grow-ms, 160ms) var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+  animation: mz-place-as-range-grow var(--mz-par-grow-ms, 160ms) cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 @keyframes mz-place-as-range-grow {
   from {
@@ -239,7 +239,7 @@
   width: 100%;
   height: 34px;
   pointer-events: none;
-  transition: transform var(--mz-par-flip-ms, 200ms) var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform var(--mz-par-flip-ms, 200ms) cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-place-as-range-anchor {
   position: absolute;
@@ -276,7 +276,7 @@
   width: 100%;
   height: 34px;
   pointer-events: none;
-  transition: transform var(--mz-par-flip-ms, 200ms) var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform var(--mz-par-flip-ms, 200ms) cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-place-as-range-action {
   position: absolute;
@@ -291,7 +291,7 @@
   border-top: 6px solid #3d3d3d;
   transform-origin: 50% 40%;
   transform: rotate(0deg);
-  transition: transform var(--mz-par-flip-ms, 200ms) var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform var(--mz-par-flip-ms, 200ms) cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-place-as-range-action.is-up {
   transform: rotate(180deg);

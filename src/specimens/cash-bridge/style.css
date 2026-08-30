@@ -66,7 +66,7 @@
 .mz-cash-bridge-bar.is-end {
   animation-name: mz-cash-bridge-land;
   animation-duration: 0.52s;
-  animation-timing-function: var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1));
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes mz-cash-bridge-land {
   0% {
@@ -118,7 +118,7 @@
   pointer-events: none;
   opacity: 0;
   transform: translateX(-50%) translateY(4px);
-  animation: mz-cash-bridge-cap-in 0.32s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) both;
+  animation: mz-cash-bridge-cap-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .mz-cash-bridge-cap.is-down {
   color: #a3a3a3;
@@ -164,7 +164,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-cash-bridge-actions button:hover {
   transform: translateY(-2px);

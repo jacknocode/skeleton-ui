@@ -51,7 +51,7 @@
   font-weight: 700;
   color: #6e6e6e;
   /* 押し込み: 回転も拡大もせず、沈んで締まってから紙の繊維が戻るように浮く */
-  animation: mz-causal-relay-press 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+  animation: mz-causal-relay-press 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 /* 結果の軸を1本も動かさなかった原因。地を抜いて「下段に続きが無い区画」だと分かる形にする */
 .mz-causal-relay-cause.is-quiet {
@@ -68,7 +68,7 @@
   border: 1px solid #9a9a98;
   opacity: 0;
   pointer-events: none;
-  animation: mz-causal-relay-bloom 0.3s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) both;
+  animation: mz-causal-relay-bloom 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: inherit;
 }
 @keyframes mz-causal-relay-press {
@@ -181,7 +181,7 @@
   font-variant-numeric: tabular-nums;
   text-align: right;
   opacity: 0;
-  animation: mz-causal-relay-total-in 0.24s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+  animation: mz-causal-relay-total-in 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 @keyframes mz-causal-relay-total-in {
   from {
@@ -207,7 +207,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-causal-relay-actions button:hover {
   transform: translateY(-2px);

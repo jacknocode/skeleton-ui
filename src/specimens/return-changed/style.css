@@ -118,7 +118,7 @@
 /* 到着のパルス。この回の緩急の約束の例外枠——「いま・ここに着いた」の合図専用、
    尺は120msに抑える。跳ねる緩急は使わない、減速のみ */
 .mz-return-changed-item.is-pulsing {
-  animation: mz-return-changed-arrive 120ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1));
+  animation: mz-return-changed-arrive 120ms cubic-bezier(0.22, 0.61, 0.36, 1);
   transform-origin: center;
 }
 @keyframes mz-return-changed-arrive {
@@ -145,7 +145,7 @@
 }
 .mz-return-changed-bookmark.is-fading {
   opacity: 0;
-  transition: opacity 200ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1));
+  transition: opacity 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .mz-return-changed-bookmark-line {
   position: absolute;
@@ -217,7 +217,7 @@
   padding: 8px 14px;
   background: #3d3d3d;
   cursor: pointer;
-  animation: mz-return-changed-band-in 200ms var(--mz-ease-swift, cubic-bezier(0.22, 0.61, 0.36, 1)) both;
+  animation: mz-return-changed-band-in 200ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 @keyframes mz-return-changed-band-in {
   from {
@@ -260,7 +260,7 @@
   cursor: pointer;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   transition:
-    transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
     opacity 0.2s;
 }
 .mz-return-changed-submit:hover:not(:disabled) {
@@ -289,7 +289,7 @@
   text-overflow: ellipsis;
   cursor: pointer;
   transition:
-    transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
     opacity 0.2s;
 }
 .mz-return-changed-aux:hover:not(:disabled) {

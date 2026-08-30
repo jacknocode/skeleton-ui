@@ -24,7 +24,7 @@
 
    受け手の帯(.mz-sent-place-band-receiver)だけが260ms待ってから220msで現れる
    (JSのsetTimeoutで待ち、CSSのtransitionで現れる——二重構造)。この回の基本イージング
-   var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1))を使うと、transform(translateY)は実際に0を通り越して
+   cubic-bezier(0.34, 1.56, 0.64, 1)を使うと、transform(translateY)は実際に0を通り越して
    +0.38px程度まで跳ねてから収束する一方、opacityはブラウザ側で[0,1]にクランプされる
    ため「オーバーシュートで1を早期に超えて見える」ことはない(実測: opacityが1に達する
    のは開始から70〜90ms、transformがnoneに収束するのは開始から220ms前後——同じ
@@ -32,7 +32,7 @@
    タイミングが違って見える)。 */
 
 .mz-sent-place {
-  --mz-sent-place-ease: var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  --mz-sent-place-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
   flex-direction: column;
   gap: 6px;

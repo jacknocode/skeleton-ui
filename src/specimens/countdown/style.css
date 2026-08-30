@@ -34,7 +34,7 @@
   font-variant-numeric: tabular-nums;
   line-height: 1;
   animation:
-    mz-count-in 0.45s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    mz-count-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
     mz-count-beat 0.6s ease-in-out 0.45s infinite;
 }
 @keyframes mz-count-in {
@@ -72,7 +72,7 @@
   font-weight: 800;
   letter-spacing: 0.06em;
   color: #3d3d3d;
-  animation: mz-count-go 0.9s var(--mz-ease-glide, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
+  animation: mz-count-go 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 @keyframes mz-count-go {
   0% {
@@ -105,7 +105,7 @@
   font-weight: 700;
   color: #6e6e6e;
   cursor: pointer;
-  transition: transform 0.3s var(--mz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-count-btn:hover {
   transform: translateY(-2px);
