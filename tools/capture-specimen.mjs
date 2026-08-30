@@ -1463,6 +1463,38 @@ const CHOREO = {
     await page.mouse.up() // 離しても、保留中の取り寄せが遅れて届いて動き続ける
     await sleep(1600)
   },
+
+  'expired-by-doing-nothing': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**失効の瞬間に機会は1pxも動かない**こと
+       （動くのは現在地の縦線だけ。通り過ぎたことは位置関係でしか言われない）。
+       ふたつ、**取った機会と失効した機会の差**（履歴の点は取ったぶんだけ増える）。
+       みっつ、対照では**カードが消えてトーストが出る**こと——そして
+       トーストが消えたあと、閉じたことが画面のどこにも残らないこと。
+       先に片方を「取る」。取った側と放置した側を同じ画面に並べないと差が写らない。 */
+    const next = page.getByRole('button', { name: /次の週/ })
+    const take = (i) => page.locator('.mz-expired-by-doing-nothing-take-btn').nth(i)
+    await sleep(900)
+    await take(1).click() // 出展枠を取る: 履歴の点が +1、帯に「取った」印が入る
+    await sleep(1100)
+    // 人を採る（2〜4週）は触らない。週を1つずつ進めて、縦線が右端を越えるのを見る
+    for (let i = 0; i < 3; i++) {
+      await next.click()
+      await sleep(900)
+    }
+    await sleep(700) // 4→5週: 失効した瞬間。帯は動かない。履歴の点も増えない
+    await next.click()
+    await sleep(1400) // もう1週。ここで初めて畳まれる（失効そのものは動きの起点にしない）
+    await next.click()
+    await sleep(1600) // 跡は残ったまま。時間では消えない
+    // 対照: 期限切れでカードが消え、トーストが出て、やがて何も残らない
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1000)
+    for (let i = 0; i < 4; i++) {
+      await next.click()
+      await sleep(800)
+    }
+    await sleep(2600) // トーストが消える。閉じたことは画面のどこにも残らない
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
