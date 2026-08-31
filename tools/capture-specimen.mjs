@@ -1579,6 +1579,35 @@ const CHOREO = {
     await sleep(3400) // 入る → 引き剥がす → 行が消える → トースト
     await sleep(1900) // トーストも消え、取れなかったことが画面のどこにも残らない
   },
+
+  'unknown-outcome': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**着地するとどう見えるか**（1回目。実線が枠に接し、受理が入る）。
+       ふたつ、**着地しないとどう見えるか**（2回目。実線が止まり、残りが破線で、枠が空のまま）。
+       この2つは横に並んだまま残るので、**同じフレームに両方が写る**のが要点。
+       みっつ、**確かめても何も変わらない**こと——押しても線が伸びないのを撮るには、
+       押す前と押した後で十分な間を取って「変わらなかった」を見せるしかない。
+       対照はスピナーが回り続け、失敗と言い切り、再送で受理が2件入る（＝二重提出）。 */
+    const primary = () => page.locator('.mz-unknown-outcome-primary-btn')
+    await sleep(1000) // 台。枠は最初から描かれている
+    await primary().click() // 1回目: 成功。実線が枠に接する
+    await sleep(2000)
+    await primary().click() // 2回目: 返らない。実線が止まり、残りが破線になる
+    await sleep(2600)
+    // 「確かめる」を3回。線は1pxも伸びない＝分からないは繰り返しても減らない
+    for (let i = 0; i < 3; i++) {
+      await primary().click()
+      await sleep(700)
+    }
+    await sleep(1600) // 着地した列と、着地しなかった列が並んだまま残る
+    // 対照: スピナー → 失敗と言い切る → 再送 → 二重提出
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await primary().click()
+    await sleep(1400) // スピナーが回る＝「まだ作業中」と読める
+    await sleep(1600) // 失敗と言い切る（実際には届いているかもしれない）
+    await page.locator('.mz-unknown-outcome-resend-btn').click()
+    await sleep(2200) // 受理が2件入る。二重に提出されたことが画面に見える
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))

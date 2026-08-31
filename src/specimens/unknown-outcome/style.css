@@ -13,10 +13,12 @@
    動きのため)、計測対象のheightの"最終値"は常に決め打ちの定数(0/40/22)であり、
    途中の値を測っているわけではない。
 
-   結果チップ(.-chip)は`.-result`を`justify-content:center`にして、線の水平中央
-   (=`.-marks`の`align-items:center`が作る軸)と揃えている。既定の台本では成功は
-   1回しか起きないため、「唯一のチップを中央に置く」だけで「それを生んだ線の
-   直下」に一致する。
+   提出ごとに自分の列(.-lane)を持つ「くし型」構成(横のlanes)。列の中で
+   dot→track→result-boxを縦にgap:0で直結しているので、線とその列自身の結果欄との
+   距離は、他の列が何個増えても一切動かない──「1回目の線は結果欄に接する」が
+   測定した瞬間だけでなく最終フレームまでずっと真であり続ける(縦の直列chainで
+   組んでいた旧版は、2件目が積まれると1件目の線の"隣"が2件目の点に変わってしまい、
+   受理チップだけが取り残されて見える事故を起こした。lane化で解消)。
 
    既定側は @keyframes を一度も使わない(animation-nameが常にnoneであるための土台)。
    @keyframesは対照のスピナー専用に予約する。 */
@@ -114,24 +116,23 @@
   transform: scale(0.94);
 }
 
-/* ---------- 到達ゾーン: 跡+線と結果欄を0ギャップで直結する ---------- */
-/* ルートのgap(8px)がここに挟まると「レールの下端」と「結果欄の上端」の実測距離が
-   ズレる(gapぶん余計に開いてしまう)ため、marksとresultをこの内側wrapperに包み、
-   wrapper自身はgap:0にする。ルート側のgapはこのwrapper "1個" との間にだけ効く。 */
-.mz-unknown-outcome-reach {
+/* ---------- 提出ごとの列(lane): dot→track→result-boxを縦にgap:0で直結 ---------- */
+/* 列同士は横方向の独立したフレックスアイテム。ある列のtrack→result-boxの距離は、
+   他の列が何個増えても変わらない(=C2が最終フレームでも恒久的に真)。 */
+.mz-unknown-outcome-lanes {
   display: flex;
-  flex-direction: column;
-  gap: 0;
+  flex-direction: row;
+  gap: 12px;
+  padding-top: 2px;
 }
 
-/* ---------- 操作の跡 + 往路の線(縦のchain) ---------- */
-
-.mz-unknown-outcome-marks {
+.mz-unknown-outcome-lane {
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0;
-  padding-top: 2px;
 }
 
 .mz-unknown-outcome-mark {
@@ -195,20 +196,24 @@
   );
 }
 
-/* ---------- 結果の欄: 下地として最初から描かれている ---------- */
-
+/* ---------- 結果の欄: 列ごとに1つ。下地として最初から描かれている ---------- */
+/* align-self:stretchで自分の列(lane)いっぱいの幅まで広がる(=自分のtrackの真下を
+   ちょうど覆う)。justify-content:centerで中身(チップ1個 or 空)を水平中央に置く
+   ことで、その列のtrackのx(=lane内で中央寄せ)と自然に一致する。 */
 .mz-unknown-outcome-result {
+  align-self: stretch;
   flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   height: 34px;
-  padding: 0 10px;
+  padding: 0 6px;
   border: 1px dashed #8c8c8c;
   border-radius: 8px;
   background: #eaeae8;
-  overflow-x: auto;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .mz-unknown-outcome-chip {
@@ -249,9 +254,11 @@
 }
 
 .mz-unknown-outcome-fail {
+  margin: 6px 0;
   font-size: 10.5px;
   font-weight: 800;
   color: #c0392b;
+  text-align: center;
 }
 
 .mz-unknown-outcome-resend-btn {

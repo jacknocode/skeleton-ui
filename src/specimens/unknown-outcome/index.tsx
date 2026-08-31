@@ -8,100 +8,88 @@ import './style.css'
    語彙が無い、というのが企画の言う難所そのもの。
 
    ---- 芯1: 往路の線が、結果の欄に届かないまま止まる(どう作ったか) ----
-   各提出は「点(操作の跡)+線(往路)」のペアとして下へ積む(縦のchain)。固定長
-   (LINE_FULL=40px)の透明な軌道(.track)の中で、届いた分だけ濃い実線(#3d3d3d)を
-   上から重ねる。成功は軌道全長を覆う(=gap 0)。未着地は軌道の下端18pxを覆わずに
-   止まる。
+   固定長(LINE_FULL=40px)の透明な軌道(.track)の中で、届いた分だけ濃い実線
+   (#3d3d3d)を上から重ねる。成功は軌道全長を覆う(=gap 0)。未着地は軌道の下端18pxを
+   覆わずに止まる。
 
-   ---- 未着地の区間を「濃さ」ではなく「線種」で言う(コーディネーターからの
-   フィードバックで修正) ----
-   最初の実装は届いていない区間を「常設の薄いグレー(#d6d6d3)のレール」で示して
-   いたが、実物を見ると肉眼ではほぼ読めないほど淡く、「担体が置かれる場所が
-   描かれていないと読めない」という図鑑の教訓に反する結果になった(No.116/No.118に
-   続く3回目の同じ事故、という指摘を受けた)。かつ、この回では「薄さ=確度」を
-   既に別の主題として使っている(No.74/No.114)ため、薄さで「届いていない」を言うと
-   語彙が衝突する。
+   ---- 未着地の区間を「濃さ」ではなく「線種」で言う ----
+   届いていない区間を「常設の薄いグレーのレール」で示す初期案は、実物を見ると
+   肉眼ではほぼ読めないほど淡く、「担体が置かれる場所が描かれていないと読めない」
+   という図鑑の教訓に反した(No.116/No.118に続く同型の事故、との指摘)。かつこの回は
+   「薄さ=確度」を既に別の主題として使っている(No.74/No.114)ため、薄さで「届いて
+   いない」を言うと語彙が衝突する。
    直した形: 実線が止まった"後"に、残り18pxだけ破線(.-line-gap、#8c8c8c、結果欄の
    `1px dashed #8c8c8c`と同じ色・同じ線種)で埋める。「実線=届いた/破線=届いて
-   いない」という線種だけの対立にし、濃淡(opacity/color-lightness)には一切頼らない。
-   結果欄の枠と同じ破線語彙を使うことで、「未着地の18pxは、結果欄という"まだ埋まって
-   いない枠"の続きである」という含意も持たせた。
+   いない」という線種だけの対立にし、濃淡には一切頼らない。
 
-   ---- 芯1の続き: なぜ「チェーン(直列)」で良いのか ----
-   最初は各マークが同じ結果欄に対して独立に距離を測る「くし型(並列レーン)」で組もうと
-   したが、そのためには結果欄を絶対位置で固定し、レーンを横に並べる必要があり
-   「点は縦に積まれる」という企画の明示と衝突する。実装して気づいたのは、**この標本の
-   台本が一度も「3件目を提出してから2件目の距離を測り直す」局面を要求していない**こと。
-   受け入れ条件は台本の順番(1→2→3→4)をなぞって測られる。2回目(未着地)が最後の
-   マークであり続ける間(3回目の確かめる・4回目の次へは新しいマークを作らない)は、
-   直列に積んだ最後のマークの下端は常に結果欄の上端に**文字どおり**隣接している
-   ──だから「点は縦に積む」を素直に実装しても、測られる範囲では並列レーンと
-   同じ精度が出る。将来3件目を提出すれば2件目のマークは結果欄から離れるが、それは
-   「消えない跡」として構造的に残り続けるだけで、意味は壊れない(跡は永久に18pxの
-   空白を後ろに引きずる、という一般化が勝手に成立する)。
+   ---- 芯1のさらに続き: 縦のchainから横のlanesへ(2回目の構造修正) ----
+   最初はNo.119の定規に倣って全提出を1本の縦列に直列で積み、結果欄も1つだけ共有する
+   「chain」で組んだ。C1〜C8の数値はすべて通ったが、実物を見たコーディネーターから
+   「最終フレームで、着地した結果が非着地の提出のものに見える」という指摘を受けた。
+   原因は構造そのもの: 提出2が下に積まれた瞬間、提出1の線の"次の隣人"が結果欄では
+   なく提出2の点に変わり、`受理#1`は提出2の破線の真下に座ることになる。C2
+   (「1回目の線は結果欄に接する」)は測定した瞬間には真だったが、**もっと後の
+   フレームで絵として真であり続けない**——これはNo.118と同型の落ち方だと指摘された。
+
+   直した形: 提出ごとに**自分の列(lane)**を持たせ、線もその列の**自分の結果欄**へ
+   降りるようにした(横に並ぶ「くし型」)。最初のチェーン案を検討したときにも
+   くし型は候補に挙がっていたが、そのときは「点は縦に積まれる」という企画の文面と
+   衝突すると判断して見送っていた。実際に「消えない跡」を最終フレームまで正しく
+   保ち続けるには、結果欄を提出ごとに独立させて実測上も真に独立させる必要がある
+   ——という、文面上の言葉づかいより優先すべき制約が実装して初めて分かった。
+   これにより、C2は「測った瞬間だけ真」ではなく「以後もずっと真」になる。ある列の
+   結果欄が、他の列の存在や有無によって動く要素が構造的に無い(各列は自分の
+   track→自分のresult-boxを0ギャップで直結し、列同士は横方向の独立したフレックス
+   アイテムでしかない)ため。
 
    ---- 芯2: スピナーを1つも持たない ----
    既定側のモーションは全部 `transition`(height/transform)で書き、`animation`
    (@keyframes)は一度も使わない。@keyframesはこの標本では対照のスピナー専用に
    予約した。これにより「既定の全要素のcomputed animation-nameは常にnone」が、
-   特定のタイミングだけでなく**いつサンプリングしても**保証される(一発ものの
-   ポップにanimationを使うと、再生中だけanimation-nameがnoneでなくなる瞬間が
-   生まれてしまうため、あえて避けた)。線の伸びは「伸びて止まる」動きそのものが
-   時間の経過を表し、スピナーの代替になる(企画の言う「両方を同時に言える」)。
+   特定のタイミングだけでなく**いつサンプリングしても**保証される。線の伸びは
+   「伸びて止まる」動きそのものが時間の経過を表し、スピナーの代替になる。
 
    ---- 芯3: 再送させない。ラベルを確かめるに変える ----
    ボタンは「押せなくする」のではなく別の動作に置き換える: 直近の提出が未着地の
    あいだ、ラベルは確かめるになり、押しても`marks`配列に一切触れない(=線もgapも
-   1px たりとも動かない)。抜け道は「次へ」──直近の未着地を諦めて次の提出へ進む
-   ための、確かめるとは別のボタン。次へを押しても未着地のマークは配列から消さない
-   ──ただ「次の提出を許可するフラグ(advanced)」を立てるだけなので、古いマークの
-   高さ・opacityには一切触れない(C8の土台)。
+   1px たりとも動かない)。抜け道は「次へ」──直近の未着地を諦めて次の提出(次の列)へ
+   進むための、確かめるとは別のボタン。次へを押しても未着地のマーク・その列は
+   一切消さない・動かさない(C8の土台)。
 
    ---- 対照: 壊れ方 ----
    スピナー(@keyframes回転、既定には存在しない語彙)を2200ms回し続けたあと、赤字で
    「送信に失敗しました」+「再送」ボタンを出す。再送を押すと、結果欄に「受理 #2」
    「受理 #3」の**2件**が入る──最初の提出(スピナー中に本当は届いていた)と、
    再送とが両方受理された、という二重提出の実測(壊れ方1)。スピナーが回っている間は
-   「待てば分かる」という誤読を誘う(壊れ方2)。既定にはこの2つの担体(スピナー・
-   「失敗/再送」の文言)がどちらも存在しない。
+   「待てば分かる」という誤読を誘う(壊れ方2)。対照は縦積みのlanes化を必要としない
+   ──幾何のgapという概念自体を対照は持たない(スピナー→文言→再送という別の壊れ方
+   なので)ため、単一の結果欄のままにしてある。
 
    ---- 台本(決め打ち。乱数不使用) ----
    marks配列のindex(0始まり)の偶奇だけで結果が決まる決定的な関数
    `scriptOutcome(index)`(0→成功, 1→未着地, 2→成功...)。「送った回数」で決まる
-   ので、同じ操作列は必ず同じ結果になる。UIは3件目以降も同じ規則で動くが、画面の
-   高さ(320×250px以内)を守るため MAX_ATTEMPTS で提出そのものを打ち止めにする
-   (企画が要求する台本は2件目までなので、3件目以降は「壊れない」ことだけ保証すれば
-   十分と判断した)。
+   ので、同じ操作列は必ず同じ結果になる。MAX_ATTEMPTS(=2、企画の台本がちょうど
+   要求する回数)で提出そのものを打ち止めにする(外形320×250px以内を守るため。
+   横並びにしたことで縦方向の余裕は大きくなったが、列を増やしすぎると今度は横に
+   収まらなくなるため、台本の範囲(2列)で打ち止めにする判断は変えていない)。
 
    ---- 実装して気づいたこと ----
    1. 「確かめる」を押しても本当に何も変えない、を保証する一番簡単な方法は
-      「確かめるのハンドラを空にする」ことだった。チェック回数の表示やドットの
-      軽い明滅すら、後から「その演出が実は0.0Xpxだけ高さに影響していた」という
-      事故を生みかねない(共通仕様の「measure対象にtransitionを付けない」と同じ
-      発想)。何もしないボタンを作る勇気が、いちばん安全な実装だった。
-   2. 「受理#1」チップは線が結果欄に触れた**直後**(340ms、線のtransition完了後
-      +微小マージン)に追加している。線のtransition完了を待たずに即座にチップを
-      置くと、チップが先に着地して見えてしまい「線が届いたから受理された」という
-      因果が読み取れなくなる(先に結果が出て、後から線が追いつくように見える)。
-   3. 破線の色(#8c8c8c)は対照の「失敗」色(赤)と混同しないよう、最後まで灰色に
-      統一した。既定はモノクロを最後まで貫く必要がある。
-   3b. 「受理#1」チップが線の真下に見えない、という指摘も受けた。原因は
-      `.-result`が`justify-content`の初期値(flex-start)のまま左詰めだった一方、
-      線(.track)は`.marks`の`align-items:center`で欄の水平中央に置かれていた
-      ため。`.-result`を`justify-content:center`にして揃えた──既定の台本では
-      成功は1回しか起きない(MAX_ATTEMPTSの都合で2件目は必ず未着地)ので、
-      「唯一のチップを中央に置く」だけで「それを生んだ線の直下」と一致する。
-      複数個の成功が並ぶ場面(この標本には無いが)まで一般化するなら、チップ側に
-      生成元マークのx座標を持たせて個別に位置合わせする必要がある。
-   4. MAX_ATTEMPTS(=2、企画の台本がちょうど要求する回数)に達すると主ボタンを
-      disabledにする。これは「再送させない」とは別の理由(画面サイズの都合)なので、
-      ラベルは変えず「週を提出する」のままdisabledにした──ラベルを変えて理由を
-      こじつけると、企画が禁じた「別の意味を持つ担体の使い回し」に近づいてしまう
-      ため。実測: LINE_FULL=40のままMAX_ATTEMPTS=3を許すと、3件目(次への後、もう
-      一度提出する)まで進んだ時点で外形が320×256pxとなり250pxの上限を1回だけ
-      踏み越えることが実測で分かった(320×250px以内、という上限は「台本どおり2件で
-      止める」前提で初めて満たされる)。企画は3件目以降の挙動を規定していないため、
-      台本の範囲(2件)で打ち止めにするのが最も安全と判断した。 */
+      「確かめるのハンドラを空にする」ことだった。押しても`marks`state・timerの
+      どちらにも触れない。
+   2. 「受理#N」チップと「破線区間」は、どちらも同じ`settled`フラグの反対の
+      分岐で出している(成功なら破線ではなくチップ、未着地なら逆)。線の
+      transitionが終わった"後"に立てる点は共通で、動きが終わる前に結果を
+      見せてしまうと「先に結果が出て、後から線が追いつく」ように見えてしまう
+      ため。
+   3. 列(lane)ごとに結果欄を持たせたことで、以前の標本にあった「単一の結果欄に
+      複数のチップが横並びになる」絵から、「各列が受理か空欄かをそれぞれ持つ」絵に
+      変わった。結果として、成功列と非着地列を**並べて同時に見比べられる**ことが
+      C2を恒久的に真にするだけでなく、企画の芯(「着地と非着地が、同じ担体の同じ量
+      で区別できる」)をより直接的な絵にした——1枚のフレームの中に「接する例」と
+      「18px手前で止まる例」が両方写る。
+   4. 列の幅はpx固定ではなく`flex:1 1 0`で均等割りにした。MAX_ATTEMPTSを増減
+      しても(将来的に)レイアウトを個別に書き直さずに済むための選択。 */
 
 type Mode = 'default' | 'contrast'
 type Outcome = 'success' | 'pending'
@@ -110,7 +98,9 @@ interface Mark {
   id: number
   outcome: Outcome
   grown: boolean
-  settled: boolean // 未着地のマークだけ使う: 線が止まった"後"に破線区間を出すためのフラグ
+  // 線のtransitionが終わった後に true になる。成功なら受理チップを、未着地なら
+  // 破線区間を出す合図として共用する(=結果が動く前に見えてしまう事故を避ける)。
+  settled: boolean
 }
 
 interface Chip {
@@ -118,12 +108,13 @@ interface Chip {
   label: string
 }
 
-const LINE_FULL = 40 // レール(=線の最大到達)の固定長。成功時はここまで塗る
+const LINE_FULL = 40 // 軌道(=線の最大到達)の固定長。成功時はここまで塗る
 const GAP_STOP = 18 // 企画で決め打ちの「未着地」停止量(px)。ここだけが唯一の定数
 const GROW_MS_SUCCESS = 320
 const GROW_MS_PENDING = 420
-const CHIP_DELAY_MS = 340 // 線のtransition(320ms)が終わってからチップを置く
-const MAX_ATTEMPTS = 2 // 画面の外形(320x250px以内)を守るための表示上限。企画の台本も2件目までしか要求しない
+const SETTLE_DELAY_SUCCESS_MS = 340 // 実線のtransition(320ms)が終わってからチップを置く
+const SETTLE_DELAY_PENDING_MS = 480 // 実線のtransition(420ms)が終わってから破線を置く
+const MAX_ATTEMPTS = 2 // 外形(320x250px以内)を守るための表示上限。企画の台本も2件目までしか要求しない
 const CONTRAST_SPIN_MS = 2200
 
 // 送った回数(index, 0始まり)だけで結果が決まる。乱数不使用・決め打ち。
@@ -131,16 +122,14 @@ function scriptOutcome(index: number): Outcome {
   return index % 2 === 0 ? 'success' : 'pending'
 }
 
-/** 届いたかどうか分からない: 往路の線が結果の欄に届かないまま止まる。スピナー無し。 */
+/** 届いたかどうか分からない: 往路の線が結果の欄に届かないまま止まる。提出ごとに自分の列を持つ。 */
 export default function UnknownOutcome() {
   const [mode, setMode] = useState<Mode>('default')
 
   // ---- 既定 ----
   const [marks, setMarks] = useState<Mark[]>([])
-  const [chips, setChips] = useState<Chip[]>([])
   const [advanced, setAdvanced] = useState(false)
   const markIdRef = useRef(0)
-  const chipIdRef = useRef(0)
   const timersRef = useRef<number[]>([])
   const rafRef = useRef<number[]>([])
 
@@ -167,12 +156,10 @@ export default function UnknownOutcome() {
     window.clearTimeout(cTimerRef.current)
     setMode(next)
     setMarks([])
-    setChips([])
     setAdvanced(false)
     setCPhase('idle')
     setCChips([])
     markIdRef.current = 0
-    chipIdRef.current = 0
   }
 
   function handleModeChange(next: Mode) {
@@ -201,22 +188,15 @@ export default function UnknownOutcome() {
     })
     rafRef.current.push(r1)
 
-    if (outcome === 'success') {
-      const t = window.setTimeout(() => {
-        setChips((prev) => [...prev, { id: chipIdRef.current++, label: `受理 #${prev.length + 1}` }])
-      }, CHIP_DELAY_MS)
-      timersRef.current.push(t)
-    } else {
-      // 未着地: 実線が止まりきってから、残り18pxを破線で埋める(=届いていない区間の可視化)。
-      // 動きが終わる"前"に破線を出すと結果が動く前から見えてしまうので、止まった後にする。
-      const t = window.setTimeout(() => {
-        setMarks((prev) => prev.map((m) => (m.id === id ? { ...m, settled: true } : m)))
-      }, GROW_MS_PENDING + 60)
-      timersRef.current.push(t)
-    }
+    // 実線のtransitionが終わってから settled を立てる(成功→チップ、未着地→破線)。
+    const settleDelay = outcome === 'success' ? SETTLE_DELAY_SUCCESS_MS : SETTLE_DELAY_PENDING_MS
+    const t = window.setTimeout(() => {
+      setMarks((prev) => prev.map((m) => (m.id === id ? { ...m, settled: true } : m)))
+    }, settleDelay)
+    timersRef.current.push(t)
   }
 
-  // 確かめる: 何もしない。marks/chipsに一切触れない(=線もgapも1pxも動かない)
+  // 確かめる: 何もしない。marks/timerに一切触れない(=線もgapも1pxも動かない)
   function handleCheck() {
     // 意図的に空。この空であること自体がC4の答え。
   }
@@ -231,7 +211,7 @@ export default function UnknownOutcome() {
 
   function handleNext() {
     if (!isBlocked) return
-    setAdvanced(true) // 未着地のマークはそのまま残し、次の提出だけを許可する
+    setAdvanced(true) // 未着地のマーク・その列はそのまま残し、次の提出だけを許可する
   }
 
   const primaryLabel = isBlocked ? '確かめる' : '週を提出する'
@@ -301,13 +281,16 @@ export default function UnknownOutcome() {
             )}
           </div>
 
-          <div className="mz-unknown-outcome-reach">
-            <div className="mz-unknown-outcome-marks" data-role="marks">
-              {marks.map((m, i) => {
-                const targetHeight = m.outcome === 'success' ? LINE_FULL : LINE_FULL - GAP_STOP
-                const gapPx = m.outcome === 'success' ? 0 : GAP_STOP
-                return (
-                  <div className="mz-unknown-outcome-mark" key={m.id} data-role="mark" data-index={i}>
+          {/* 提出ごとに自分の列(lane)を持つ。線はその列の自分の結果欄へ降りるので、
+              列が増えても(=次の提出があっても)他の列の「接する/接しない」は動かない。 */}
+          <div className="mz-unknown-outcome-lanes" data-role="lanes">
+            {marks.map((m, i) => {
+              const targetHeight = m.outcome === 'success' ? LINE_FULL : LINE_FULL - GAP_STOP
+              const gapPx = m.outcome === 'success' ? 0 : GAP_STOP
+              const successOrdinal = marks.slice(0, i + 1).filter((x) => x.outcome === 'success').length
+              return (
+                <div className="mz-unknown-outcome-lane" key={m.id} data-role="lane" data-index={i}>
+                  <div className="mz-unknown-outcome-mark" data-role="mark">
                     <span className="mz-unknown-outcome-dot" data-role="dot" />
                     <span className="mz-unknown-outcome-track" data-role="track">
                       <span
@@ -324,17 +307,18 @@ export default function UnknownOutcome() {
                       )}
                     </span>
                   </div>
-                )
-              })}
-            </div>
 
-            <div className="mz-unknown-outcome-result" data-role="result-box">
-              {chips.map((c) => (
-                <span className="mz-unknown-outcome-chip" data-role="chip" key={c.id}>
-                  {c.label}
-                </span>
-              ))}
-            </div>
+                  {/* この列だけの結果欄。下地として最初から描かれている(空でも枠は見える)。 */}
+                  <div className="mz-unknown-outcome-result" data-role="result-box">
+                    {m.outcome === 'success' && m.settled && (
+                      <span className="mz-unknown-outcome-chip" data-role="chip">
+                        受理 #{successOrdinal}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </>
       ) : (
@@ -367,26 +351,26 @@ export default function UnknownOutcome() {
             )}
           </div>
 
-          <div className="mz-unknown-outcome-reach">
-            <div className="mz-unknown-outcome-marks is-contrast" data-role="marks">
-              <div className="mz-unknown-outcome-mark">
+          <div className="mz-unknown-outcome-lanes is-contrast" data-role="lanes">
+            <div className="mz-unknown-outcome-lane" data-role="lane">
+              <div className="mz-unknown-outcome-mark" data-role="mark">
                 <span className="mz-unknown-outcome-dot" data-role="dot" />
                 <span className="mz-unknown-outcome-track" data-role="track" />
               </div>
-            </div>
 
-            {cPhase === 'failed' && (
-              <div className="mz-unknown-outcome-fail" role="status" data-role="fail-msg">
-                送信に失敗しました
+              {cPhase === 'failed' && (
+                <div className="mz-unknown-outcome-fail" role="status" data-role="fail-msg">
+                  送信に失敗しました
+                </div>
+              )}
+
+              <div className="mz-unknown-outcome-result" data-role="result-box">
+                {cChips.map((c) => (
+                  <span className="mz-unknown-outcome-chip is-contrast" data-role="chip" key={c.id}>
+                    {c.label}
+                  </span>
+                ))}
               </div>
-            )}
-
-            <div className="mz-unknown-outcome-result" data-role="result-box">
-              {cChips.map((c) => (
-                <span className="mz-unknown-outcome-chip is-contrast" data-role="chip" key={c.id}>
-                  {c.label}
-                </span>
-              ))}
             </div>
           </div>
         </>
