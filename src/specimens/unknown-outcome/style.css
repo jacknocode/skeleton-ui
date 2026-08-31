@@ -1,26 +1,256 @@
+/* No.122「届いたかどうか分からない」
+   モノクロ・自己完結。色トークンは図鑑のパレット(#3d3d3d 濃 / #6e6e6e 濃中 /
+   #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡=レール / #eaeae8 舞台の地 / #f5f5f3 反転文字 /
+   #fff)を踏襲。対照だけ赤(#c0392b)を持ち込む(=対照の壊れ方)。外形は320×250px以内。
+
+   芯: .-line の height だけが「届いた量」を言う。成功はレール全長(40px)を覆い、
+   未着地はレールの下端18pxを覆わずに残す──レール(.-track、常に同じ長さ・同じ灰色)
+   が下地として先に敷かれているので、覆われていない部分がそのまま「まだ届いていない
+   区間」として目に見える。line自体にtransitionは付けるが(伸びる動きのため)、
+   計測対象のheightの"最終値"は常に決め打ちの定数(0/40/22)であり、途中の値を
+   測っているわけではない。
+
+   既定側は @keyframes を一度も使わない(animation-nameが常にnoneであるための土台)。
+   @keyframesは対照のスピナー専用に予約する。 */
+
 .mz-unknown-outcome {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 320px;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-unknown-outcome.is-active {
-  animation: mz-unknown-outcome-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: 操作ヒント + 既定/対照トグル ---------- */
+
+.mz-unknown-outcome-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-unknown-outcome-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+.mz-unknown-outcome-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-unknown-outcome-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-unknown-outcome-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-unknown-outcome-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 操作列: 主ボタン + (未着地のときだけ)次へ ---------- */
+
+.mz-unknown-outcome-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+}
+
+.mz-unknown-outcome-primary-btn {
+  flex: none;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s;
+}
+.mz-unknown-outcome-primary-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.mz-unknown-outcome-primary-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.mz-unknown-outcome-next-btn {
+  flex: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  font-size: 10px;
+  font-weight: 800;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-unknown-outcome-next-btn:active {
+  transform: scale(0.94);
+}
+
+/* ---------- 到達ゾーン: 跡+線と結果欄を0ギャップで直結する ---------- */
+/* ルートのgap(8px)がここに挟まると「レールの下端」と「結果欄の上端」の実測距離が
+   ズレる(gapぶん余計に開いてしまう)ため、marksとresultをこの内側wrapperに包み、
+   wrapper自身はgap:0にする。ルート側のgapはこのwrapper "1個" との間にだけ効く。 */
+.mz-unknown-outcome-reach {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ---------- 操作の跡 + 往路の線(縦のchain) ---------- */
+
+.mz-unknown-outcome-marks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding-top: 2px;
+}
+
+.mz-unknown-outcome-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+/* 点: 送った回数だけ積まれる。消えない。位置・大きさ・色、いずれも結果で変えない */
+.mz-unknown-outcome-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #3d3d3d;
+}
+
+/* レール: 往路の下地。常に固定長(40px)・固定色。事実は一切主張しない(場所の提示だけ) */
+.mz-unknown-outcome-track {
+  position: relative;
+  flex: none;
+  width: 2px;
+  height: 40px;
+  background: #d6d6d3;
+  border-radius: 1px;
+}
+
+/* 実線: 「届いた量」だけを塗る。届いていない区間はレールの地色のまま見える。
+   色は成功/未着地で変えない(幾何=heightだけが違いを言う)。 */
+.mz-unknown-outcome-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: #3d3d3d;
+  border-radius: 1px;
+}
+/* 成功: ぷるん(出の動き)。レール全長を覆って接する */
+.mz-unknown-outcome-line.is-success {
+  transition: height 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* 未着地: 減速して止まる。跳ねない・戻らない(共通仕様: 戻り・退場は跳ねさせない) */
+.mz-unknown-outcome-line.is-pending {
+  transition: height 0.42s ease-out;
+}
+
+/* ---------- 結果の欄: 下地として最初から描かれている ---------- */
+
+.mz-unknown-outcome-result {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px dashed #8c8c8c;
+  border-radius: 8px;
+  background: #eaeae8;
+  overflow-x: auto;
+}
+
+.mz-unknown-outcome-chip {
+  flex: none;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  font-size: 10px;
+  font-weight: 800;
+  color: #3d3d3d;
+  transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- 対照 ---------- */
+
+.mz-unknown-outcome-marks.is-contrast .mz-unknown-outcome-track {
+  background: #d6d6d3;
+}
+
+.mz-unknown-outcome-primary-btn.is-spinning {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 1;
+}
+
+/* スピナー: 既定には一度も現れない語彙。@keyframesはここだけで使う */
+.mz-unknown-outcome-spinner {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  border: 2px solid rgba(245, 245, 243, 0.35);
+  border-top-color: #f5f5f3;
+  animation: mz-unknown-outcome-spin 0.7s linear infinite;
+}
+@keyframes mz-unknown-outcome-spin {
+  to {
+    transform: rotate(360deg);
   }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+}
+
+.mz-unknown-outcome-fail {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #c0392b;
+}
+
+.mz-unknown-outcome-resend-btn {
+  flex: none;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: #c0392b;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-unknown-outcome-resend-btn:active {
+  transform: scale(0.96);
+}
+
+.mz-unknown-outcome-chip.is-contrast {
+  background: #fdecea;
+  color: #c0392b;
+  box-shadow: none;
+  border: 1px solid rgba(192, 57, 43, 0.35);
 }

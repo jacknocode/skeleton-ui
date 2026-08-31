@@ -271,33 +271,35 @@ export default function UnknownOutcome() {
             )}
           </div>
 
-          <div className="mz-unknown-outcome-marks" data-role="marks">
-            {marks.map((m, i) => {
-              const targetHeight = m.outcome === 'success' ? LINE_FULL : LINE_FULL - GAP_STOP
-              const gapPx = m.outcome === 'success' ? 0 : GAP_STOP
-              return (
-                <div className="mz-unknown-outcome-mark" key={m.id} data-role="mark" data-index={i}>
-                  <span className="mz-unknown-outcome-dot" data-role="dot" />
-                  <span className="mz-unknown-outcome-track" data-role="track">
-                    <span
-                      className={`mz-unknown-outcome-line is-${m.outcome}`}
-                      data-role="line"
-                      data-outcome={m.outcome}
-                      data-gap-px={gapPx.toFixed(2)}
-                      style={{ height: m.grown ? targetHeight : 0 }}
-                    />
-                  </span>
-                </div>
-              )
-            })}
-          </div>
+          <div className="mz-unknown-outcome-reach">
+            <div className="mz-unknown-outcome-marks" data-role="marks">
+              {marks.map((m, i) => {
+                const targetHeight = m.outcome === 'success' ? LINE_FULL : LINE_FULL - GAP_STOP
+                const gapPx = m.outcome === 'success' ? 0 : GAP_STOP
+                return (
+                  <div className="mz-unknown-outcome-mark" key={m.id} data-role="mark" data-index={i}>
+                    <span className="mz-unknown-outcome-dot" data-role="dot" />
+                    <span className="mz-unknown-outcome-track" data-role="track">
+                      <span
+                        className={`mz-unknown-outcome-line is-${m.outcome}`}
+                        data-role="line"
+                        data-outcome={m.outcome}
+                        data-gap-px={gapPx.toFixed(2)}
+                        style={{ height: m.grown ? targetHeight : 0 }}
+                      />
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
 
-          <div className="mz-unknown-outcome-result" data-role="result-box">
-            {chips.map((c) => (
-              <span className="mz-unknown-outcome-chip" data-role="chip" key={c.id}>
-                {c.label}
-              </span>
-            ))}
+            <div className="mz-unknown-outcome-result" data-role="result-box">
+              {chips.map((c) => (
+                <span className="mz-unknown-outcome-chip" data-role="chip" key={c.id}>
+                  {c.label}
+                </span>
+              ))}
+            </div>
           </div>
         </>
       ) : (
@@ -330,25 +332,27 @@ export default function UnknownOutcome() {
             )}
           </div>
 
-          <div className="mz-unknown-outcome-marks is-contrast" data-role="marks">
-            <div className="mz-unknown-outcome-mark">
-              <span className="mz-unknown-outcome-dot" data-role="dot" />
-              <span className="mz-unknown-outcome-track" data-role="track" />
+          <div className="mz-unknown-outcome-reach">
+            <div className="mz-unknown-outcome-marks is-contrast" data-role="marks">
+              <div className="mz-unknown-outcome-mark">
+                <span className="mz-unknown-outcome-dot" data-role="dot" />
+                <span className="mz-unknown-outcome-track" data-role="track" />
+              </div>
             </div>
-          </div>
 
-          {cPhase === 'failed' && (
-            <div className="mz-unknown-outcome-fail" role="status" data-role="fail-msg">
-              送信に失敗しました
+            {cPhase === 'failed' && (
+              <div className="mz-unknown-outcome-fail" role="status" data-role="fail-msg">
+                送信に失敗しました
+              </div>
+            )}
+
+            <div className="mz-unknown-outcome-result" data-role="result-box">
+              {cChips.map((c) => (
+                <span className="mz-unknown-outcome-chip is-contrast" data-role="chip" key={c.id}>
+                  {c.label}
+                </span>
+              ))}
             </div>
-          )}
-
-          <div className="mz-unknown-outcome-result" data-role="result-box">
-            {cChips.map((c) => (
-              <span className="mz-unknown-outcome-chip is-contrast" data-role="chip" key={c.id}>
-                {c.label}
-              </span>
-            ))}
           </div>
         </>
       )}
