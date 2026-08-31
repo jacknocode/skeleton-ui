@@ -225,10 +225,6 @@
 
 /* ---------- 対照 ---------- */
 
-.mz-unknown-outcome-marks.is-contrast .mz-unknown-outcome-track {
-  background: #d6d6d3;
-}
-
 .mz-unknown-outcome-primary-btn.is-spinning {
   display: inline-flex;
   align-items: center;
