@@ -1,0 +1,276 @@
+/* No.121「先に取られていた」
+   モノクロ・自己完結。パレット: #3d3d3d(濃) / #6e6e6e / #8c8c8c / #b3b3b3 /
+   #d6d6d3 / #c7c7c4(レール) / #eaeae8(枠の地) / #f5f5f3 / #fff。
+   対照だけ赤 #c0392b を持ち込む(=対照の壊れ方)。
+
+   レーン座標(すべて絶対配置・px固定。JSは left の"値"を計算しない——
+   到達点そのものをCSSクラスとして持ち、JSは"どのクラスを当てるか"だけを選ぶ):
+     レーン幅 300px、高さ26px
+     自分の欄(spot)  left:3px  top:6px  (14x14の待機位置)
+     枠(frame)       right:0   top:1px  (24x24)  → left端は 276px
+     駒 is-rest       left:3px   (自分の欄と同心)
+     駒 is-near       left:250px (= 276 − 12(隙間) − 14(駒幅)。枠の手前12px)
+     駒 is-landed     left:281px (= 276 + (24-14)/2。枠の中心)
+   is-near と is-landed の"出"は同じtransition(240ms, ぷるん)。差は目的地だけ。
+   is-returning は目的地を is-rest と同じ 3px に戻すが、transitionを
+   420ms ease-out に差し替える(戻りは跳ねない=出と戻りの非対称、C7)。 */
+
+.mz-taken-by-someone-else {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 320px;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+/* ---------- 1行目: 操作ヒント + 既定/対照トグル ---------- */
+
+.mz-taken-by-someone-else-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-taken-by-someone-else-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-taken-by-someone-else-modeswitch {
+  flex: none;
+  display: flex;
+  padding: 2px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-taken-by-someone-else-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-taken-by-someone-else-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 3行の機会リスト ---------- */
+
+.mz-taken-by-someone-else-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mz-taken-by-someone-else-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.32s ease-in,
+    transform 0.32s ease-in;
+}
+/* 対照のみ使う退場(壊れ方2)。既定の行は一度もこのクラスを持たない */
+.mz-taken-by-someone-else-row.is-closing {
+  opacity: 0;
+  transform: translateY(6px) scale(0.97);
+}
+
+.mz-taken-by-someone-else-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mz-taken-by-someone-else-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #5c5c5c;
+}
+.mz-taken-by-someone-else-take-btn {
+  flex: none;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  font-size: 10px;
+  font-weight: 800;
+  color: #3d3d3d;
+  cursor: pointer;
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s;
+}
+.mz-taken-by-someone-else-take-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-taken-by-someone-else-take-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+}
+
+/* レーン: 自分の欄 → 駒の通り道 → 枠。300px固定(上の座標コメント参照) */
+.mz-taken-by-someone-else-lane {
+  position: relative;
+  width: 300px;
+  height: 26px;
+}
+
+/* レール: 場所の提示だけ(No.116/119と同じ考え方)。事実は言わない下地 */
+.mz-taken-by-someone-else-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 12px;
+  height: 2px;
+  border-radius: 999px;
+  background: #c7c7c4;
+  z-index: 0;
+}
+
+/* 自分の欄: 駒が離れているあいだも"ここが持ち場"と分かる下地(輪郭のみ) */
+.mz-taken-by-someone-else-spot {
+  position: absolute;
+  left: 3px;
+  top: 6px;
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 1.5px dashed #b3b3b3;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+/* 駒: 直径14pxの丸。行ごとに1つ、自分の欄から出発する */
+.mz-taken-by-someone-else-piece {
+  position: absolute;
+  top: 6px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #3d3d3d;
+  z-index: 3;
+  transition: left 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-taken-by-someone-else-piece.is-rest {
+  left: 3px;
+}
+/* 行C: 枠の手前12pxで止まる到達点(=そもそもこの座標にしか進めない設計) */
+.mz-taken-by-someone-else-piece.is-near {
+  left: 250px;
+}
+/* 行B・対照行C: 枠の中心まで実際に着地する到達点 */
+.mz-taken-by-someone-else-piece.is-landed {
+  left: 281px;
+}
+/* 戻り: 目的地はis-restと同じ3pxだが、transitionだけ差し替える(跳ねない・粘る) */
+.mz-taken-by-someone-else-piece.is-returning {
+  left: 3px;
+  transition: left 0.42s ease-out;
+}
+
+/* 枠: 24×24px。3行とも最初から描かれている(空でも見える下地) */
+.mz-taken-by-someone-else-frame {
+  position: absolute;
+  right: 0;
+  top: 1px;
+  width: 24px;
+  height: 24px;
+  box-sizing: border-box;
+  border: 1px solid #6e6e6e;
+  border-radius: 5px;
+  background: #eaeae8;
+  z-index: 2;
+}
+
+/* 他人の取り分: 輪郭だけの丸(=自分の駒ではないと一目で分かる)。
+   transition/animationを一切持たない——マウントされた瞬間から最終状態
+   (芯2)。JSX上は .frame の子要素(=枠の中に在る、という構造をそのまま
+   表す)なので、containing block も .frame。中心寄せは left/top 50% +
+   transform(枠のborder-box幅に依存しない、常に中心に来る書き方)。 */
+.mz-taken-by-someone-else-other {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1.5px solid #6e6e6e;
+  background: transparent;
+  transition: none;
+  animation: none;
+}
+
+/* ---------- 履歴の列: 「取った」「取れなかった」の2種類だけ ---------- */
+
+.mz-taken-by-someone-else-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 16px;
+}
+.mz-taken-by-someone-else-hist-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px 2px 4px;
+  border-radius: 999px;
+  background: #f5f5f3;
+}
+.mz-taken-by-someone-else-hist-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3d3d3d;
+}
+.mz-taken-by-someone-else-hist-text {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #6e6e6e;
+}
+
+/* ---------- 対照: トースト(壊れ方3) ---------- */
+
+.mz-taken-by-someone-else-toast {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 4px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #c0392b;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  animation: mz-taken-by-someone-else-toast-in 0.2s ease-out;
+  z-index: 4;
+}
+@keyframes mz-taken-by-someone-else-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

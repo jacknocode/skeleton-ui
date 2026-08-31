@@ -1,0 +1,284 @@
+/* No.122「届いたかどうか分からない」
+   モノクロ・自己完結。色トークンは図鑑のパレット(#3d3d3d 濃 / #6e6e6e 濃中 /
+   #8c8c8c 中=破線 / #b3b3b3 淡中 / #eaeae8 舞台の地 / #f5f5f3 反転文字 / #fff)を
+   踏襲。対照だけ赤(#c0392b)を持ち込む(=対照の壊れ方)。外形は320×250px以内。
+
+   芯: .-line の height だけが「届いた量」を言う。成功は軌道(.-track、固定40px)
+   全長を覆い、未着地は軌道の下端18pxを覆わずに残す。「届いていない」ことは
+   *濃さ*ではなく*線種*で言う: 実線(.-line、#3d3d3d)が止まった後、残りの18pxを
+   破線(.-line-gap、#8c8c8c)で埋める。結果欄の枠自体が`1px dashed #8c8c8c`なので、
+   破線という語彙が「まだ埋まっていない」で一貫する(この回は薄さを既に別の主題
+   [確度]に使っているため、濃淡でここを言うと語彙が衝突する──実線/破線という
+   線種の対立にすることで衝突を避けた)。line自体にtransitionは付けるが(伸びる
+   動きのため)、計測対象のheightの"最終値"は常に決め打ちの定数(0/40/22)であり、
+   途中の値を測っているわけではない。
+
+   提出ごとに自分の列(.-lane)を持つ「くし型」構成(横のlanes)。列の中で
+   dot→track→result-boxを縦にgap:0で直結しているので、線とその列自身の結果欄との
+   距離は、他の列が何個増えても一切動かない──「1回目の線は結果欄に接する」が
+   測定した瞬間だけでなく最終フレームまでずっと真であり続ける(縦の直列chainで
+   組んでいた旧版は、2件目が積まれると1件目の線の"隣"が2件目の点に変わってしまい、
+   受理チップだけが取り残されて見える事故を起こした。lane化で解消)。
+
+   既定側は @keyframes を一度も使わない(animation-nameが常にnoneであるための土台)。
+   @keyframesは対照のスピナー専用に予約する。 */
+
+.mz-unknown-outcome {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 320px;
+  position: relative;
+}
+
+/* ---------- 1行目: 操作ヒント + 既定/対照トグル ---------- */
+
+.mz-unknown-outcome-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-unknown-outcome-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-unknown-outcome-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-unknown-outcome-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-unknown-outcome-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 操作列: 主ボタン + (未着地のときだけ)次へ ---------- */
+
+.mz-unknown-outcome-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+}
+
+.mz-unknown-outcome-primary-btn {
+  flex: none;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s;
+}
+.mz-unknown-outcome-primary-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.mz-unknown-outcome-primary-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.mz-unknown-outcome-next-btn {
+  flex: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  font-size: 10px;
+  font-weight: 800;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-unknown-outcome-next-btn:active {
+  transform: scale(0.94);
+}
+
+/* ---------- 提出ごとの列(lane): dot→track→result-boxを縦にgap:0で直結 ---------- */
+/* 列同士は横方向の独立したフレックスアイテム。ある列のtrack→result-boxの距離は、
+   他の列が何個増えても変わらない(=C2が最終フレームでも恒久的に真)。 */
+.mz-unknown-outcome-lanes {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  padding-top: 2px;
+}
+
+.mz-unknown-outcome-lane {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.mz-unknown-outcome-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+/* 点: 送った回数だけ積まれる。消えない。位置・大きさ・色、いずれも結果で変えない */
+.mz-unknown-outcome-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #3d3d3d;
+}
+
+/* 軌道: 往路が伸びうる領域。常に固定長(40px)。それ自体は何も主張しない透明な枠
+   (場所の提示だけ)──実際に「届いた/届いていない」を言うのは中の実線と破線。 */
+.mz-unknown-outcome-track {
+  position: relative;
+  flex: none;
+  width: 2px;
+  height: 40px;
+}
+
+/* 実線: 「届いた量」だけを塗る。色は成功/未着地で変えない(幾何=heightだけが違いを言う) */
+.mz-unknown-outcome-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: #3d3d3d;
+  border-radius: 1px;
+}
+/* 成功: ぷるん(出の動き)。軌道全長を覆って接する */
+.mz-unknown-outcome-line.is-success {
+  transition: height 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* 未着地: 減速して止まる。跳ねない・戻らない(共通仕様: 戻り・退場は跳ねさせない) */
+.mz-unknown-outcome-line.is-pending {
+  transition: height 0.42s ease-out;
+}
+
+/* 破線: 「届いていない」区間そのもの。実線が止まった後に現れ、以後ずっと同じ
+   高さ・同じ不透明度のまま残る(=跡は消えない・薄れない)。transitionを持たない
+   ──現れるか現れないかの二値であって、伸び縮みする担体ではないため。 */
+.mz-unknown-outcome-line-gap {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 2px;
+  height: 18px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    #8c8c8c 0,
+    #8c8c8c 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
+/* ---------- 結果の欄: 列ごとに1つ。下地として最初から描かれている ---------- */
+/* align-self:stretchで自分の列(lane)いっぱいの幅まで広がる(=自分のtrackの真下を
+   ちょうど覆う)。justify-content:centerで中身(チップ1個 or 空)を水平中央に置く
+   ことで、その列のtrackのx(=lane内で中央寄せ)と自然に一致する。 */
+.mz-unknown-outcome-result {
+  align-self: stretch;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 6px;
+  border: 1px dashed #8c8c8c;
+  border-radius: 8px;
+  background: #eaeae8;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.mz-unknown-outcome-chip {
+  flex: none;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  font-size: 10px;
+  font-weight: 800;
+  color: #3d3d3d;
+  transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- 対照 ---------- */
+
+.mz-unknown-outcome-primary-btn.is-spinning {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 1;
+}
+
+/* スピナー: 既定には一度も現れない語彙。@keyframesはここだけで使う */
+.mz-unknown-outcome-spinner {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  border: 2px solid rgba(245, 245, 243, 0.35);
+  border-top-color: #f5f5f3;
+  animation: mz-unknown-outcome-spin 0.7s linear infinite;
+}
+@keyframes mz-unknown-outcome-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.mz-unknown-outcome-fail {
+  margin: 6px 0;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #c0392b;
+  text-align: center;
+}
+
+.mz-unknown-outcome-resend-btn {
+  flex: none;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: #c0392b;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-unknown-outcome-resend-btn:active {
+  transform: scale(0.96);
+}
+
+.mz-unknown-outcome-chip.is-contrast {
+  background: #fdecea;
+  color: #c0392b;
+  box-shadow: none;
+  border: 1px solid rgba(192, 57, 43, 0.35);
+}
