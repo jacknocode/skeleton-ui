@@ -8,13 +8,24 @@ import './style.css'
    語彙が無い、というのが企画の言う難所そのもの。
 
    ---- 芯1: 往路の線が、結果の欄に届かないまま止まる(どう作ったか) ----
-   各提出は「点(操作の跡)+線(往路)」のペアとして下へ積む(縦のchain)。線の下地に
-   常に同じ長さの薄いレール(#d6d6d3、LINE_FULL固定)を敷き、その上に濃い実線
-   (#3d3d3d)を「届いた分だけ」重ねる。成功はレール全長を覆う(=gap 0)。未着地は
-   レールの下端手前18pxを覆わずに残す(=gap 18、レールの地色がそのまま透けて見える)。
-   これが「よくある罠」への回答でもある: 線だけを浮かせて描くと背景に溶けて読めない
-   ため、常設のレールを先に敷いてから実線を重ねた(このレールは成功/失敗どちらでも
-   常に同じ長さ・同じ色──だからレール自体は事実を一切主張しない、下地でしかない)。
+   各提出は「点(操作の跡)+線(往路)」のペアとして下へ積む(縦のchain)。固定長
+   (LINE_FULL=40px)の透明な軌道(.track)の中で、届いた分だけ濃い実線(#3d3d3d)を
+   上から重ねる。成功は軌道全長を覆う(=gap 0)。未着地は軌道の下端18pxを覆わずに
+   止まる。
+
+   ---- 未着地の区間を「濃さ」ではなく「線種」で言う(コーディネーターからの
+   フィードバックで修正) ----
+   最初の実装は届いていない区間を「常設の薄いグレー(#d6d6d3)のレール」で示して
+   いたが、実物を見ると肉眼ではほぼ読めないほど淡く、「担体が置かれる場所が
+   描かれていないと読めない」という図鑑の教訓に反する結果になった(No.116/No.118に
+   続く3回目の同じ事故、という指摘を受けた)。かつ、この回では「薄さ=確度」を
+   既に別の主題として使っている(No.74/No.114)ため、薄さで「届いていない」を言うと
+   語彙が衝突する。
+   直した形: 実線が止まった"後"に、残り18pxだけ破線(.-line-gap、#8c8c8c、結果欄の
+   `1px dashed #8c8c8c`と同じ色・同じ線種)で埋める。「実線=届いた/破線=届いて
+   いない」という線種だけの対立にし、濃淡(opacity/color-lightness)には一切頼らない。
+   結果欄の枠と同じ破線語彙を使うことで、「未着地の18pxは、結果欄という"まだ埋まって
+   いない枠"の続きである」という含意も持たせた。
 
    ---- 芯1の続き: なぜ「チェーン(直列)」で良いのか ----
    最初は各マークが同じ結果欄に対して独立に距離を測る「くし型(並列レーン)」で組もうと
@@ -72,10 +83,16 @@ import './style.css'
       +微小マージン)に追加している。線のtransition完了を待たずに即座にチップを
       置くと、チップが先に着地して見えてしまい「線が届いたから受理された」という
       因果が読み取れなくなる(先に結果が出て、後から線が追いつくように見える)。
-   3. レール(下地)の色を対照の「失敗」色(赤)と混同しないよう、灰色
-      (#d6d6d3)に統一した。もし薄いグレーではなく赤みを一切帯びない色を選ばないと、
-      未着地のレールの「隠れた部分」がうっすら「良くない予兆」に見えてしまう
-      ──既定はモノクロを最後まで貫く必要がある。
+   3. 破線の色(#8c8c8c)は対照の「失敗」色(赤)と混同しないよう、最後まで灰色に
+      統一した。既定はモノクロを最後まで貫く必要がある。
+   3b. 「受理#1」チップが線の真下に見えない、という指摘も受けた。原因は
+      `.-result`が`justify-content`の初期値(flex-start)のまま左詰めだった一方、
+      線(.track)は`.marks`の`align-items:center`で欄の水平中央に置かれていた
+      ため。`.-result`を`justify-content:center`にして揃えた──既定の台本では
+      成功は1回しか起きない(MAX_ATTEMPTSの都合で2件目は必ず未着地)ので、
+      「唯一のチップを中央に置く」だけで「それを生んだ線の直下」と一致する。
+      複数個の成功が並ぶ場面(この標本には無いが)まで一般化するなら、チップ側に
+      生成元マークのx座標を持たせて個別に位置合わせする必要がある。
    4. MAX_ATTEMPTS(=2、企画の台本がちょうど要求する回数)に達すると主ボタンを
       disabledにする。これは「再送させない」とは別の理由(画面サイズの都合)なので、
       ラベルは変えず「週を提出する」のままdisabledにした──ラベルを変えて理由を
@@ -93,6 +110,7 @@ interface Mark {
   id: number
   outcome: Outcome
   grown: boolean
+  settled: boolean // 未着地のマークだけ使う: 線が止まった"後"に破線区間を出すためのフラグ
 }
 
 interface Chip {
@@ -171,7 +189,7 @@ export default function UnknownOutcome() {
     const index = marks.length
     const outcome = scriptOutcome(index)
     const id = markIdRef.current++
-    setMarks((prev) => [...prev, { id, outcome, grown: false }])
+    setMarks((prev) => [...prev, { id, outcome, grown: false, settled: false }])
     setAdvanced(false)
 
     // 1フレーム置いてからheightを0→目標値へ。CSSのtransitionを踏ませるための定石。
@@ -187,6 +205,13 @@ export default function UnknownOutcome() {
       const t = window.setTimeout(() => {
         setChips((prev) => [...prev, { id: chipIdRef.current++, label: `受理 #${prev.length + 1}` }])
       }, CHIP_DELAY_MS)
+      timersRef.current.push(t)
+    } else {
+      // 未着地: 実線が止まりきってから、残り18pxを破線で埋める(=届いていない区間の可視化)。
+      // 動きが終わる"前"に破線を出すと結果が動く前から見えてしまうので、止まった後にする。
+      const t = window.setTimeout(() => {
+        setMarks((prev) => prev.map((m) => (m.id === id ? { ...m, settled: true } : m)))
+      }, GROW_MS_PENDING + 60)
       timersRef.current.push(t)
     }
   }
@@ -292,6 +317,11 @@ export default function UnknownOutcome() {
                         data-gap-px={gapPx.toFixed(2)}
                         style={{ height: m.grown ? targetHeight : 0 }}
                       />
+                      {/* 届いていない区間: 実線が止まった後だけ、破線で残り18pxを埋める。
+                          実線=届いた/破線=届いていない、で語彙を分ける(濃さでは分けない)。 */}
+                      {m.outcome === 'pending' && m.settled && (
+                        <span className="mz-unknown-outcome-line-gap" data-role="line-gap" />
+                      )}
                     </span>
                   </div>
                 )

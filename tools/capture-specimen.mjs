@@ -1528,6 +1528,57 @@ const CHOREO = {
     }
     await sleep(2600) // トーストが消える。閉じたことは画面のどこにも残らない
   },
+
+  'preview-gives-up': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**外れが積もって輪郭が太っていく**こと
+       （4 → 26 → 71 → 136px。No.118 の続きなので、この4週は同じ絵に見える必要がある）。
+       ふたつ、**輪郭がトラックに収まらなくなる瞬間**——左端が台の端で止まり、
+       輪郭が台いっぱいになる。行き先が無い、という1枚。
+       みっつ、その同じクリックの中で**点へ引き渡される**こと。
+       週5のスナップは 650ms しか出ないので、そこだけ間を取らずに続けて撮る。
+       対照は幅が 20px 固定のまま進み、最後に輪郭ごと消えて赤い文言だけが残る。 */
+    const next = () => page.getByRole('button', { name: '次の週へ' })
+    await sleep(900) // 台。トラックと塗りだけが在る
+    for (let i = 0; i < 4; i++) {
+      await next().click()
+      await sleep(1250) // 輪郭が太る。1週ずつ見せないと「育つ」が写らない
+    }
+    await next().click() // 週5: 収まらなくなる
+    await sleep(2200) // 全幅の1枚 → 650ms 後に点へ。連続で撮る
+    await next().click()
+    await sleep(1100) // 点が1つ増える。輪郭は二度と出ない
+    await next().click()
+    await sleep(1600)
+    // 対照: 幅は固定のまま。最後は輪郭ごと消えて、材料が何も残らない
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    for (let i = 0; i < 5; i++) {
+      await next().click()
+      await sleep(900)
+    }
+    await sleep(1800) // 「予測不能」だけが残る＝判断の材料がどこにも無い
+  },
+
+  'taken-by-someone-else': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**行Aは最初から埋まっている**こと（動いて現れない。
+       だから撮り始めの静止の間が要る）。ふたつ、**行Bの成功**——駒が枠に入る。
+       みっつ、**行Cの不成立**——同じ出の動きで滑り出した駒が、枠の手前で止まり、
+       自分の欄へ戻る。ふたつめとみっつめを続けて撮らないと「違いは着地だけ」が写らない。
+       対照は駒が一度枠に入ってから引き剥がされ、行ごと消えてトーストが出る。 */
+    const take = (n) => page.locator('.mz-taken-by-someone-else-take-btn').nth(n)
+    await sleep(1100) // 行Aの枠は最初から埋まっている（この間に何も動かない）
+    await take(1).click() // 行B: 成功。駒が枠に収まる
+    await sleep(1700)
+    await take(2).click() // 行C: 出の動きは行Bと同一。着地だけが違う
+    await sleep(2600) // 手前で止まり、枠に他人の分が出て、自分の欄へ戻る
+    await sleep(900) // 履歴に「取れなかった」が残る。行は消えない
+    // 対照: 一度枠に入れてから引き剥がし、行ごと消してトーストで他人を主語にする
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1000)
+    await take(2).click()
+    await sleep(3400) // 入る → 引き剥がす → 行が消える → トースト
+    await sleep(1900) // トーストも消え、取れなかったことが画面のどこにも残らない
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))

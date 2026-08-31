@@ -109,8 +109,12 @@
   border-color: #6e6e6e;
 }
 
-/* 点(引き渡し後): 直径5pxの丸。全部同じ不透明度・同じ色・同じ大きさ
-   (古さや順番を薄さ・大きさで言わない = C4)。transitionもanimationも持たない。 */
+/* 点(引き渡し後): 直径5pxの丸。全部同じ不透明度・同じ色・同じ大きさ・同じ縁
+   (古さや順番を薄さ・大きさ・縁で言わない = C4)。transitionもanimationも持たない。
+   点の色(#3d3d3d)は事実の塗りと同じ色なので、塗りの上に乗るとそのままでは
+   塗りに溶けて読めない――企画からの指摘(直し1点)。box-shadowで舞台の地色
+   (#eaeae8)の縁を回してから塗りから切り離す。box-shadowはレイアウトサイズに
+   影響しないので、getBoundingClientRect() が返す中心x/y(C5/C8)は変わらない。 */
 .mz-preview-gives-up-point {
   position: absolute;
   top: 50%;
@@ -121,6 +125,7 @@
   border-radius: 50%;
   background: #3d3d3d;
   opacity: 1;
+  box-shadow: 0 0 0 2px #eaeae8;
 }
 
 /* ---------- 操作行 ---------- */
