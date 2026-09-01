@@ -1,26 +1,256 @@
+/* No.123「あとから答えが来る」
+   122(unknown-outcome)の色トークン・くし型lanesをそのまま継承する。
+   モノクロ・自己完結(#3d3d3d 濃 / #6e6e6e 濃中 / #8c8c8c 中=破線 /
+   #b3b3b3 淡中 / #eaeae8 舞台の地 / #f5f5f3 反転文字 / #fff)。
+   対照だけ赤(#c0392b)を持ち込む(=対照の壊れ方の合図)。外形は340×330px以内。
+
+   芯: .-line の height と .-line-gap は、列がpendingとして生まれた瞬間に
+   決まり、既定側では**それ以降一切触れない**(遅着してもtransitionを
+   一切踏まない=height宣言そのものが変わらない)。「あとから知ったこと」は
+   結果欄に現れる.-chipだけが担う。そのchipには既定側では transition/
+   animation を一切付けない(=出現に緩急を付けない。担体の緩急は、その担体が
+   指す出来事がいま・その場所で起きたときだけ許される、という新原則)。
+   @keyframesは一度も使わない(既定の全要素でcomputed animation-nameが
+   常にnoneであるための土台。122から継承)。 */
+
 .mz-answer-arrives-late {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-answer-arrives-late.is-active {
-  animation: mz-answer-arrives-late-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: 操作ヒント + 既定/対照トグル ---------- */
+
+.mz-answer-arrives-late-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-answer-arrives-late-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-answer-arrives-late-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-answer-arrives-late-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-answer-arrives-late-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-answer-arrives-late-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 操作列: 主ボタン + (未着地のときだけ)次へ ---------- */
+
+.mz-answer-arrives-late-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+}
+
+.mz-answer-arrives-late-primary-btn {
+  flex: none;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s;
+}
+.mz-answer-arrives-late-primary-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.mz-answer-arrives-late-primary-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.mz-answer-arrives-late-next-btn {
+  flex: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  font-size: 10px;
+  font-weight: 800;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-answer-arrives-late-next-btn:active {
+  transform: scale(0.94);
+}
+
+/* ---------- 提出ごとの列(lane): dot→track→result-boxを縦にgap:0で直結 ---------- */
+/* 列同士は横方向の独立したフレックスアイテム。3列でも、ある列のtrack→result-box
+   の距離は他の列の増減で一切変わらない(122のくし型構成をそのまま継承)。 */
+.mz-answer-arrives-late-lanes {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.mz-answer-arrives-late-lane {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.mz-answer-arrives-late-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+/* 点: 提出した回数だけ積まれる。消えない。resolvedの前後で見た目を一切変えない */
+.mz-answer-arrives-late-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #3d3d3d;
+}
+
+/* 軌道: 往路が伸びうる領域。常に固定長(40px)。場所を提示するだけの透明な枠 */
+.mz-answer-arrives-late-track {
+  position: relative;
+  flex: none;
+  width: 2px;
+  height: 40px;
+}
+
+/* 実線: 提出した瞬間に「そのとき分かった量」を塗る。resolved(あとから知ったこと)
+   では一切変化しない――変わるのはheightの目標値であって、それは提出時に
+   一度だけ決まる(既定側)。 */
+.mz-answer-arrives-late-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: #3d3d3d;
+  border-radius: 1px;
+}
+.mz-answer-arrives-late-line.is-success {
+  transition: height 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-answer-arrives-late-line.is-pending {
+  transition: height 0.42s ease-out;
+}
+
+/* 破線: 「まだ分からなかった」区間そのもの。実線が止まった後に現れ、既定側では
+   あとから答えが来ても消えない・薄れない・書き換わらない。伸び縮みしない
+   (transitionを持たない、現れるかどうかの二値)。 */
+.mz-answer-arrives-late-line-gap {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 2px;
+  height: 18px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    #8c8c8c 0,
+    #8c8c8c 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
+/* ---------- 結果の欄: 列ごとに1つ。破線の向こう側。下地は最初から描かれている ---------- */
+.mz-answer-arrives-late-result {
+  align-self: stretch;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 4px;
+  border: 1px dashed #8c8c8c;
+  border-radius: 8px;
+  background: #eaeae8;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* チップ: 既定側はtransition/animationを一切持たない(computed transition-duration
+   は常に0s)。「あとから知ったこと」の担体だけが動くのはここではなく――ここに
+   何もない状態から突然現れることそのものが動きであり、緩急は付けない、という
+   企画の新原則をそのままCSSの不在で表現する。 */
+.mz-answer-arrives-late-chip {
+  flex: none;
+  width: 68px; /* C4: 受理/不受理・文字数の違いによらず外形サイズを固定1値にする */
+  height: 21px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #3d3d3d;
+  white-space: nowrap;
+}
+
+/* ---------- 対照 ---------- */
+/* is-contrastは見た目を変えない(壊れ方は挙動: 幾何の書き換え・番号の振り直し・
+   トーストの消滅であって、チップ自体の色や形ではない)。将来のフックとして
+   クラスだけ残す。 */
+.mz-answer-arrives-late-chip.is-contrast {
+}
+
+/* トースト: 「送信完了」。resolvedのたびに現れ、1800msで消える。
+   専用の行として最初から場所を確保しておく(高さ26px固定)——lanes/chipの真上に
+   重ねて字を潰す事故(この図鑑で過去に3度起きた「担体が別の担体に溶けて読めない」
+   の再発)を避けるため。out/inはopacityだけで行い、高さは動かさない。 */
+.mz-answer-arrives-late-toast {
+  flex: none;
+  align-self: center;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  opacity: 0;
+  box-sizing: border-box;
+  transition: opacity 0.25s ease-out;
+}
+.mz-answer-arrives-late-toast[data-visible='1'] {
+  opacity: 1;
 }
