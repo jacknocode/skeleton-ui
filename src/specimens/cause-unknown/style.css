@@ -1,0 +1,263 @@
+/* No.124「どれが効いたのか分からない」
+   モノクロ・自己完結。パレットは図鑑の共通トークンを踏襲
+   (#3d3d3d 濃=確か / #8c8c8c 中=確かでない[No.122の破線と同色] / #b3b3b3 淡中 /
+   #cfcfcd 常設の中立線 / #e4e4e2,#f2f2f0 地 / #fff)。対照だけ強調色(#c0392b系ではなく
+   ここでは名指しの色として控えめな #b8860b 系のアンバーを使う——「事実の語彙で描かれた
+   推測」だと分かるよう、既定には一度も出ない色にする)。外形は340×330px以内。
+
+   芯: 幹(.-trunk, 実線 #3d3d3d)は常に1本で、両端の座標は候補の集合を一切参照しない
+   定数(RAIL_X/ANCHOR_Y/TRUNK_LEN/RESULT_X)——結果側の先端(.-trunk-head)は構造上
+   1pxも動かない。候補である原因にだけ出す枝(.-branch)は全て同じ長さ・同じ線種
+   (border-top-width/style/color/opacity が distinct 1値)で、候補が1つに絞れた
+   ときだけ.is-solidが付いて破線→実線・グレー→濃色に変わる(=幹と同じ確かさになる)。
+   レール(.-rail)は常設の中立な背骨で、枝を幹の起点へ橋渡しするだけの構造材
+   ——候補の増減で伸び縮みしない。 */
+
+.mz-cause-unknown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 300px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #f2f2f0;
+  box-sizing: border-box;
+}
+
+/* ---------- 1行目: 操作ヒント + 既定/対照トグル ---------- */
+
+.mz-cause-unknown-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+}
+.mz-cause-unknown-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-cause-unknown-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #e4e4e2;
+}
+.mz-cause-unknown-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-cause-unknown-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 週・候補の読み上げ ---------- */
+
+.mz-cause-unknown-weekbar {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 舞台 ---------- */
+
+.mz-cause-unknown-stage {
+  position: relative;
+  flex: none;
+}
+
+/* 原因カード: 3枚とも background-color / border-color / font-size は最後まで同一。
+   変わるのは中のボタンの文言だけ(=操作の状態であってカードの飾りではない)。 */
+.mz-cause-unknown-cause {
+  position: absolute;
+  left: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+.mz-cause-unknown-cause-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: #3d3d3d;
+}
+.mz-cause-unknown-toggle {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #eaeae8;
+  font-size: 9px;
+  font-weight: 800;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-cause-unknown-toggle:active:not(:disabled) {
+  transform: scale(0.92);
+}
+.mz-cause-unknown-toggle:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+/* レール: 常設の縦の背骨。中立色・候補の増減で伸び縮みしない構造材 */
+.mz-cause-unknown-rail {
+  position: absolute;
+  width: 0;
+  border-left: 2px solid #cfcfcd;
+}
+
+/* 枝: 候補である原因にだけ出す。全枝、長さ・線種が同一(=配分を言わない) */
+.mz-cause-unknown-branch {
+  position: absolute;
+  height: 0;
+  border-top: 2px dashed #8c8c8c;
+  transform: translateY(-1px);
+}
+/* 候補が1つに絞れた瞬間だけ、その枝が実線に変わる(=幹と同じ確かさになる) */
+.mz-cause-unknown-branch.is-solid {
+  border-top-style: solid;
+  border-top-color: #3d3d3d;
+  animation: mz-cause-unknown-confirm 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-cause-unknown-confirm {
+  0% {
+    transform: translateY(-1px) scaleY(1);
+  }
+  40% {
+    transform: translateY(-1px) scaleY(2.6);
+  }
+  100% {
+    transform: translateY(-1px) scaleY(1);
+  }
+}
+
+/* 幹: 効果を運ぶ実線。常に1本。両端は固定座標(候補の集合を参照しない) */
+.mz-cause-unknown-trunk {
+  position: absolute;
+  height: 0;
+  border-top: 3px solid #3d3d3d;
+  transform: translateY(-1.5px);
+}
+.mz-cause-unknown-trunk-head {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  transform: translate(-3px, -3px);
+  pointer-events: none;
+}
+
+/* 結果欄 */
+.mz-cause-unknown-result {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid #e4e4e2;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+.mz-cause-unknown-result-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+}
+.mz-cause-unknown-result-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+  animation: mz-cause-unknown-value-in 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes mz-cause-unknown-value-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---------- 次の週へ ---------- */
+
+.mz-cause-unknown-next-btn {
+  padding: 7px 18px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s;
+}
+.mz-cause-unknown-next-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.mz-cause-unknown-next-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ---------- 対照: 壊れ方 ---------- */
+/* 対照のカードは横並び。名指しした1つ(.is-primary)だけ色とバッジで飾る
+   ——3枚のうち2値に割れる背景色が「推測が事実の語彙で描かれている」印そのもの。 */
+.mz-cause-unknown-cause.is-primary {
+  background: #fbf1de;
+  box-shadow: 0 0 0 1.5px #b8860b inset, 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+.mz-cause-unknown-badge {
+  position: absolute;
+  top: -9px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #b8860b;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* 対照の幹: 名指しした1つから結果欄へ直に引く直線。根元(左端)のxが主要因の
+   入れ替わりに合わせて動く——起きていない「因果の乗り換え」のアニメーション。 */
+.mz-cause-unknown-c-trunk {
+  position: absolute;
+  height: 0;
+  border-top: 3px solid #b8860b;
+  transform-origin: 0 0;
+  transition:
+    left 0.34s cubic-bezier(0.34, 1.56, 0.64, 1),
+    width 0.34s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+}

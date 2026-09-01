@@ -51,6 +51,113 @@ async function glide(page, from, to, ms) {
 
 /* 標本ごとの触り方。u,v は 0..1 のステージ相対座標 */
 const CHOREO = {
+  /* ---- No.123〜125「答えは、ひとつの形で届かない」---- */
+  'answer-arrives-late': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**列①が遅着で受理されるとき、線が1pxも動かず、
+       増えるのは新しいチップだけ**であること(=主題そのもの)。ふたつ、**番号は
+       判明した順**であること——②(即受理)→①(遅着受理)→③(遅着不受理)の順で
+       チップが増え、左の列(①)より右の列(②)の番号のほうが小さいという逆転が
+       画面に残ること。みっつ、**確かめるを押しても遅着の後も何も変わらない**こと。
+       対照は同じ台本で、①が遅着した瞬間に破線が消えて線が伸び(=いま届いたように
+       見える)、②のチップ文字列が受理#1→受理#2に書き換わり、「送信完了」トーストが
+       出ては1800msで消える。 */
+    const primary = () => page.locator('[data-role="primary-btn"]')
+    const next = () => page.locator('[data-role="next-btn"]')
+
+    await sleep(1000) // 台。3列とも空
+
+    // ---- 既定 ----
+    await primary().click() // 列①提出(t=0起点)。未着地、破線が立つ
+    await sleep(700)
+    await next().click() // 次へ: 列①を諦めず、隣の列へ進む(未着地の列はそのまま残る)
+    await sleep(150)
+    await primary().click() // 列②提出。即受理(受理#1)
+    await sleep(700)
+    await sleep(900) // 列①がまだ破線のまま・列②はもう答えが付いている、を並べて見せる
+    await primary().click() // 列③提出。未着地、破線が立つ
+    await sleep(700)
+    await sleep(1200) // 列①の提出から約4.2秒: ここで遅着受理(受理#2)が結果欄に現れる。
+    // 線・破線は1pxも動かない――動くのは新しく現れるチップだけ
+    await sleep(900) // その状態のまま少し止めて見せる
+    await sleep(900) // 列③の提出から約3秒: 遅着不受理(不受理#3)が現れる
+    await sleep(1000) // 3列(受理#2/受理#1/不受理#3)が並んだ最終形を見せる
+
+    // 確かめる: 遅着の後に3回押しても、線もチップも一切変わらない
+    for (let i = 0; i < 3; i++) {
+      await primary().click()
+      await sleep(500)
+    }
+    await sleep(800)
+
+    // ---- 対照: 同じ台本で、答えが来たら破線を実線に書き換えて線を伸ばす ----
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(600)
+    await primary().click() // 列①提出
+    await sleep(700)
+    await next().click()
+    await sleep(150)
+    await primary().click() // 列②提出。即受理(受理#1)。直後にトーストが一瞬光る
+    await sleep(700)
+    await sleep(900)
+    await primary().click() // 列③提出
+    await sleep(700)
+    await sleep(1200) // 列①遅着の瞬間: 破線が消え、線が結果欄まで伸び、
+    // 列②のチップが「受理#1」→「受理#2」に書き換わり、トーストが出る
+    await sleep(900) // 書き換わった状態を見せる
+    await sleep(900) // 列③遅着の瞬間: 同様に線が伸び、トーストが再び出る
+    await sleep(2000) // トーストが1800msで消える(=遅れて分かった事実が画面に残らない)のを見せる
+  },
+  'cause-unknown': async (page) => {
+    /* 撮るべきは3つ。ひとつ、破線の枝が3→2→1と減っていくあいだ、結果側の実線の
+       先端(trunk-head)が1pxも動かないこと(=幹も結果欄も終始同じ場所にいる)。
+       ふたつ、候補が1つに絞れた瞬間だけその枝がdashed→solidに変わり、原因から
+       結果までがNo.65「因果のリレー」と同じ1本の実線に見えること。みっつ、対照では
+       根拠のない「主要因」の名指しが、名指しの元(A)が候補から外れた瞬間にBへ
+       乗り換わる——起きていない出来事のアニメーションが発生すること。 */
+    const stop = (c) => page.locator(`.mz-cause-unknown-toggle[data-cause="${c}"]`)
+    const next = () => page.getByRole('button', { name: '次の週へ' })
+    await sleep(1000) // 週1: A・B・C全部動かす→+18→候補3。3本の破線が3枚のカードへ繋がる
+    await stop('C').click() // Cを止める
+    await next().click() // 週2へ: +18のまま、Cの枝だけが消える(先端は1pxも動かない)
+    await sleep(1700)
+    await stop('B').click() // Bを止める
+    await next().click() // 週3へ: 効果が0になり、Aの枝が消える。残る1本(B)がdashed→solidに変わる
+    await sleep(2300) // 実線に変わる瞬間と、1本の実線に見える絵をしっかり見せる
+    // 対照: 同じ手順をなぞると、根拠のない名指しが付き、外れると乗り換わる
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1100) // Aが「主要因」と名指しされ、線が引かれる(データ上はA/B/Cの区別は無い)
+    await stop('C').click()
+    await next().click()
+    await sleep(1500)
+    await stop('B').click()
+    await next().click() // Aが候補から外れ、名指しがBへ乗り換わる。線の根元がxで動く
+    await sleep(2400)
+  },
+  /* No.125「読み手が答えを埋める」。撮るべきは3つ、順番が要る。
+     (1) 既定: 答えても塗り(黒)が1pxも動かず、輪郭(破線)だけが右端/左端に張り付いた
+     まま最小幅へ縮むこと。(2) 外すと輪郭が元の幅にそのまま戻ること。(3) 答えない
+     まま「次の週へ」が最初から押せること——モーダルが一度も出ない。
+     最後に対照へ倒し、モーダルに止められ、答えると塗りが実際に伸びてカウントアップし、
+     「外す」が1つも無いことを見せる。 */
+  'reader-fills-in': async (page) => {
+    await sleep(1100) // 3行の支出と、輪郭(不明分90px)がconfirmedPxの右に張り付いているのを読ませる
+    await page.getByRole('button', { name: 'これは広告費です' }).click()
+    await sleep(1400) // 塗りは動かない。輪郭だけが右端に張り付いたまま最小幅(4px)へ縮む
+    await page.getByRole('button', { name: '外す' }).click()
+    await sleep(1200) // 外すと輪郭が元の90pxへそのまま戻る(往復で差0)
+    await page.getByRole('button', { name: '違います' }).click()
+    await sleep(1400) // 同じ縮み方が、今度は左端(confirmedPxの位置)に張り付いて起きる
+    await page.getByRole('button', { name: '外す' }).click()
+    await sleep(900)
+    await page.getByRole('button', { name: '次の週へ' }).click()
+    await sleep(1300) // 答えないまま週を送っても、輪郭は90pxを持ったまま次週へ持ち越される
+    // 対照: モーダルに止められる。答えると塗りが実際に伸び、数字がカウントアップする
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1000) // 「次の週へ」がdisabledのまま、role=dialogが1個出ている
+    await page.locator('.mz-reader-fills-in-dialog').getByRole('button', { name: 'これは広告費です' }).click()
+    await sleep(1600) // 塗りがconfirmedPxからtrackWまで伸び、数字が18,000→27,000へカウントアップし、確定バッジが付く
+  },
+
   'tooltip-magnet-dot': async (page) => {
     await sleep(600)
     let cur = px(0.18, 0.55)

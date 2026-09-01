@@ -1,0 +1,310 @@
+/* No.125「読み手が答えを埋める」
+   モノクロ・自己完結。色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #5c5c5c 濃中 /
+   #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡 / #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。
+   外形は340×330px以内。
+
+   塗り(.sum-fill)と輪郭(.band)は別要素・別のCSSプロパティで見た目を作る:
+   ・塗り … solid背景、borderなし。widthは定数からしか値を受け取らない(既定側)。
+   ・輪郭 … 背景ほぼ透明、border-style:dashed。widthにもleftにも一切transitionを
+     持たない(=中割りが生まれない。No.114・No.118と同じ規約)。 */
+
+.mz-reader-fills-in {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+}
+
+/* ---------- 1行目: 操作ヒント + 既定/対照トグル ---------- */
+
+.mz-reader-fills-in-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.mz-reader-fills-in-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mz-reader-fills-in-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-reader-fills-in-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-reader-fills-in-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 合計の担体: 塗り＋輪郭 ---------- */
+
+.mz-reader-fills-in-sum {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mz-reader-fills-in-sum-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #5c5c5c;
+}
+
+/* 合計の担体そのもの。行3(不明な支出)が測定によって解決される経路が構造上存在
+   しない(画面は分類できないので、常に「未回答」か「申告」のどちらか)ため、この
+   縁は分岐を持たず常にdashed——「答えても実線に変わらない」を設計で保証する。 */
+.mz-reader-fills-in-sum-track {
+  position: relative;
+  height: 16px;
+  border-radius: 8px;
+  background: #eaeae8;
+  border: 1.5px dashed #8c8c8c;
+}
+
+/* 対照は「申告で確定した」と言い切る実装なので、合計の担体の縁も実線にする。
+   ここを破線のまま残すと、対照の側にだけ「不確かさが混じっている」という
+   既定の語彙が1つ残ってしまい、対照の壊れ方(申告と測定が見分けられない)が弱まる。 */
+.mz-reader-fills-in[data-mode='contrast'] .mz-reader-fills-in-sum-track {
+  border-style: solid;
+}
+
+/* 塗り(確定分): borderなし・solid背景。既定側はwidthに一度もtransitionを持たず、
+   渡す値も定数(confirmedPx)のまま変わらないので、そもそも動く経路が無い。 */
+.mz-reader-fills-in-sum-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 7px;
+  background: #3d3d3d;
+}
+/* 対照だけが持つ壊れ方: 答えると実際に伸びる(＝新しい事実が測定されたという嘘)。 */
+.mz-reader-fills-in-sum-fill.is-contrast {
+  transition: width 0.08s linear;
+}
+
+/* 輪郭(ありうる範囲): dashed border、widthとleftに一切transitionを持たない(=尺ゼロ)。
+   最小幅はborder合計(1.5px×2=3px)より大きい4pxに取る(No.118の教訓)。 */
+.mz-reader-fills-in-band {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  border: 1.5px dashed #3d3d3d;
+  border-radius: 5px;
+  background: rgba(61, 61, 61, 0.05);
+  pointer-events: none;
+}
+
+.mz-reader-fills-in-sum-readout {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #6e6e6e;
+  font-variant-numeric: tabular-nums;
+}
+.mz-reader-fills-in-sum-readout b {
+  color: #3d3d3d;
+}
+.mz-reader-fills-in-sum-sep {
+  margin: 0 5px;
+  color: #b3b3b3;
+}
+
+/* ---------- 3行の支出 ---------- */
+
+.mz-reader-fills-in-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* 共有クラス: background-color・font-size・heightは3行とも常にこの1値
+   (=濃さで格を付けない)。差はborder-styleにしか出ない。 */
+.mz-reader-fills-in-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  color: #3d3d3d;
+  border-width: 1.5px;
+  border-color: #3d3d3d;
+}
+.mz-reader-fills-in-row.is-measured {
+  border-style: solid;
+}
+.mz-reader-fills-in-row.is-declared {
+  border-style: dashed;
+}
+
+.mz-reader-fills-in-row-label {
+  color: #6e6e6e;
+  font-weight: 700;
+}
+.mz-reader-fills-in-row-amount {
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-reader-fills-in-row-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 対照だけの壊れ方: 答えると「確定」バッジが付く。行のborder/background/
+   font-size/heightは一切変えない(バッジはamountの隣に並ぶ追加の子要素でしかない)。 */
+.mz-reader-fills-in-badge {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 9px;
+  font-weight: 800;
+  animation: mz-reader-fills-in-badge-in 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-reader-fills-in-badge-in {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ---------- 申告の操作 ---------- */
+
+.mz-reader-fills-in-declare {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mz-reader-fills-in-declare-btn {
+  padding: 7px 11px;
+  border-radius: 10px;
+  background: #eaeae8;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #5c5c5c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    transform 0.15s var(--zk-ease-boing);
+}
+.mz-reader-fills-in-declare-btn:hover {
+  background: #dddddb;
+}
+.mz-reader-fills-in-declare-btn:active {
+  transform: scale(0.96);
+}
+.mz-reader-fills-in-declare-btn.is-undo {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.mz-reader-fills-in-declare-state {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  flex: 1 1 auto;
+}
+
+/* ---------- 週送り ---------- */
+
+.mz-reader-fills-in-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mz-reader-fills-in-next-btn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    opacity 0.2s,
+    transform 0.15s var(--zk-ease-boing);
+}
+.mz-reader-fills-in-next-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.mz-reader-fills-in-next-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.mz-reader-fills-in-week-readout {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 対照: 分類を強制するモーダル ---------- */
+
+.mz-reader-fills-in-dialog-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(61, 61, 61, 0.4);
+  border-radius: 14px;
+  z-index: 2;
+}
+
+.mz-reader-fills-in-dialog {
+  width: 264px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+}
+.mz-reader-fills-in-dialog-text {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #3d3d3d;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+.mz-reader-fills-in-dialog-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-reader-fills-in-dialog .mz-reader-fills-in-declare-btn {
+  flex: 1 1 0;
+  background: #eaeae8;
+}
