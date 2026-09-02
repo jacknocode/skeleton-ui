@@ -1,0 +1,267 @@
+/* No.126「原因が画面に無い」
+   モノクロ・自己完結。パレットは124から継承(#3d3d3d 濃=確か / #8c8c8c 中 / #b3b3b3 淡中 /
+   #cfcfcd 常設の中立線 / #e4e4e2,#f2f2f0 地 / #fff)。対照だけ124と同じ控えめなアンバー
+   (#b8860b)を使う——既定には一度も出ない色。外形は340×330px以内。
+
+   芯: 台(.-rail)はleft/widthが全週不動で舞台の右端まで伸びる。締め線(.-close-tick)は
+   候補の右端という固定x座標に立ち、候補が0になった瞬間だけDOMから消える(transitionなし
+   ——消えるか消えないかだけが情報で、消え方には情報を乗せない)。幹(.-trunk)は締め線と
+   同じx座標を根元にした固定座標の実線で、candidatesを一切参照しない。既定の要素には
+   一切animationを使わない(round-common: 台が緩急を持ってはいけない、という縛りをこの
+   標本全体に適用した)。 */
+
+.mz-cause-off-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 300px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #f2f2f0;
+  box-sizing: border-box;
+}
+
+/* ---------- 1行目: 操作ヒント + 既定/対照トグル ---------- */
+
+.mz-cause-off-screen-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+}
+.mz-cause-off-screen-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-cause-off-screen-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #e4e4e2;
+}
+.mz-cause-off-screen-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-cause-off-screen-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 週・候補の読み上げ ---------- */
+
+.mz-cause-off-screen-weekbar {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 舞台 ---------- */
+
+.mz-cause-off-screen-stage {
+  position: relative;
+  flex: none;
+}
+
+/* 原因カード: 3枚(+対照のその他)ともbackground-color/border-color/font-sizeは同一。
+   変わるのは中のボタンの文言だけ */
+.mz-cause-off-screen-cause {
+  position: absolute;
+  top: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+.mz-cause-off-screen-cause-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #3d3d3d;
+}
+.mz-cause-off-screen-toggle {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #eaeae8;
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-cause-off-screen-toggle:active:not(:disabled) {
+  transform: scale(0.92);
+}
+.mz-cause-off-screen-toggle:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+/* 台(候補が載る横のレール): left/widthが全週不動。舞台の右端まで無言で伸びる中立色の構造材 */
+.mz-cause-off-screen-rail {
+  position: absolute;
+  height: 0;
+  border-top: 2px solid #cfcfcd;
+  transform: translateY(-1px);
+}
+
+/* 枝: 候補である原因にだけ出す。全枝、長さ・線種が同一(=配分を言わない) */
+.mz-cause-off-screen-branch {
+  position: absolute;
+  width: 0;
+  border-left: 2px dashed #8c8c8c;
+  transform: translateX(-1px);
+}
+
+/* 締め線: 「この台にはもうこれ以上載らない」。位置は固定、消えるか消えないかだけが情報
+   ——現れ方・消え方にtransition/animationを付けない(round-commonの縛り) */
+.mz-cause-off-screen-close-tick {
+  position: absolute;
+  width: 3px;
+  height: 15px;
+  border-left: 2px solid #3d3d3d;
+  transform: translate(-1.5px, -7.5px);
+  pointer-events: none;
+}
+
+/* 幹: 効果を運ぶ実線。常に1本。両端は固定座標(candidatesを一切参照しない) */
+.mz-cause-off-screen-trunk {
+  position: absolute;
+  height: 0;
+  border-top: 3px solid #3d3d3d;
+  transform: translateY(-1.5px);
+}
+.mz-cause-off-screen-trunk-head {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  transform: translate(-3px, -3px);
+  pointer-events: none;
+}
+
+/* 結果欄 */
+.mz-cause-off-screen-result {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid #e4e4e2;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+.mz-cause-off-screen-result-label {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+}
+.mz-cause-off-screen-result-value {
+  font-size: 19px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 次の週へ ---------- */
+
+.mz-cause-off-screen-next-btn {
+  padding: 7px 18px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s;
+}
+.mz-cause-off-screen-next-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.mz-cause-off-screen-next-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ---------- 履歴の列(strip)。原因のトグルを押した回数だけ増える。締め線の開閉とは無関係 ---------- */
+
+.mz-cause-off-screen-strip {
+  position: relative;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  padding: 2px 4px;
+  box-sizing: border-box;
+}
+.mz-cause-off-screen-strip-rail {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 50%;
+  height: 2px;
+  border-radius: 999px;
+  background: #e4e4e2;
+  transform: translateY(-50%);
+  z-index: 0;
+  pointer-events: none;
+}
+.mz-cause-off-screen-dot {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #b3b3b3;
+}
+
+/* ---------- 対照: 壊れ方 ---------- */
+/* その他カード: 実在しない候補に名前を付けたことが分かるよう、アンバーで縁取る
+   (=対照の語彙。既定には一度も出ない色) */
+.mz-cause-off-screen-cause.is-other {
+  background: #fbf1de;
+  box-shadow: 0 0 0 1.5px #b8860b inset, 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* 対照の幹: 名指しした1つ(または その他)から結果欄へ直に引く直線。根元のxが乗り換えに
+   合わせて動く(transition 0.34s)——起きていない「因果の乗り換え」のアニメーション */
+.mz-cause-off-screen-c-trunk {
+  position: absolute;
+  height: 0;
+  border-top: 3px solid #b8860b;
+  transform-origin: 0 0;
+  transition:
+    left 0.34s cubic-bezier(0.34, 1.56, 0.64, 1),
+    width 0.34s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
