@@ -1,26 +1,256 @@
+/* No.127「ほとんどが申告になる」
+   モノクロ・自己完結。色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #5c5c5c 濃中 /
+   #6e6e6e 中濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡 / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。対照だけが赤(#b3392f系)を持つ。外形は340×330px以内。
+
+   台の下辺(.segments)は12区間に分かれ、区間どうしはborder-bottom-width/color/
+   opacityを共有し、border-bottom-style(solid/dashed)と幅だけが違う——125の
+   「二値の線種」に「長さ」という軸を1つ足しただけ、という企画の中心をCSSでも
+   そのまま保証する。区間にもtrackにもtransitionを一切持たない(=中割りゼロ)。 */
+
 .mz-mostly-declared {
-  padding: 12px 24px;
-  border-radius: 999px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-mostly-declared.is-active {
-  animation: mz-mostly-declared-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: 操作ヒント + 既定/対照トグル ---------- */
+
+.mz-mostly-declared-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-mostly-declared-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+
+.mz-mostly-declared-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mz-mostly-declared-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-mostly-declared-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-mostly-declared-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 合計の担体: 塗り(不動) + 下辺(12区間) ---------- */
+
+.mz-mostly-declared-sum {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mz-mostly-declared-sum-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #5c5c5c;
+}
+
+/* 塗り: 合計¥120,000そのもの。widthは定数からしか値を受け取らない——全週・
+   既定/対照を通して1pxも動かない。 */
+.mz-mostly-declared-track {
+  position: relative;
+  height: 14px;
+  border-radius: 7px 7px 0 0;
+  overflow: hidden;
+  background: #eaeae8;
+}
+.mz-mostly-declared-fill {
+  position: absolute;
+  inset: 0;
+  background: #3d3d3d;
+}
+/* 対照だけの壊れ方: 閾値を跨ぐと塗りが赤くなる(=新しい事実ではなく、ただの判定)。 */
+.mz-mostly-declared-fill.is-low {
+  background: #a33327;
+}
+
+/* 下辺: 12区間。全区間で border-bottom-width/color/opacity は同一値(distinct 1)。
+   違うのは border-bottom-style と幅だけ——ここに量が乗る。 */
+.mz-mostly-declared-segments {
+  display: flex;
+  width: 100%;
+  height: 7px;
+  border-radius: 0 0 7px 7px;
+  overflow: hidden;
+}
+.mz-mostly-declared-segment {
+  height: 100%;
+  box-sizing: border-box;
+  border-bottom: 3px solid #3d3d3d;
+  opacity: 1;
+}
+.mz-mostly-declared-segment.is-declared {
+  border-bottom-style: dashed;
+}
+
+/* 対照: 下辺は区間を持たない単一要素。全週で同一のborder-bottom-style(常にsolid)
+   ＝台が量を1つも運んでいないことの実測。 */
+.mz-mostly-declared-segments.is-contrast-edge {
+  border-bottom: 3px solid #3d3d3d;
+}
+
+.mz-mostly-declared-sum-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+.mz-mostly-declared-sum-readout b.is-low {
+  color: #a33327;
+}
+.mz-mostly-declared-confidence {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #a33327;
+}
+
+/* ---------- 12行(2列グリッド) ---------- */
+
+.mz-mostly-declared-rows {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 6px;
+}
+
+.mz-mostly-declared-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 20px;
+  padding: 0 16px 0 7px;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #3d3d3d;
+  border-width: 1.4px;
+  border-color: #3d3d3d;
+}
+.mz-mostly-declared-row.is-measured {
+  border-style: solid;
+}
+.mz-mostly-declared-row.is-declared {
+  border-style: dashed;
+}
+
+.mz-mostly-declared-row-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #6e6e6e;
+  font-weight: 700;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.mz-mostly-declared-row-amount {
+  flex: none;
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 既定だけの逆操作コントロール: 申告に届いたことがある行の右上隅にだけ出す。
+   グレースケールのみ(=対照だけの語彙である赤・強調をここに持ち込まない)。 */
+.mz-mostly-declared-retest-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 11px;
+  height: 11px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #8c8c8c;
+  background: #fff;
+  color: #8c8c8c;
+  font-size: 7px;
+  line-height: 9px;
+  text-align: center;
+  cursor: pointer;
+}
+.mz-mostly-declared-retest-btn:hover {
+  border-color: #3d3d3d;
+  color: #3d3d3d;
+}
+
+/* 対照だけの壊れ方: バッジは個数を出すが金額を出さない(1行の巨大な申告と
+   複数の小さな申告が同じ絵になる)。 */
+.mz-mostly-declared-badge {
+  flex: none;
+  margin-left: 4px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 7px;
+  font-weight: 800;
+}
+
+/* ---------- 週送り ---------- */
+
+.mz-mostly-declared-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.mz-mostly-declared-next-btn {
+  padding: 6px 12px;
+  border-radius: 9px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    opacity 0.2s,
+    transform 0.15s var(--zk-ease-boing);
+}
+.mz-mostly-declared-next-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.mz-mostly-declared-next-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.mz-mostly-declared-week-readout {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
 }

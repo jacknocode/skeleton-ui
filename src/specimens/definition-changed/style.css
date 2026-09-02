@@ -1,26 +1,228 @@
+/* No.128「定義が途中で変わった」
+   モノクロ・自己完結。既定が使う色は2値だけ: 濃(#3d3d3d, 線・継ぎ目・点・帯の文字)と
+   淡(#d6d6d3, 目盛り線・x軸・週の目盛り)。テキストのグレー(#8c8c8c 等)は
+   C6が数える対象(線・目盛り・継ぎ目・点のcolor/background-color/border-color)には
+   含めていない——数字・キャプションの可読性のためだけに使う中間トーン。
+   対照だけ赤(#c0392b)を持ち込む(=対照の壊れ方そのもの)。
+
+   芯: .mz-definition-changed-line の d 座標は既定・対照で完全に同一(index.tsx参照)。
+   だからこのCSSでも既定/対照でpath自体の座標に触れるプロパティ(transform等)は
+   一切書かない。差はここでも「台」(.mz-definition-changed-grid / -seam / -axis)
+   と「バッジ・帯の中身」にしか出さない。 */
+
 .mz-definition-changed {
-  padding: 12px 24px;
-  border-radius: 999px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 320px;
+  padding: 10px;
+  box-sizing: border-box;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-definition-changed.is-active {
-  animation: mz-definition-changed-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: 操作ヒント + 既定/対照トグル ---------- */
+
+.mz-definition-changed-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-definition-changed-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+.mz-definition-changed-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-definition-changed-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-definition-changed-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-definition-changed-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- チャート本体 ---------- */
+
+.mz-definition-changed-chart {
+  display: block;
+  overflow: visible;
+}
+
+/* 目盛り線(台)。既定は継ぎ目でx1/x2が止まる二群、対照はx1=左端/x2=右端で全幅を貫通する
+   一群——このCSS自体は両方に同じ見た目のstroke属性を与えるだけで、"貫通するかどうか"は
+   index.tsx側のx1/x2座標(=どこまで引くか)だけで決まる。台なのでtransitionは持たない。 */
+.mz-definition-changed-grid {
+  stroke: #d6d6d3;
+  stroke-width: 1.4;
+  transition: none;
+  animation: none;
+}
+
+.mz-definition-changed-tick-label {
+  font-size: 8.5px;
+  font-weight: 700;
+  fill: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+.mz-definition-changed-region-label {
+  font-size: 8px;
+  font-weight: 800;
+  fill: #8c8c8c;
+  letter-spacing: 0.02em;
+}
+
+/* 継ぎ目。No.116の締め線(committed)と同型: 幅2px・#3d3d3d・実線。台なのでtransition無し */
+.mz-definition-changed-seam {
+  stroke: #3d3d3d;
+  stroke-width: 2;
+  transition: none;
+  animation: none;
+}
+
+/* x軸(時間の定規)。既定・対照とも同じ見た目で全幅を貫通する。事実(時間)なので一定 */
+.mz-definition-changed-axis {
+  stroke: #d6d6d3;
+  stroke-width: 1.4;
+  transition: none;
+  animation: none;
+}
+.mz-definition-changed-week-tick {
+  stroke: #d6d6d3;
+  stroke-width: 1.2;
+  transition: none;
+  animation: none;
+}
+.mz-definition-changed-week-label {
+  font-size: 7.6px;
+  font-weight: 700;
+  fill: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 折れ線本体(担体)。既定・対照でstroke色以外は同じ。座標(d)はJS側で共有済み */
+.mz-definition-changed-line {
+  fill: none;
+  stroke: #3d3d3d;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: none;
+  animation: none;
+}
+/* 対照だけ、入場を一筆書きで見せる(=壊れ方の一部。座標自体は変わらない) */
+.mz-definition-changed-line.is-contrast {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: mz-definition-changed-draw 0.7s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+@keyframes mz-definition-changed-draw {
+  to {
+    stroke-dashoffset: 0;
   }
-  60% {
-    transform: scale(0.9, 1.1);
+}
+
+/* データ点(担体)。cx/cyはJS側で固定。ここではサイズ・色だけを選択状態で変える */
+.mz-definition-changed-dot {
+  cursor: pointer;
+  outline: none;
+}
+.mz-definition-changed-dot-hit {
+  fill: transparent;
+}
+.mz-definition-changed-dot-core {
+  fill: #3d3d3d;
+  transition: none;
+}
+.mz-definition-changed-dot.is-selected .mz-definition-changed-dot-core {
+  fill: #3d3d3d;
+}
+/* 選択の輪(点そのものではなく、点の周りに足す装飾。位置は動かない) */
+.mz-definition-changed-dot-ring {
+  fill: none;
+  stroke: #3d3d3d;
+  stroke-width: 1.6;
+  opacity: 0;
+  transform: scale(0.6);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    opacity 0.15s ease-out,
+    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-definition-changed-dot.is-selected .mz-definition-changed-dot-ring {
+  opacity: 1;
+  transform: scale(1);
+}
+.mz-definition-changed-dot:focus-visible .mz-definition-changed-dot-hit {
+  stroke: #8c8c8c;
+  stroke-width: 1.5;
+  fill: none;
+}
+
+/* ---------- 差分の帯 ---------- */
+
+/* 既定: 中立の淡いグレー。数字は生の差分(整数)だけ、%は使わない(=同じ母数で
+   割ったという主張を持ち込まない) */
+.mz-definition-changed-band rect {
+  fill: rgba(61, 61, 61, 0.07);
+  stroke: none;
+}
+.mz-definition-changed-band-label {
+  font-size: 10px;
+  font-weight: 800;
+  fill: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+/* 対照: 跨いだ2点でも同じ帯を出し、赤で%を言い切る(=存在しない比較を存在するかのように見せる) */
+.mz-definition-changed-band.is-contrast rect {
+  fill: rgba(192, 57, 43, 0.1);
+}
+.mz-definition-changed-band.is-contrast .mz-definition-changed-band-label {
+  fill: #c0392b;
+}
+
+/* ---------- 対照: 第7週の変化率バッジ(常設。既定にはこの概念自体が無い) ---------- */
+
+.mz-definition-changed-badge {
+  animation: mz-definition-changed-badge-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.55s both;
+}
+.mz-definition-changed-badge rect {
+  fill: #c0392b;
+}
+.mz-definition-changed-badge text {
+  font-size: 9.5px;
+  font-weight: 800;
+  fill: #fff;
+  text-anchor: middle;
+  font-variant-numeric: tabular-nums;
+}
+@keyframes mz-definition-changed-badge-in {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.7);
   }
   100% {
+    opacity: 1;
     transform: none;
   }
 }
