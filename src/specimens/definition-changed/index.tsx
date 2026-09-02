@@ -331,13 +331,14 @@ export default function DefinitionChanged() {
         />
 
         {mode === 'contrast' && (
-          <g
-            className="mz-definition-changed-badge"
-            data-role="badge"
-            transform={`translate(${xAt(SPLIT_WEEK + 1)}, ${yAt(VALUES[SPLIT_WEEK]) - 13})`}
-          >
-            <rect x={-19} y={-11} width={38} height={16} rx={8} />
-            <text y={1}>{fmtSigned(BADGE_PCT)}%</text>
+          // 位置(translate属性)と入場アニメ(CSSのtransform)を別のgに分ける。
+          // 同じ要素にSVG属性のtransformとCSSアニメのtransformを両方与えると、
+          // CSSの計算値がSVG属性を上書きして位置が(0,0)に飛ぶ(実装して気づいた罠)。
+          <g transform={`translate(${xAt(SPLIT_WEEK + 1)}, ${yAt(VALUES[SPLIT_WEEK]) - 13})`}>
+            <g className="mz-definition-changed-badge" data-role="badge">
+              <rect x={-19} y={-11} width={38} height={16} rx={8} />
+              <text y={1}>{fmtSigned(BADGE_PCT)}%</text>
+            </g>
           </g>
         )}
 

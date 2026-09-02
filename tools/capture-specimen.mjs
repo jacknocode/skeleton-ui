@@ -158,6 +158,61 @@ const CHOREO = {
     await sleep(1600) // 塗りがconfirmedPxからtrackWまで伸び、数字が18,000→27,000へカウントアップし、確定バッジが付く
   },
 
+  /* No.127「ほとんどが申告になる」。撮るべきは3つ。ひとつ、週を送っても
+     合計の数字(¥120,000)も塗りも1pxも動かず、変わるのは台の下辺の線種だけであること。
+     ふたつ、下辺の破線が伸びていくのは行の「個数」ではなく「金額」に比例していること
+     （大きい金額の行が先に申告へ変わるので、個数がまだ3でも下辺はもう1/3が破線になる）。
+     みっつ、`測り直す`で1行だけ戻すと、その行の金額ぶんだけ破線が縮むこと——
+     台の長さが本当に成分の関数であることは、逆向きの操作でしか見えない。
+     最後に対照へ倒すと、バッジと閾値の赤が増えているのに、台の下辺は1本の実線のまま
+     （＝装飾は増えたが、成分についての情報はゼロ）。 */
+  'mostly-declared': async (page) => {
+    const next = () => page.getByRole('button', { name: '次の週へ' })
+    await sleep(1400) // 週1: 12行すべて測定。下辺は全部実線で、合計は ¥120,000
+    await next().click()
+    await sleep(1700) // 週2: 3行が申告に。個数は3なのに下辺はもう100px(=1/3)が破線
+    await next().click()
+    await sleep(1700) // 週3
+    await next().click()
+    await sleep(2000) // 週4: 10行が申告。下辺 288.75/300px が破線。数字は1文字も変わっていない
+    await page.locator('.mz-mostly-declared-retest-btn').first().click()
+    await sleep(1900) // 1行だけ測り直すと、その行の金額ぶん(35px)だけ破線が縮む
+    // 対照: バッジが並び、半数を超えたところで赤くなる。台の下辺は何も語らない
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    for (let i = 0; i < 3; i++) {
+      await next().click()
+      await sleep(1200)
+    }
+    await sleep(900)
+  },
+
+  /* No.128「定義が途中で変わった」。撮るべきは3つ。ひとつ、折れ線は連続しているのに
+     水平の目盛りが継ぎ目を1本も横断していないこと（左右で目盛りの数字も違う）。
+     ふたつ、同じ区間の2点を選ぶと差の帯が出るのに、継ぎ目を跨ぐ2点では何も出ないこと
+     ——エラーも「比較できません」も出さず、ただ帯が無い。
+     みっつ、対照では目盛りが全幅を貫通し、跨いだ2点にも帯が出て `+96%` と言い切ること。
+     既定と対照で折れ線の座標は1pxも違わない——差は全部、台の側にある。 */
+  'definition-changed': async (page) => {
+    const dot = (w) => page.locator(`.mz-definition-changed-dot[data-week="${w}"]`)
+    await sleep(1800) // 目盛りが継ぎ目で止まっている絵をまず読ませる
+    await dot(2).click()
+    await sleep(700)
+    await dot(5).click()
+    await sleep(2000) // 同じ区間の2点: 帯が出て差が読める
+    await dot(6).click() // 3点目で選び直しになる
+    await sleep(700)
+    await dot(7).click()
+    await sleep(2400) // 継ぎ目を跨ぐ2点: 帯は出ない。代わりに何も出ない
+    // 対照: 目盛りが貫通し、跨いだ差にも `+96%` が付く
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1600)
+    await dot(6).click()
+    await sleep(600)
+    await dot(7).click()
+    await sleep(2400)
+  },
+
   'tooltip-magnet-dot': async (page) => {
     await sleep(600)
     let cur = px(0.18, 0.55)
