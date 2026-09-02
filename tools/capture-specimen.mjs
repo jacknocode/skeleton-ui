@@ -158,6 +158,42 @@ const CHOREO = {
     await sleep(1600) // 塗りがconfirmedPxからtrackWまで伸び、数字が18,000→27,000へカウントアップし、確定バッジが付く
   },
 
+  /* No.126「原因が画面に無い」。撮るべきは3つ。ひとつ、候補が3→2→1→0 と減っていく
+     あいだ、効果を運ぶ実線(幹)が1pxも動かないこと（No.124 から継承した性質）。
+     ふたつ、3つとも止めても効果が残った週に、候補の台の締め線が外れること——
+     台は伸びも縮みもせず、動くものは何も無い。要素が1つ消えるだけである。
+     読み手が反証したのは効果の帰属ではなく、「候補はこれで全部だ」という画面の言い切りのほう。
+     みっつ、対照では `その他` というカードが生えて実線が1本引かれ、幹の根元が
+     そこへ乗り換えて動くこと。`その他` は止められる——押すと因果の線が全部消えるのに、
+     効果は +12 のまま残る（意味のない操作が、名前を付けたせいで生まれている）。 */
+  'cause-off-screen': async (page) => {
+    const stop = (c) => page.locator(`.mz-cause-off-screen-toggle[data-cause="${c}"]`)
+    const next = () => page.getByRole('button', { name: '次の週へ' })
+    await sleep(1500) // 週1: A・B・C の3本の破線。台の右端には締め線が立っている
+    await stop('C').click()
+    await next().click()
+    await sleep(1600) // 週2: 効果は +12 のまま。Cの枝だけが消える。幹は1pxも動かない
+    await stop('B').click()
+    await next().click()
+    await sleep(1600) // 週3: 候補1
+    await stop('A').click()
+    await sleep(900) // ここで履歴が +1 される(締め線とは別のトリガー)
+    await next().click()
+    await sleep(2600) // 週4: 候補0。効果は +12 のまま残り、締め線だけが外れる
+    // 対照: `その他` が生えて実線が引かれ、幹の根元が乗り換える
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1100)
+    await stop('C').click()
+    await next().click()
+    await sleep(1200)
+    await stop('B').click()
+    await next().click()
+    await sleep(1200)
+    await stop('A').click()
+    await next().click()
+    await sleep(2400) // `その他` が候補に混じり、根元が乗り換えて動く
+  },
+
   /* No.127「ほとんどが申告になる」。撮るべきは3つ。ひとつ、週を送っても
      合計の数字(¥120,000)も塗りも1pxも動かず、変わるのは台の下辺の線種だけであること。
      ふたつ、下辺の破線が伸びていくのは行の「個数」ではなく「金額」に比例していること
