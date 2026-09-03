@@ -1806,6 +1806,106 @@ const CHOREO = {
     await page.locator('.mz-unknown-outcome-resend-btn').click()
     await sleep(2200) // 受理が2件入る。二重に提出されたことが画面に見える
   },
+  'past-restated': async (page) => {
+    const openBtn = () => page.getByRole('button', { name: 'ひらく' })
+    const frameBtn = () => page.getByRole('button', { name: /前に見たときの形|閉じる/ })
+    const confirmBtn = () => page.getByRole('button', { name: '確かめた' })
+    const firstTimeBtn = () => page.getByRole('button', { name: '初めての読み手' })
+    const returningBtn = () => page.getByRole('button', { name: '前回も見た' })
+
+    // 遡及前の画面(継ぎ目つき。128の状態)をまず読ませる
+    await sleep(1300)
+    // ひらく: 何も再生されない。ここで詰めると主題が消える
+    await openBtn().click()
+    await sleep(1700)
+    // 前に見たときの形(再演の枠)を開いて旧の形を読み、閉じる
+    await frameBtn().click()
+    await sleep(1600)
+    await frameBtn().click() // 同じボタンが「閉じる」に変わっている
+    await sleep(700)
+    // 跡は時間では消えない
+    await sleep(4000)
+    // 確かめた で跡が消える
+    await confirmBtn().click()
+    await sleep(1200)
+    // 初めての読み手に切り替えて ひらく → 跡が1つも出ない(この標本の証拠)
+    await firstTimeBtn().click()
+    await sleep(600)
+    await openBtn().click()
+    await sleep(1800)
+    await returningBtn().click() // 対照へ移る前に既定側の状態を戻しておく
+    await sleep(500)
+
+    // 対照: 書き換えが再生される。旧線が薄く常設で重なる
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await openBtn().click()
+    await sleep(2200) // 再生(0.7s)+旧線が重なった絵を読ませる間
+    // 初めての読み手にも跡が出る(=対照の壊れ方3)
+    await firstTimeBtn().click()
+    await sleep(500)
+    await openBtn().click()
+    await sleep(2200)
+  },
+  'declared-on-declared': async (page) => {
+    const leaf = (id) => page.locator(`.mz-declared-on-declared-leaf-btn[data-row-id="${id}"]`)
+    const row = (id) => page.locator(`.mz-declared-on-declared-row[data-row-id="${id}"]`)
+    await sleep(1400) // 起動直後: 葉2行は0本、計算値3行だけが1本(solid)
+    await leaf('price').click()
+    await sleep(1700) // 単価を埋める一手で、売上・粗利・来期の粗利の下辺が同時に増える
+    await leaf('costRatio').click()
+    await sleep(900)
+    await row('nextProfit').click() // 来期の粗利を選ぶ=主役にする
+    await sleep(2400) // 全段dashed。客数を経由しない値だけが「着地しない」
+    await row('nextProfit').click() // 選択を外す
+    await sleep(500)
+    // 埋めたのと逆順で測り直す(往復差0を見せるため)
+    await leaf('costRatio').click()
+    await sleep(1200)
+    await leaf('price').click()
+    await sleep(1800) // 全行が最初の状態に戻る。時間は進んでいるのに段数は浅くなった
+    // 対照: 同じ2手が「丸ごと破線+推定」になり、過半数でダイアログが割り込む
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await leaf('price').click()
+    await sleep(2200) // 客数を経由する売上まで丸ごと推定になる。1手だけで4/6が過半数を超え、
+    // 対照はここでもうダイアログを出す(=既定より大げさに壊れる証拠)。長めに止めて読ませる
+    await page.locator('[data-role="dialog-ack"]').click()
+    await sleep(900)
+    await leaf('costRatio').click()
+    await sleep(2200) // 5/6。原価率まで推定に変わり、ダイアログが再び割り込む
+    await page.locator('[data-role="dialog-ack"]').click()
+    await sleep(1400)
+  },
+  'as-of-mismatch': async (page) => {
+    const retake = (id) => page.locator(`.mz-as-of-mismatch-retake-btn[data-row-id="${id}"]`)
+    const oldestBtn = () => page.locator('[data-role="retake-oldest-btn"]')
+    const allBtn = () => page.locator('[data-role="retake-all-btn"]')
+    const advanceBtn = () => page.locator('[data-role="advance-btn"]')
+
+    await sleep(1500) // 8本の台がギザギザに不揃い。下の目盛りで「いま/-1h/-6h/-1d/-1w」を読む
+    await retake('login').click() // 最古ではない行を取り直す
+    await sleep(1900) // その行の右端だけ伸びる。合計(最下段)の右端は1pxも動かない
+    await oldestBtn().click() // いちばん古い行(inquiry, 7日前)を取り直す
+    await sleep(1900) // 今度は合計の右端が動く(次点の行まで進む)
+    await advanceBtn().click() // 何も取り直していないのに、時間だけが経つ
+    await sleep(1500) // 全行の右端が左へ流れる(いまが進んだので相対的に全部古くなる)
+    await allBtn().click() // 全部取り直す
+    await sleep(2200) // それでも右端はピッタリとは揃わない(取り直しにも順序がある)
+
+    // 対照: 台が消えてバッジに変わる。`最終更新`は最新行の時刻を名乗り続け、
+    // `全部取り直す`の瞬間だけ`同期済み`が現れる(閾値を跨いだ断絶)
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1300)
+    await retake('login').click()
+    await sleep(1200)
+    await oldestBtn().click()
+    await sleep(1200)
+    await advanceBtn().click()
+    await sleep(900)
+    await allBtn().click()
+    await sleep(2200) // `同期済み`が現れる。バッジはまだ8通りバラバラなまま
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))

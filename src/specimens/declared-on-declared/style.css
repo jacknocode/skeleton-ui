@@ -1,0 +1,245 @@
+/* No.130「申告の上に積んだ申告」
+   モノクロ・自己完結。色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #5c5c5c 濃中 /
+   #6e6e6e 中濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡 / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。対照だけが赤(#a33327系)を持つ。外形は340×330px以内。
+
+   台の下辺(.track > .seg)は「段数ぶん縦に積む」——127が横に並べた区間を、
+   130は縦に重ねる。区間どうしは border-bottom-width/color と opacity を共有し、
+   border-bottom-style(solid/dashed)だけが違う。既定の全要素にtransitionを
+   一切持たせない(=中割りゼロ。この回の縛り「いま・その場所で起きたことがほぼ無い」)。 */
+
+.mz-declared-on-declared {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+/* ---------- 1行目: 操作ヒント + 既定/対照トグル ---------- */
+
+.mz-declared-on-declared-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.mz-declared-on-declared-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mz-declared-on-declared-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-declared-on-declared-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-declared-on-declared-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 対照だけの警告(閾値超え) ---------- */
+
+.mz-declared-on-declared-warning {
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: #a33327;
+  color: #f5f5f3;
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+/* ---------- 6行 ---------- */
+
+.mz-declared-on-declared-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mz-declared-on-declared-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+.mz-declared-on-declared-row.is-focused {
+  background: #eaeae8;
+}
+.mz-declared-on-declared-rows.is-contrast .mz-declared-on-declared-row {
+  cursor: default;
+}
+
+.mz-declared-on-declared-row-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mz-declared-on-declared-row-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #5c5c5c;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.mz-declared-on-declared-row-value {
+  flex: none;
+  font-size: 11px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 葉(単価・原価率)だけに出る操作ボタン。グレースケールのみ
+   (対照だけの語彙である赤・強調は既定側に持ち込まない)。 */
+.mz-declared-on-declared-leaf-btn {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #8c8c8c;
+  background: #fff;
+  color: #8c8c8c;
+  font-size: 8px;
+  line-height: 12px;
+  text-align: center;
+  cursor: pointer;
+}
+.mz-declared-on-declared-leaf-btn:hover:not(:disabled) {
+  border-color: #3d3d3d;
+  color: #3d3d3d;
+}
+.mz-declared-on-declared-leaf-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* 台: 段数ぶんの区間を縦に積む。column-reverseで並べ、配列の先頭(=最下段)を
+   視覚的な下端に置く。高さは固定(3段ぶん)で確保し、段数が変わっても行の高さが
+   ジャンプしないようにする——段数0(客数)は空のまま。 */
+.mz-declared-on-declared-track {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 3px;
+  height: 18px;
+}
+
+/* 台(レール): 全行に常設。段数0(測定そのもの)でも、この薄い地色の線だけは必ず描く
+   ——「担体が無い」と「担体はあるが0本」を区別する(目視で見つかった不具合の修正2)。
+   区間(.seg)とは別の役目・別の要素なので、C1の本数にもC2の「区間はdistinct1」にも
+   数えない。色は既存トークン#d6d6d3(=No.128が使ったrgb(214,214,211)と同じ、
+   この図鑑が既に「薄い・中立」の意味で使っている色)を再利用し、新しい色は増やさない。 */
+.mz-declared-on-declared-rail {
+  flex: none;
+  height: 2px;
+  border-bottom: 2px solid #d6d6d3;
+}
+
+/* 区間: 段数ぶん縦に積む。線と線のあいだを3px空け、深さ3(この標本の最大)まで
+   数え間違えようがないこと目視で確認済み(目視で見つかった不具合の修正1。
+   以前は間隔1pxで、隣り合う2本の実測上のy座標は1pxしか離れておらず、
+   レンダリング後は1本の太い線にしか見えなかった——実測(本数=段数)は通っていたのに
+   絵としてだけ破綻していた、この図鑑で6回連続の失敗)。 */
+.mz-declared-on-declared-seg {
+  flex: none;
+  height: 2px;
+  border-bottom: 2px solid #3d3d3d;
+  opacity: 1;
+}
+.mz-declared-on-declared-seg.is-dashed {
+  border-bottom-style: dashed;
+}
+
+/* 対照の台: 全行、常に1本・solid の固定要素。段数の情報を1つも運ばない(C8)。 */
+.mz-declared-on-declared-track.is-contrast-track {
+  height: 4px;
+}
+.mz-declared-on-declared-track.is-contrast-track .mz-declared-on-declared-seg {
+  height: 3px;
+}
+
+/* ---------- 対照だけの壊れ方: 触れたら値そのものごと破線 + "推定" ---------- */
+
+.mz-declared-on-declared-rows.is-contrast .mz-declared-on-declared-row {
+  border: 1.4px solid #3d3d3d;
+}
+.mz-declared-on-declared-rows.is-contrast .mz-declared-on-declared-row.is-tainted {
+  border-style: dashed;
+}
+
+.mz-declared-on-declared-badge {
+  flex: none;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 7px;
+  font-weight: 800;
+}
+
+/* ---------- 対照だけのダイアログ(閾値超えで操作を止める) ---------- */
+
+.mz-declared-on-declared-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(61, 61, 61, 0.55);
+  border-radius: 8px;
+}
+.mz-declared-on-declared-dialog {
+  width: 250px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  text-align: center;
+}
+.mz-declared-on-declared-dialog p {
+  margin: 0 0 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #3d3d3d;
+}
+.mz-declared-on-declared-dialog-btn {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #a33327;
+  color: #f5f5f3;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
