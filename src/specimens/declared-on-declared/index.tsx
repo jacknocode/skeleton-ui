@@ -249,6 +249,8 @@ export default function DeclaredOnDeclared() {
                   role="img"
                   aria-label={`${LABEL[id]}の根拠は${depth}段`}
                 >
+                  {/* 台(レール)は段数0でも常設する。DOM順で最初(=column-reverseで最下段)に置く */}
+                  <span className="mz-declared-on-declared-rail" data-role="rail" />
                   {segs.map((style, i) => (
                     <span
                       key={i}

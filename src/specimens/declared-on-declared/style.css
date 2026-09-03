@@ -152,10 +152,26 @@
   flex-direction: column-reverse;
   justify-content: flex-start;
   align-items: stretch;
-  gap: 1px;
-  height: 11px;
+  gap: 3px;
+  height: 18px;
 }
 
+/* 台(レール): 全行に常設。段数0(測定そのもの)でも、この薄い地色の線だけは必ず描く
+   ——「担体が無い」と「担体はあるが0本」を区別する(目視で見つかった不具合の修正2)。
+   区間(.seg)とは別の役目・別の要素なので、C1の本数にもC2の「区間はdistinct1」にも
+   数えない。色は既存トークン#d6d6d3(=No.128が使ったrgb(214,214,211)と同じ、
+   この図鑑が既に「薄い・中立」の意味で使っている色)を再利用し、新しい色は増やさない。 */
+.mz-declared-on-declared-rail {
+  flex: none;
+  height: 2px;
+  border-bottom: 2px solid #d6d6d3;
+}
+
+/* 区間: 段数ぶん縦に積む。線と線のあいだを3px空け、深さ3(この標本の最大)まで
+   数え間違えようがないこと目視で確認済み(目視で見つかった不具合の修正1。
+   以前は間隔1pxで、隣り合う2本の実測上のy座標は1pxしか離れておらず、
+   レンダリング後は1本の太い線にしか見えなかった——実測(本数=段数)は通っていたのに
+   絵としてだけ破綻していた、この図鑑で6回連続の失敗)。 */
 .mz-declared-on-declared-seg {
   flex: none;
   height: 2px;

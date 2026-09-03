@@ -128,7 +128,8 @@
 .mz-past-restated-chart-wrap {
   position: relative;
   width: 304px;
-  height: 184px;
+  /* height は index.tsx 側のインラインスタイルが決める(既定 184px、枠が開いている
+     あいだだけ枠の高さぶんへ伸びる)。ここでは書かない = 二重の真実を作らない */
 }
 .mz-past-restated-svg {
   display: block;
@@ -231,17 +232,19 @@
    replay-not-now の語彙を継承: 破線の枠=「これは事実の描画ではない」。
    C7(既定の全要素で animation-name が none)はこの枠にも及ぶので、@keyframes は
    使わない。開閉は即座(transition:none)——この回の原則どおり、既定側は徹底して
-   尺ゼロにする */
+   尺ゼロにする。
+
+   目視で見つかった罠と直し: 枠の width/height は中身の svg(FRAME_VIEW_H まで
+   拡張済み)と index.tsx 側で完全に同じ数値を渡している(インラインstyle)。
+   ここではその外側に border と背景だけを足す——枠が中身より小さくなる余地が
+   構造上無い。overflow:hidden は最後の安全網(数値がズレても、はみ出すのではなく
+   切れる側に倒す)。 */
 .mz-past-restated-frame {
   position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 4px;
-  padding-top: 6px;
+  left: 0;
+  top: 0;
   box-sizing: border-box;
+  overflow: hidden;
   background: #fdfdfc;
   border: 2px dashed rgba(61, 61, 61, 0.55);
   border-radius: 10px;
@@ -249,11 +252,12 @@
   animation: none;
 }
 .mz-past-restated-frame-label {
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 800;
-  color: #5c5c5c;
+  fill: #5c5c5c;
   letter-spacing: 0.02em;
 }
 .mz-past-restated-frame-svg {
-  flex: none;
+  display: block;
+  overflow: hidden;
 }

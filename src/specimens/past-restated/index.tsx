@@ -69,7 +69,15 @@ import './style.css'
    同じ実験をしても再現する)。だから対照の「再生」は CSS ではなく、
    No.89 の `runReplay` と同型の `requestAnimationFrame` による JS 側の補間で
    作っている——**位置を表す担体をCSSで動かしたいなら、値をCSSプロパティとして
-   渡さない限り、transitionは効かない**という、この図鑑がまだ書いていなかった注意点。 */
+   渡さない限り、transitionは効かない**という、この図鑑がまだ書いていなかった注意点。
+
+   もう1つ、目視で見つかった罠(数値条件は全部通っていたが絵として破綻していた)。
+   `前に見たときの形` の枠は最初、ラベルをHTMLの<div>にしてsvgの上にflexで積んで
+   いた。ラベルの行の高さぶん中身全体が押し下げられ、枠の外枠(`inset:0`で本体
+   チャートと同じ184px高に固定)からx軸の目盛りと週ラベルがはみ出していた——
+   C1〜C8はどれも「要素の有無」「stroke等の一致」「個数」しか見ておらず、
+   「枠の矩形が中身の矩形を包んでいるか」を誰も測っていなかった。直しは
+   ReplayFrame と FRAME_LABEL_H/FRAME_VIEW_H を参照。 */
 
 type Mode = 'default' | 'contrast'
 
@@ -91,6 +99,11 @@ const Y_TOP = 16
 const Y_BOTTOM = 152
 const VIEW_W = 304
 const VIEW_H = 184
+// 再演の枠だけが使う、名乗りぶんの上マージン。チャート本体(PreGrid/TimeAxis/線/点)は
+// 1px も変えず、枠の中だけ座標系を FRAME_LABEL_H ぶん高くしてラベルの置き場所を作る
+// (=枠のラベルが「本体を押し出して x 軸をはみ出させる」ことが構造的に起きない)
+const FRAME_LABEL_H = 18
+const FRAME_VIEW_H = VIEW_H + FRAME_LABEL_H
 
 const PRE_LEFT_TICKS = [120, 135, 150]
 const PRE_RIGHT_TICKS = [280, 305, 330]
@@ -298,25 +311,50 @@ function Chart({
 /** 再演の枠: いまのチャートの上に重なる、旧の形だけを見せる読み取り専用の窓。
  *  中の線は本チャートの線と完全に同じクラスで描く(C5)。名乗るのは枠のラベルだけ。
  *  開閉は row3 の「前に見たときの形」⇄「閉じる」ボタン1つで行う(枠自身は
- *  閉じるボタンを持たない。持たせると同じ操作に2つの入口ができてしまう)。 */
+ *  閉じるボタンを持たない。持たせると同じ操作に2つの入口ができてしまう)。
+ *
+ *  目視で見つかった罠: 最初はラベルを HTML の <div> にして svg の上に flex で
+ *  積んでいた。ラベルの行の高さぶん中身全体が押し下げられ、枠の外枠(inset:0 で
+ *  本体チャートと同じ 184px 高に固定)からチャート下端(x軸の目盛り・週ラベル)が
+ *  はみ出す——数値条件はどれも「要素の有無・スタイルの一致」しか見ておらず、
+ *  「枠の矩形が中身の矩形を包んでいるか」を誰も測っていなかったので拾えなかった。
+ *  直しは、ラベルを HTML ではなく同じ svg 内の <text> にし、svg 自体の高さを
+ *  FRAME_LABEL_H ぶん増やして、チャート本体は <g transform="translate(0, 18)"> で
+ *  そのまま下にずらすだけにする——本体の座標(PreGrid/TimeAxis/線/点の x/y)は
+ *  1つも変えていないので、C5(線の描き方の一致)にも影響しない。枠の DOM 上の
+ *  width/height はこの拡張後の svg のサイズにそのまま合わせているので、
+ *  枠の矩形が中身をはみ出しなく包むことが構造的に保証される。 */
 function ReplayFrame() {
   return (
-    <div className="mz-past-restated-frame" data-role="replay-frame">
-      <div className="mz-past-restated-frame-label">前に見たときの画面</div>
+    <div
+      className="mz-past-restated-frame"
+      data-role="replay-frame"
+      style={{ width: VIEW_W, height: FRAME_VIEW_H }}
+    >
       <svg
         className="mz-past-restated-svg mz-past-restated-frame-svg"
-        viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+        viewBox={`0 0 ${VIEW_W} ${FRAME_VIEW_H}`}
         width={VIEW_W}
-        height={VIEW_H}
+        height={FRAME_VIEW_H}
         role="img"
         aria-label="前に見たときの折れ線"
       >
-        <PreGrid />
-        <TimeAxis />
-        <g className="mz-past-restated-line" data-role="frame-line">
-          <LineSegments points={OLD_POINTS} />
+        <text
+          className="mz-past-restated-frame-label"
+          x={VIEW_W / 2}
+          y={12}
+          textAnchor="middle"
+        >
+          前に見たときの画面
+        </text>
+        <g transform={`translate(0, ${FRAME_LABEL_H})`}>
+          <PreGrid />
+          <TimeAxis />
+          <g className="mz-past-restated-line" data-role="frame-line">
+            <LineSegments points={OLD_POINTS} />
+          </g>
+          <Dots points={OLD_POINTS} className="mz-past-restated-dot" />
         </g>
-        <Dots points={OLD_POINTS} className="mz-past-restated-dot" />
       </svg>
     </div>
   )
@@ -487,7 +525,11 @@ export default function PastRestated() {
         )}
       </div>
 
-      <div className="mz-past-restated-chart-wrap">
+      {/* 枠が開いているあいだだけ、枠の高さ(FRAME_VIEW_H)ぶんを確保する。
+          枠は position:absolute で置くので、この高さの切り替えだけがカード全体の
+          縦幅を伸縮させる唯一の経路——枠の中身は決してこの外側のボックスを
+          はみ出さない(枠自身のCSSも参照)。 */}
+      <div className="mz-past-restated-chart-wrap" style={{ height: frameOpen ? FRAME_VIEW_H : VIEW_H }}>
         <Chart mode={mode} restated={restated} currentPoints={currentPoints} marks={marks} />
         {mode === 'default' && frameOpen && <ReplayFrame />}
       </div>
