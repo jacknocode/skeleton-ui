@@ -1,26 +1,159 @@
+/* No.134「入れきれないので間引く」
+   モノクロ・自己完結。色トークンは図鑑のパレットのみ(#2f2f2f 濃 / #3d3d3d 濃 / #5c5c5c 濃中 /
+   #6e6e6e 中濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡 / #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。
+   この図鑑は色を持たない——対照も含めて赤や緑は使わない。外形は428×260px程度、
+   560×360のステージ内に収まる。
+
+   芯: 帯(.mz-thinned-to-fit-band)はtop/heightだけで値を語る。色・不透明度・角丸は
+   全列同一値(distinct 1)——太さ(高さ)だけが密度を運ぶ。対照の折れ線(path)はd属性のみが
+   動く。どちらも「基本のぷるん」(cubic-bezier(0.34,1.56,0.64,1))は使わない——
+   行き過ぎて戻ると「一瞬だけ実際より大きい値があった」というデータの嘘になるため、
+   ここではease-out系の単調な曲線だけを使う。 */
+
 .mz-thinned-to-fit {
-  padding: 12px 24px;
-  border-radius: 999px;
+  --mz-ttf-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 428px;
+  padding: 14px;
+  box-sizing: border-box;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-thinned-to-fit.is-active {
-  animation: mz-thinned-to-fit-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-thinned-to-fit-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-thinned-to-fit-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-thinned-to-fit-caption {
+  font-size: 10px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-thinned-to-fit-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-thinned-to-fit-mode-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-thinned-to-fit-mode-btn.is-active {
+  background: #2f2f2f;
+  color: #f5f5f3;
+}
+
+/* ---------- 2行目: 件数(既定・対照で同一文字列) + 操作 ---------- */
+
+.mz-thinned-to-fit-row2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-thinned-to-fit-count {
+  font-size: 11px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+.mz-thinned-to-fit-actions {
+  display: flex;
+  gap: 5px;
+}
+.mz-thinned-to-fit-actions button {
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #eaeae8;
+  color: #5c5c5c;
+  font-size: 9.5px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    opacity 0.2s;
+}
+.mz-thinned-to-fit-actions button:hover:not(:disabled) {
+  background: #2f2f2f;
+  color: #f5f5f3;
+}
+.mz-thinned-to-fit-actions button:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+/* ---------- 台(既定=帯 / 対照=折れ線) ---------- */
+
+.mz-thinned-to-fit-chart {
+  position: relative;
+  border-radius: 4px;
+  background: #f5f5f3;
+  border: 1px solid #eaeae8;
+  overflow: hidden;
+}
+
+/* 既定: 画素列ごとの帯。left(=列位置)は拡大しても動かない。top/heightだけが値を運ぶ。
+   色・角丸・不透明度は全列同一値——太さ(高さ)だけが密度の情報を持つ(=答え3)。 */
+.mz-thinned-to-fit-band {
+  position: absolute;
+  width: 1px;
+  border-radius: 0;
+  background: #3d3d3d;
+  opacity: 1;
+  transition:
+    top var(--mz-ttf-duration, 0.45s) var(--mz-ttf-ease),
+    height var(--mz-ttf-duration, 0.45s) var(--mz-ttf-ease);
+}
+
+/* 対照: 折れ線。d属性だけがtransitionの対象(=points属性はCSSで補間できないため
+   pathに変更した、というのが実装で踏んだ罠の1つ)。 */
+.mz-thinned-to-fit-svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+.mz-thinned-to-fit-line {
+  fill: none;
+  stroke: #3d3d3d;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  transition: d 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---------- 台の下の目盛り(区間の両端だけを名乗る) ---------- */
+
+.mz-thinned-to-fit-ruler {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -2px;
+}
+.mz-thinned-to-fit-tick {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
 }
