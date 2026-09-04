@@ -43,13 +43,28 @@ import './style.css'
    動いていないのに、覆いが剥がれて右側に露出する——「台の側が引いていく」という
    企画の指定を、JSのフレーム処理を一切使わずCSSのtransitionと重なり順だけで実現する。
 
-   ---- 答え3: 対照は色を使わず、台を凍結させたまま数字だけ動かす ----
+   ---- 答え2.5(実物レビューでの修正): 「台を失った」を言うには、台そのものを描く ----
+   最初の実装は、塗りの下に敷いた全長固定の飾り線(baseline)しか持たず、塗りの色・長さの
+   合計は揃える前後で変わらなかった。塗りが「そろえた分だけ捨てた」を運ぶ担体である以上、
+   それが載る/載らない場所＝台そのものが見えていないと、担体の変化は画面から読めない
+   （この図鑑がNo.95などで既に踏んだ「担体は、それが載る場所が描かれていないと読めない」の
+   裏返し）。そこで塗りのすぐ下(3〜4px下、高さ2px)に**レール**を敷き、レールの右端を
+   塗りの右端と常に同じ値(todayTrackPx)で連動させた。レールは塗りではなく「台」そのものの
+   担体なので、揃えた瞬間に塗りと**同じ0.5s・同じイージングで一緒に**縮む。動かないのは
+   `.is-discard`だけ——結果、揃えたあとは「塗りは3日目から6日目まで生き残っているのに、
+   その下にレールが無い」という絵になり、"台を失った"がレールの不在として初めて読める。
+
+   ---- 答え3: 対照は「帯 vs 1値」以外を一切変えない ----
    モノクロ縛りのため、対照の「壊れ方」を色で示す常套手段（赤で警告する等）は使わない。
    代わりに、対照の台は揃えるを押しても一切width を変えない（今週・先週とも常に生の
    日数ぶんの長さで固定）——「捨てていることを画面に一切出さない」を、台を凍結させる
-   ことそのもので体現する。動くのは見出しの%の数字だけ。基準時点の表示も「最終更新」
-   ラベル1つだけで、それが今週（新しいほう）の時点だけを名乗り、先週の材料が3日分しか
-   ないという事実は画面のどこにも現れない。
+   ことそのもので体現する。基準時点の表示も「最終更新」ラベル1つだけで、それが今週
+   （新しいほう）の時点だけを名乗り、先週の材料が3日分しかないという事実は画面のどこにも
+   現れない。差の数値は既定の帯の**単位・大きさをそのまま**（円。窓の違いを一切差し引かない
+   生の差＝既定の帯の上限と同じ+¥171,900、揃えた後は+¥12,600）で言い切る——単位を%に
+   変えると「差の出し方の話」に「表示単位の話」が混ざり、対照が主張したい違い（帯を
+   1値に潰したこと）がぼやける（実物レビューでの修正点。対照は既定と1箇所しか違えない）。
+   動くのはこの数値だけ。
 
    ---- 実装で踏んだ罠 ----
    ・最初、`.is-discard`の位置を「今の`.is-track`のwidthを起点に」JS側で毎回計算し直す
@@ -67,6 +82,18 @@ import './style.css'
      「消えてから台が追いつく」ように見えてしまった。0.5sの伸長アニメーションが
      終わるまで`.is-discard`を残すタイマーを足して、台が伸びて覆い被さる過程が
      見えるようにした。
+   ・(実物レビュー後) 当初、塗りの下に敷いた飾り線を「全長固定のbaseline」のまま流用しようと
+     しかけたが、それだと揃える前後で見た目の変化が"塗りの長さ"だけに閉じてしまい、
+     「レールが引いた」ことにならない。レールは塗りの背景ではなく、塗りの下に**別の高さで**
+     常に見える形で置き、widthを塗りと同じ変数(todayTrackPx)で連動させることで、
+     初めて「塗りは残っているのに台が無い」が測定可能になった。
+   ・(2回目の実物レビュー後) 対照の差を最初%表記(+117.2%)にしたのは、対照は「1値で言い切る」
+     というだけで十分に壊れ方が伝わると思い込んだため。実際には既定(円・帯)と対照(％・1値)
+     のあいだで単位まで変わってしまい、「帯を1値に潰した」という主張したい違いに「円→％」
+     という無関係な違いが重なって読み手の注意を分散させていた。対照はfmtDiff(既定と同じ
+     関数)で円額をそのまま出す形に直し、既定の帯の上限(RAW_DIFF)と対照の生の1値が
+     文字通り同じ値(+¥171,900)になるようにした——「既定と違うのは1箇所だけ」という
+     この図鑑の対照の作法を、値のレベルでも一致させて証明できるようにした。
 
    ---- 企画が決めていなかったこと ----
    ・具体的な金額・日数（今週6/7日・先週3/7日、318,600円・146,700円）は実装が決めた。
@@ -108,9 +135,6 @@ const RAW_DIFF = THIS_WEEK_TOTAL - LAST_WEEK_TOTAL // 上限: 窓の違いを最
 const ALIGNED_DIFF_PX = ALIGNED_DIFF * px_per_yen
 const RAW_DIFF_PX = RAW_DIFF * px_per_yen
 
-const RAW_PERCENT = (RAW_DIFF / LAST_WEEK_TOTAL) * 100
-const ALIGNED_PERCENT = (ALIGNED_DIFF / LAST_WEEK_TOTAL) * 100
-
 const TICKS = [
   { day: 0, label: '週初' },
   { day: 3, label: '3日目' },
@@ -120,7 +144,6 @@ const TICKS = [
 
 const fmtYen = (n: number) => `¥${Math.round(n).toLocaleString('ja-JP')}`
 const fmtDiff = (n: number) => `${n >= 0 ? '+' : '-'}¥${Math.abs(Math.round(n)).toLocaleString('ja-JP')}`
-const fmtPercent = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`
 const pxForDay = (day: number) => day * px_per_day
 
 /** 今週の合計と先週の合計を、材料の締め時点(as-of)がずれたまま並べる。 */
@@ -211,7 +234,6 @@ export default function CompareAcrossAsOf() {
               {fmtYen(THIS_WEEK_TOTAL)}
             </span>
             <div className="mz-compare-across-as-of-track-row" data-role="track-row" data-week="this" style={{ width: TRACK_MAX }}>
-              <span className="mz-compare-across-as-of-baseline" style={{ width: TRACK_MAX }} />
               {discardVisible && (
                 <div
                   className="mz-compare-across-as-of-fill is-discard"
@@ -227,6 +249,9 @@ export default function CompareAcrossAsOf() {
                 data-confirmed-days={aligned ? LAST_WEEK_DAYS : TODAY_DAYS}
                 style={{ width: todayTrackPx }}
               />
+              {/* レール: 台そのものの担体。塗りと同じwidth・同じtransitionで連動する。
+                  塗りの背景ではなく下の別高さに置くことで、塗りに隠れず常に見える(答え2.5)。 */}
+              <div className="mz-compare-across-as-of-rail" data-role="week-rail" data-week="this" style={{ width: todayTrackPx }} />
             </div>
 
             <span className="mz-compare-across-as-of-week-label" data-role="week-label" data-week="last">
@@ -236,7 +261,6 @@ export default function CompareAcrossAsOf() {
               {fmtYen(LAST_WEEK_TOTAL)}
             </span>
             <div className="mz-compare-across-as-of-track-row" data-role="track-row" data-week="last" style={{ width: TRACK_MAX }}>
-              <span className="mz-compare-across-as-of-baseline" style={{ width: TRACK_MAX }} />
               <div
                 className="mz-compare-across-as-of-fill is-track is-final"
                 data-role="week-track"
@@ -244,6 +268,7 @@ export default function CompareAcrossAsOf() {
                 data-confirmed-days={LAST_WEEK_DAYS}
                 style={{ width: LAST_WEEK_PX }}
               />
+              <div className="mz-compare-across-as-of-rail" data-role="week-rail" data-week="last" style={{ width: LAST_WEEK_PX }} />
             </div>
 
             <span />
@@ -264,30 +289,21 @@ export default function CompareAcrossAsOf() {
           </div>
 
           <div className="mz-compare-across-as-of-diff">
-            <span className="mz-compare-across-as-of-diff-label">差（先週比）</span>
+            <div className="mz-compare-across-as-of-diff-head">
+              <span className="mz-compare-across-as-of-diff-label">差（先週比）</span>
+              <span className="mz-compare-across-as-of-diff-value" data-role="diff-value">
+                {aligned ? fmtDiff(ALIGNED_DIFF) : `${fmtDiff(ALIGNED_DIFF)} 〜 ${fmtDiff(RAW_DIFF)}`}
+              </span>
+            </div>
             <div className="mz-compare-across-as-of-band-track" data-role="band-track" style={{ width: BAND_MAX }}>
               <div
                 className="mz-compare-across-as-of-band-fill"
                 data-role="diff-band"
                 style={{ left: ALIGNED_DIFF_PX, width: bandWidthPx }}
               />
-              <span className="mz-compare-across-as-of-band-tick" style={{ left: ALIGNED_DIFF_PX }} />
-              {!aligned && <span className="mz-compare-across-as-of-band-tick" style={{ left: RAW_DIFF_PX }} />}
-              <span
-                className="mz-compare-across-as-of-band-val is-low"
-                data-role="diff-low"
-                style={{ left: ALIGNED_DIFF_PX }}
-              >
-                {fmtDiff(ALIGNED_DIFF)}
-              </span>
+              <span className="mz-compare-across-as-of-band-tick" data-role="diff-low-tick" style={{ left: ALIGNED_DIFF_PX }} />
               {!aligned && (
-                <span
-                  className="mz-compare-across-as-of-band-val is-high"
-                  data-role="diff-high"
-                  style={{ left: RAW_DIFF_PX }}
-                >
-                  〜{fmtDiff(RAW_DIFF)}
-                </span>
+                <span className="mz-compare-across-as-of-band-tick" data-role="diff-high-tick" style={{ left: RAW_DIFF_PX }} />
               )}
             </div>
           </div>
@@ -314,12 +330,17 @@ export default function CompareAcrossAsOf() {
             <span className="mz-compare-across-as-of-week-amount" data-role="week-amount" data-week="this">
               {fmtYen(THIS_WEEK_TOTAL)}
             </span>
-            {/* 対照だけの壊れ方: 揃えるを押しても台は一切widthを変えない(=捨てていることが画面に出ない) */}
+            {/* 対照だけの壊れ方: 揃えるを押しても台・レールとも一切widthを変えない(=捨てていることが画面に出ない) */}
             <div className="mz-compare-across-as-of-track-row" data-role="track-row" data-week="this" style={{ width: TRACK_MAX }}>
-              <span className="mz-compare-across-as-of-baseline" style={{ width: TRACK_MAX }} />
               <div
                 className="mz-compare-across-as-of-fill is-track is-final is-frozen"
                 data-role="week-track"
+                data-week="this"
+                style={{ width: TODAY_RAW_PX }}
+              />
+              <div
+                className="mz-compare-across-as-of-rail is-frozen"
+                data-role="week-rail"
                 data-week="this"
                 style={{ width: TODAY_RAW_PX }}
               />
@@ -332,10 +353,15 @@ export default function CompareAcrossAsOf() {
               {fmtYen(LAST_WEEK_TOTAL)}
             </span>
             <div className="mz-compare-across-as-of-track-row" data-role="track-row" data-week="last" style={{ width: TRACK_MAX }}>
-              <span className="mz-compare-across-as-of-baseline" style={{ width: TRACK_MAX }} />
               <div
                 className="mz-compare-across-as-of-fill is-track is-final is-frozen"
                 data-role="week-track"
+                data-week="last"
+                style={{ width: LAST_WEEK_PX }}
+              />
+              <div
+                className="mz-compare-across-as-of-rail is-frozen"
+                data-role="week-rail"
                 data-week="last"
                 style={{ width: LAST_WEEK_PX }}
               />
@@ -347,9 +373,9 @@ export default function CompareAcrossAsOf() {
             <span
               className="mz-compare-across-as-of-diff-number"
               data-role="diff-number"
-              data-value={cAligned ? ALIGNED_PERCENT.toFixed(1) : RAW_PERCENT.toFixed(1)}
+              data-value={cAligned ? ALIGNED_DIFF : RAW_DIFF}
             >
-              {fmtPercent(cAligned ? ALIGNED_PERCENT : RAW_PERCENT)}
+              {fmtDiff(cAligned ? ALIGNED_DIFF : RAW_DIFF)}
             </span>
           </div>
 

@@ -29,6 +29,14 @@ import './style.css'
    上端になるので、鋭いスパイクも必ず画面に出る（=C1）。落としているのは帯の中の
    「点の個数・順序」だけで、値の範囲は一度も落としていない。
 
+   訂正（実物を見た後の企画側の見落とし）: 「落としていいのは点の個数だけ」だけでは
+   足りなかった。拡大すると1画素あたりの点数が1.5点程度まで落ち、多くの列でmin=maxの
+   「点」になる。値域が隣の列と重ならないとそこで帯が途切れ、折れ線ではなく粒の散らばり
+   にしか見えなくなる（＝系列の形が読めない）。正しくは「点の個数だけを落とし、値の
+   範囲も、隣とのつながりも落とさない」。列cの値域に「直前の列c-1の最後の点」を
+   必ず含めることで、隣り合う帯が常に重なるようにした（=C7）。min/maxは広がる方向
+   にしか変わらないので、C1・C2の測定値は変わらない（後述の「実測」参照）。
+
    ---- 答え2: y軸のドメインは常に固定。拡大しても再スケールしない ----
    ドメイン（domainMin〜domainMax）は系列全体のmin/maxから一度だけ算出し、拡大の
    前後で1度も変えない。だから区間内の最大値のy座標は拡大しても1px も動かない（=C2）。
@@ -180,9 +188,18 @@ function bandRangesOf(start: number, end: number, cols: number): Array<[number, 
 }
 
 /** 画素列ごとのmin〜max帯。落としているのは列内の「点の個数・順序」だけ。値の範囲(極値)は
-    1度も落とさない——これが答え1そのもの。 */
+    1度も落とさない——これが答え1そのもの。
+
+    追記(修正): 列cの値域には自分の点に加えて「直前の列c-1の最後の点」も含める(先頭列は
+    自分の点だけ)。min/maxは広がる方向にしか変わらないので、真の極値(C1)や区間内の
+    最大値(C2)は1つも失わない。そのぶん隣の列と値域が必ず重なるようになり、帯が縦に
+    つながって見える(=C7)。点が1つも落ちない列(拡大時に発生しうる)は、自分の点を
+    持たないまま直前の列の最後の値だけを引き継いだ幅0の帯としてつなげ、carryは
+    そのまま次の列へも渡す。 */
 function computeBands(values: number[], start: number, end: number, cols: number): Band[] {
-  return bandRangesOf(start, end, cols).map(([a, b]) => {
+  const bands: Band[] = []
+  let carry: number | undefined
+  for (const [a, b] of bandRangesOf(start, end, cols)) {
     let mn = Infinity
     let mx = -Infinity
     for (let i = a; i < b; i++) {
@@ -190,8 +207,28 @@ function computeBands(values: number[], start: number, end: number, cols: number
       if (v < mn) mn = v
       if (v > mx) mx = v
     }
-    return { aIdx: a, bIdx: b, min: mn, max: mx }
-  })
+    if (carry !== undefined) {
+      if (carry < mn) mn = carry
+      if (carry > mx) mx = carry
+    }
+    if (mn === Infinity) {
+      mn = mx = BASELINE
+    }
+    bands.push({ aIdx: a, bIdx: b, min: mn, max: mx })
+    if (b > a) carry = values[b - 1]
+  }
+  return bands
+}
+
+function countBandGaps(bands: Band[]): number {
+  let gaps = 0
+  for (let c = 1; c < bands.length; c++) {
+    const prev = bands[c - 1]
+    const cur = bands[c]
+    const overlaps = cur.min <= prev.max && cur.max >= prev.min
+    if (!overlaps) gaps++
+  }
+  return gaps
 }
 
 /** 対照: 等間隔サンプリング。countは拡大の前後で変えない(=path 'd'のCSSトランジションが
@@ -246,6 +283,7 @@ export default function ThinnedToFit() {
   const dRegionObservedMax = regionObservedMaxFromBands(dBands, ZOOM_START, ZOOM_END)
   const dRegionObservedMaxY = yOf(dRegionObservedMax)
   const dDistinctHeights = new Set(dBands.map((b) => Math.round(yOf(b.min) - yOf(b.max)))).size
+  const dBandGapCount = countBandGaps(dBands)
 
   const cObservedMax = Math.max(...cSamples.map((p) => p.value))
   const cObservedMaxY = yOf(cObservedMax)
@@ -318,6 +356,7 @@ export default function ThinnedToFit() {
           data-region-observed-max-value={dRegionObservedMax.toFixed(2)}
           data-region-observed-max-y={dRegionObservedMaxY.toFixed(2)}
           data-band-height-distinct={dDistinctHeights}
+          data-band-gap-count={dBandGapCount}
           data-badge-count={0}
           style={{ width: CHART_W, height: CHART_H }}
         >
