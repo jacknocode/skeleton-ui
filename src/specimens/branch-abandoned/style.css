@@ -1,26 +1,277 @@
+/* No.133「捨てた分岐」
+   モノクロ・自己完結。色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #5c5c5c 濃中 /
+   #6e6e6e 中濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡 / #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。
+   この標本は色を一切持たない(既定・対照とも)。
+
+   芯: 本線の点(.mz-branch-abandoned-dot)と枝の点は**まったく同じクラス**を使う。
+   opacity・background-color・width/height はどちらも1つの規則からしか生まれない
+   ようにして、"弱める"余地そのものをCSSの構造から無くしている(C2)。
+   is-fork(第3週の本線の点)だけは外側にbox-shadowの輪を足すが、box-shadowは
+   background-color/opacity/width/heightのいずれにも影響しないので、
+   枝の点との比較(C2)には一切干渉しない。 */
+
 .mz-branch-abandoned {
-  padding: 12px 24px;
-  border-radius: 999px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 412px;
+  padding: 12px 14px;
+  box-sizing: border-box;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-branch-abandoned.is-active {
-  animation: mz-branch-abandoned-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: 操作ヒント + 既定/対照トグル ---------- */
+
+.mz-branch-abandoned-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
+.mz-branch-abandoned-caption {
+  font-size: 10px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-branch-abandoned-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-branch-abandoned-mode-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-branch-abandoned-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- いまの残高: mainPath(cPath)の末尾からしか値を取らない欄 ---------- */
+
+.mz-branch-abandoned-stat {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6e6e6e;
+}
+.mz-branch-abandoned-stat-num {
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 時間割の舞台 ---------- */
+
+.mz-branch-abandoned-timeline {
+  position: relative;
+  height: 118px;
+  border-radius: 10px;
+  background: #f5f5f3;
+}
+
+.mz-branch-abandoned-baseline {
+  position: absolute;
+  height: 1px;
+  background: #d6d6d3;
+}
+.mz-branch-abandoned-connector-v {
+  position: absolute;
+  width: 1px;
+  background: #d6d6d3;
+}
+.mz-branch-abandoned-connector-h {
+  position: absolute;
+  height: 1px;
+  background: #d6d6d3;
+}
+
+/* 1つの週(点+ラベル)。本線・枝のどちらも同じ入れ物クラスを使う */
+.mz-branch-abandoned-point {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1;
+}
+
+/* 点そのもの。本線・枝で完全に同一(C2の担体そのもの)。湧くときだけ基本イージングで
+   ポップする(No.131以来の基本イージング=枝も本線も同じ尺・同じ動き)。以後は静止物。 */
+.mz-branch-abandoned-dot {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #3d3d3d;
+  opacity: 1;
+  animation: mz-branch-abandoned-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* 第3週(分岐の起点)だけ外側に輪を足す。box-shadowはbackground/opacity/サイズに
+   一切干渉しないため、枝の点とのC2比較を汚さない */
+.mz-branch-abandoned-dot.is-fork {
+  box-shadow: 0 0 0 3px rgba(61, 61, 61, 0.16);
+}
+
 @keyframes mz-branch-abandoned-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
   }
   60% {
-    transform: scale(0.9, 1.1);
+    transform: scale(1.12);
+    opacity: 1;
   }
   100% {
+    transform: scale(1);
+  }
+}
+
+.mz-branch-abandoned-label {
+  font-size: 7.5px;
+  font-weight: 800;
+  color: #6e6e6e;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.mz-branch-abandoned-label.is-above {
+  position: absolute;
+  bottom: 100%;
+  margin-bottom: 2px;
+  color: #3d3d3d;
+}
+.mz-branch-abandoned-label.is-below {
+  position: absolute;
+  top: 100%;
+  margin-top: 2px;
+  color: #b3b3b3;
+  font-weight: 700;
+}
+.mz-branch-abandoned-label.is-branch {
+  position: absolute;
+  top: 100%;
+  margin-top: 2px;
+  color: #6e6e6e;
+}
+
+/* 現在地: 本線の最後の点にしか描かれない(branchesを一切参照しない導出) */
+.mz-branch-abandoned-cursor {
+  position: absolute;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  border: 1.4px solid #3d3d3d;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: none; /* 尺ゼロ: 中割りを持たない */
+  z-index: 2;
+}
+
+/* ---------- 操作ボタン ---------- */
+
+.mz-branch-abandoned-actions {
+  display: flex;
+  gap: 5px;
+}
+.mz-branch-abandoned-actions button {
+  flex: 1 1 auto;
+  padding: 6px 4px;
+  border-radius: 8px;
+  background: #eaeae8;
+  color: #5c5c5c;
+  font-size: 9.5px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-branch-abandoned-actions button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.mz-branch-abandoned-actions button:hover:not(:disabled) {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-branch-abandoned-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.mz-branch-abandoned-actions button.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 再演の枠: 捨てた枝の結果はここでだけ読める ---------- */
+
+.mz-branch-abandoned-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 70px;
+  overflow-y: auto;
+  padding: 7px 9px;
+  border: 1.4px dashed #b3b3b3;
+  border-radius: 8px;
+  background: #fafaf9;
+}
+.mz-branch-abandoned-panel-title {
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #8c8c8c;
+}
+.mz-branch-abandoned-branch-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.mz-branch-abandoned-branch-label {
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #3d3d3d;
+}
+.mz-branch-abandoned-branch-weeks {
+  font-size: 8px;
+  font-weight: 600;
+  color: #6e6e6e;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 対照: トースト(一定時間で消える=分岐した事実が画面に残らない) ---------- */
+
+.mz-branch-abandoned-toast {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 9.5px;
+  font-weight: 800;
+  animation: mz-branch-abandoned-toast-fade 0.2s ease-out;
+}
+@keyframes mz-branch-abandoned-toast-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  100% {
+    opacity: 1;
     transform: none;
   }
 }
