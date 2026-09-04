@@ -1906,6 +1906,71 @@ const CHOREO = {
     await allBtn().click()
     await sleep(2200) // `同期済み`が現れる。バッジはまだ8通りバラバラなまま
   },
+  /* No.132〜134 は「どちらも正しいのに、両方は取れない」の3種。
+     どれも**交換の瞬間**が主題なので、押す前の状態を必ず一拍見せてから押す。
+     押す前を詰めると「何と何を引き換えたのか」が写らない。 */
+  'compare-across-as-of': async (page) => {
+    const align = () => page.locator('[data-role="align-btn"]')
+    const reset = () => page.locator('[data-role="reset-btn"]')
+
+    await sleep(1600) // 2本の台の右端が違う(今週=6日目・先週=3日目)。差は帯で幅を持っている
+    await align().click()
+    await sleep(2200) // 帯が1値に潰れるのと同時に、今週のレールだけが3日目まで引く
+    await sleep(900) // 塗りは動いていない。右半分の下だけレールが無い(台を失った)
+    await reset().click()
+    await sleep(2000) // レールが伸び戻り、差がまた幅を持つ
+
+    // 対照: 差は1つの数字。押しても台もレールも動かず、何を捨てたのかが画面に出ない
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1400)
+    await align().click()
+    await sleep(2200)
+  },
+  'branch-abandoned': async (page) => {
+    const next = () => page.locator('[data-role="next-btn"]')
+    const redo = () => page.locator('[data-role="redo-btn"]')
+    const view = () => page.locator('[data-role="view-abandoned-btn"]')
+
+    await sleep(900)
+    for (let i = 0; i < 6; i++) {
+      await next().click() // 第6週まで進める。枝を3点にしないと「捨てた並び」が読めない
+      await sleep(430)
+    }
+    await sleep(1100)
+    await redo().click()
+    await sleep(2200) // 第3週から先が別の手に入れ替わり、古い並びが列の下に枝として残る
+    await view().click()
+    await sleep(2400) // 捨てた結果は再演の枠の中でだけ読める。いまの残高は動かない
+    await view().click()
+    await sleep(900)
+
+    // 対照: やり直しが列に点を+1し(戻ったのに前へ進む)、枝は消えてトーストが流れて終わる
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1200)
+    for (let i = 0; i < 4; i++) {
+      await next().click()
+      await sleep(380)
+    }
+    await redo().click()
+    await sleep(2600) // トーストが出て、1.6秒で消える。分岐したことが画面のどこにも残らない
+  },
+  'thinned-to-fit': async (page) => {
+    const zoom = () => page.locator('[data-role="zoom-btn"]')
+    const reset = () => page.locator('[data-role="reset-btn"]')
+
+    await sleep(1800) // 帯の太さに密度が出ていて、1点しかないスパイクも3本立っている
+    await zoom().click()
+    await sleep(2400) // ほどけるだけ。山の頂点は1pxも動かない
+    await reset().click()
+    await sleep(1800)
+
+    // 対照: 等間隔サンプリング。全体表示ではスパイクが1本も無いのに、
+    // 拡大すると無かった山が生えてくる(データは1点も変わっていない)
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1800)
+    await zoom().click()
+    await sleep(2600)
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))

@@ -1,0 +1,274 @@
+/* No.132「窓の違う2つを比べる」
+   モノクロ・自己完結。色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #5c5c5c 濃中 /
+   #6e6e6e 中濃 / #8c8c8c 中 / #b3b3b3 淡中 / #c9c9c6 レール / #d6d6d3 淡 / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。対照も含めてこの標本は一切色を持たない(=モノクロの縛りを
+   そのまま守る)。外形は560×360px以内。
+
+   芯: `.is-track`(台そのもの)と`.is-discard`(捨てられた材料)は同じ
+   `.mz-compare-across-as-of-fill`から background・opacity を継承する(=完全一致)。
+   動くのは`.is-track`のwidthだけ——`.is-discard`は一度も transition を持たない。
+
+   レール(`.mz-compare-across-as-of-rail`)は塗りの**背景**ではなく、塗りの下端から
+   3〜4px下に別の高さで置く「台そのもの」の担体。塗りの背景として敷くと不透明な塗りに
+   永久に隠れて見えなくなるため、必ず塗りと重ならない位置に描く(実物レビューでの修正点)。
+   widthは`.is-track`と常に同じ値を使い、同じtransitionで連動させる。 */
+
+.mz-compare-across-as-of {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: max-content;
+  max-width: 524px;
+  padding: 16px;
+  box-sizing: border-box;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-compare-across-as-of-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.mz-compare-across-as-of-caption {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+}
+.mz-compare-across-as-of-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-compare-across-as-of-mode-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-compare-across-as-of-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 週の合計グリッド: ラベル / 金額 / 台 ---------- */
+
+.mz-compare-across-as-of-weeks {
+  display: grid;
+  column-gap: 8px;
+  row-gap: 7px;
+  align-items: center;
+}
+
+.mz-compare-across-as-of-week-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #6e6e6e;
+  white-space: nowrap;
+}
+.mz-compare-across-as-of-week-amount {
+  font-size: 12px;
+  font-weight: 800;
+  color: #3d3d3d;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* 台の行の器。ここが台のx座標系そのもの(=下のrulerと共通の原点・共通のpx/day)。
+   高さ20px = 塗り(0〜11px) + すき間(4px) + レール(15〜17px) + 余白。 */
+.mz-compare-across-as-of-track-row {
+  position: relative;
+  height: 20px;
+}
+
+/* 台と、捨てられた材料。同じ base クラスから background・opacity を継承することで
+   「薄めない・小さくしない」(C3)を構造として保証する。高さは11pxに固定し、
+   その下にレール用のすき間を必ず残す(=塗りを背景に敷いてレールを隠さない)。 */
+.mz-compare-across-as-of-fill {
+  position: absolute;
+  top: 0;
+  height: 11px;
+  background: #3d3d3d;
+  opacity: 1;
+  border-radius: 3px 0 0 3px;
+}
+.mz-compare-across-as-of-fill.is-track {
+  left: 0;
+  /* 500ms は index.tsx の ALIGN_MS と揃える(「揃える/やり直す」の帯の遷移と同じ尺) */
+  transition: width 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mz-compare-across-as-of-fill.is-final {
+  border-radius: 3px;
+}
+.mz-compare-across-as-of-fill.is-discard {
+  border-radius: 0 3px 3px 0;
+}
+/* 対照専用: 台を凍結させる(widthのtransitionを持たせない)。壊れ方そのもの。 */
+.mz-compare-across-as-of-fill.is-frozen {
+  transition: none;
+}
+
+/* レール: 台そのものの担体。塗りの下端(11px)から4px空けた15px位置、高さ2pxで
+   常に見える形に置く(塗りに重ねない・隠れない)。widthは塗りと同じ変数を渡すことで
+   揃える/やり直すのたびに塗りと寸分たがわず連動する。色は塗りより淡いグレー。 */
+.mz-compare-across-as-of-rail {
+  position: absolute;
+  left: 0;
+  top: 15px;
+  height: 2px;
+  border-radius: 1px;
+  background: #c9c9c6;
+  transition: width 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mz-compare-across-as-of-rail.is-frozen {
+  transition: none;
+}
+
+/* ---------- 共通の時間の定規(貫通させる。No.128との撃ち分け) ---------- */
+
+.mz-compare-across-as-of-ruler {
+  position: relative;
+  height: 13px;
+  margin-top: 1px;
+  border-top: 1px solid #d6d6d3;
+}
+.mz-compare-across-as-of-tick {
+  position: absolute;
+  top: 3px;
+  transform: translateX(-50%);
+  font-size: 7.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+}
+.mz-compare-across-as-of-tick::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 1px;
+  height: 3px;
+  background: #d6d6d3;
+}
+
+/* ---------- 差の帯(既定): 幅で確度を言う。中心線は持たない ----------
+   数値は帯の上に重ねず、見出し行(diff-head)にテキストとしてまとめて出す
+   (実物レビューでの修正: 帯の両端に直接ラベルを置くと、幅0に収束したときに
+   ラベルと帯の位置関係がばらけて読みにくくなるため)。帯そのものは幅の事実だけを運ぶ。 */
+
+.mz-compare-across-as-of-diff {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 2px;
+}
+.mz-compare-across-as-of-diff-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.mz-compare-across-as-of-diff-label {
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #6e6e6e;
+  white-space: nowrap;
+}
+.mz-compare-across-as-of-diff-value {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #3d3d3d;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-compare-across-as-of-band-track {
+  position: relative;
+  height: 14px;
+}
+.mz-compare-across-as-of-band-fill {
+  position: absolute;
+  top: 4px;
+  height: 6px;
+  border-radius: 3px;
+  background: #3d3d3d;
+  opacity: 0.55;
+  /* 500ms は is-track と同じ尺(=同じクリックで同時に収束させる) */
+  transition: width 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mz-compare-across-as-of-band-tick {
+  position: absolute;
+  top: 2px;
+  width: 1px;
+  height: 10px;
+  background: #3d3d3d;
+}
+
+/* ---------- 操作ボタン(既定・対照 共通) ---------- */
+
+.mz-compare-across-as-of-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+.mz-compare-across-as-of-actions button {
+  flex: 1 1 auto;
+  padding: 7px 6px;
+  border-radius: 9px;
+  background: #eaeae8;
+  color: #5c5c5c;
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-compare-across-as-of-actions button:hover:not(:disabled) {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-compare-across-as-of-actions button:disabled {
+  color: #b3b3b3;
+  cursor: default;
+}
+
+/* ---------- 対照: 見出し(最終更新。新しいほう1つだけを名乗る) ---------- */
+
+.mz-compare-across-as-of-status {
+  min-height: 14px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 対照: 差は distinct 1 値の数字のみ。帯の要素を持たない ---------- */
+
+.mz-compare-across-as-of-diff.is-contrast {
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.mz-compare-across-as-of-diff-number {
+  font-size: 20px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
