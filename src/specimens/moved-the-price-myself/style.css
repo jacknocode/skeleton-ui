@@ -1,26 +1,312 @@
+/* No.137「値段を上げたのは自分」
+   モノクロ・自己完結。色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #8c8c8c 中 /
+   #b3b3b3 淡中 / #d6d6d3 淡 / #dededa 台 / #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。
+   対照だけが使う警告色(#b33a3a)はここでも局所的にしか使わない。外形は340×330px以内。
+
+   既定側は@keyframesを1本も持たない(animation-nameは全要素でnone)。自分の分・
+   外の分・合計は「次の回へ」を押した瞬間に値が切り替わるだけで、行き過ぎて戻る
+   基本イージングは使わない――値の変化に緩急を付けると、一瞬だけ実際と違う値が
+   見えたことになる(No.74/132系列の判断をそのまま踏襲)。
+
+   台帳の点(.chip)と自分の分のチップは**同じクラス**――サイズ・色・角丸まで
+   完全に一致させる(芯4/C5)。外の分の帯は意図的に別の形(角丸の長い帯)にして、
+   「同じ形=自分に由来する」「違う形=自分に由来しない」を視覚の語彙にした(芯3)。 */
+
 .mz-moved-the-price-myself {
-  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 340px;
+}
+
+/* ---------- 1行目: 文脈 + 既定/対照トグル ---------- */
+
+.mz-moved-the-price-myself-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.mz-moved-the-price-myself-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mz-moved-the-price-myself-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
   border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-moved-the-price-myself-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-moved-the-price-myself-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 台帳: 買った/見送ったの列(append-only, 動かない) ---------- */
+
+.mz-moved-the-price-myself-ledger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mz-moved-the-price-myself-ledger-label {
+  flex: none;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  width: 66px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* トラック自体は舞台の地(#eaeae8)と同色だと溶けて消えるので、地よりわずかに濃い
+   塗り+縁取りで「測っている場」を敷く(担体が載る場所を描く。No.116の再演)。 */
+.mz-moved-the-price-myself-track {
+  position: relative;
+  height: 14px;
+  min-width: 10px;
+  padding: 2px 3px;
+  border-radius: 5px;
+  background: #dededa;
+  box-shadow: inset 0 0 0 1px #d1d1cd;
+}
+
+/* 点そのもの。台帳の「買った」と、下の「自分の分」チップとで完全に同一のクラス
+   (C5の担体そのもの)。位置だけが違う。 */
+.mz-moved-the-price-myself-chip {
+  position: absolute;
+  top: 2px;
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: #3d3d3d;
+  opacity: 1;
+}
+/* 見送りの点だけ中抜き(=「起きた」が事実として残るが、買ったのとは別の事実) */
+.mz-moved-the-price-myself-chip.is-skip {
+  background: transparent;
+  border: 1.5px solid #8c8c8c;
+  width: 7px;
+  height: 7px;
+  top: 3.5px;
+}
+
+/* ---------- 回のラベル + 単価 ---------- */
+
+.mz-moved-the-price-myself-round-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-top: 4px;
+}
+.mz-moved-the-price-myself-round-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+.mz-moved-the-price-myself-price {
+  font-size: 21px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+.mz-moved-the-price-myself-price b {
+  font-size: 12px;
+  font-weight: 800;
+  margin-left: 2px;
+}
+/* 対照だけ: 前回より上がった回は赤くなる(=画面がレートを判定する。この回の縛り違反) */
+.mz-moved-the-price-myself-price.is-combined.is-up {
+  color: #b33a3a;
+}
+
+/* ---------- 内訳: 自分の分(チップの積み上げ) / 外の分(帯) ---------- */
+
+.mz-moved-the-price-myself-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 8px 9px;
+  border-radius: 10px;
+  background: #f5f5f3;
+}
+.mz-moved-the-price-myself-breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* 幅は飾りではない: 66px(=台帳の行のラベル幅)+8px(gap) と、この行の外側padding(9px)+
+   このラベル幅+8px(gap)が"自分の分"チップ列の開始xで一致するように逆算している
+   (66+8=74=9+57+8)。台帳の点と自分の分チップのx座標を実測で一致させるため
+   (C5)、ラベル文字数ではなく、この数式で幅を決めた。 */
+.mz-moved-the-price-myself-breakdown-label {
+  flex: none;
+  width: 57px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-moved-the-price-myself-breakdown-value {
+  flex: none;
+  width: 54px;
+  text-align: right;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 自分の分: チップの入れ物。チップ自体は台帳と共通クラス(.chip)を、台帳と
+   同じPITCH(14px)のx座標で置く(=tailStartはindex.tsx側で計算) */
+.mz-moved-the-price-myself-chip-track {
+  position: relative;
+  height: 14px;
+  flex: 1 1 auto;
+}
+.mz-moved-the-price-myself-chip-track .mz-moved-the-price-myself-chip {
+  top: 2px;
+}
+
+/* 外の分: 中心0から左右に伸びる帯。自分の分のチップとは意図して別の形(角丸の帯)
+   にして、「止められる/止められない」を形の違いとして持たせる(芯3)。 */
+.mz-moved-the-price-myself-outer-track {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: #dededa;
+  box-shadow: inset 0 0 0 1px #d1d1cd;
+}
+.mz-moved-the-price-myself-outer-zero {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 1px;
+  background: #b3b3b3;
+}
+.mz-moved-the-price-myself-outer-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+  background: #3d3d3d;
+}
+
+/* ---------- 状態表示 ---------- */
+
+.mz-moved-the-price-myself-status {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #5c5c5c;
+  min-height: 1.4em;
+}
+
+/* ---------- 操作行 ---------- */
+
+.mz-moved-the-price-myself-actions {
+  display: flex;
+  gap: 8px;
+}
+.mz-moved-the-price-myself-primary {
+  flex: 1 1 auto;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.15s var(--zk-ease-boing),
+    background-color 0.15s,
+    box-shadow 0.15s,
+    opacity 0.15s;
+}
+.mz-moved-the-price-myself-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-moved-the-price-myself-primary:active:not(:disabled) {
+  transform: scale(1.03, 0.94);
+}
+.mz-moved-the-price-myself-primary:disabled {
+  cursor: default;
+  background: #d6d6d3;
+  color: #b3b3b3;
+  box-shadow: none;
+}
+
+.mz-moved-the-price-myself-secondary {
+  flex: 1 1 auto;
+  padding: 9px 10px;
+  border-radius: 10px;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 11.5px;
   font-weight: 800;
   color: #5c5c5c;
   cursor: pointer;
+  transition:
+    transform 0.15s var(--zk-ease-boing),
+    box-shadow 0.15s;
+}
+.mz-moved-the-price-myself-secondary:hover {
+  transform: translateY(-1px);
+}
+.mz-moved-the-price-myself-secondary:active {
+  transform: scale(1.03, 0.94);
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-moved-the-price-myself.is-active {
-  animation: mz-moved-the-price-myself-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+.mz-moved-the-price-myself-reset {
+  flex: none;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 11px;
+  font-weight: 800;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    transform 0.15s var(--zk-ease-boing),
+    box-shadow 0.15s;
 }
-@keyframes mz-moved-the-price-myself-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
+.mz-moved-the-price-myself-reset:hover {
+  transform: translateY(-1px);
+}
+.mz-moved-the-price-myself-reset:active {
+  transform: scale(1.05, 0.9);
+}
+
+/* ---------- 動きを控えたい人へ ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .mz-moved-the-price-myself-primary,
+  .mz-moved-the-price-myself-secondary,
+  .mz-moved-the-price-myself-reset,
+  .mz-moved-the-price-myself-mode-btn {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

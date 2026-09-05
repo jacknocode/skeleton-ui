@@ -1,26 +1,278 @@
+/* No.135「捨てたものが場所を取る」
+   モノクロ・自己完結。色トークンは図鑑のパレット(#3d3d3d 濃 / #6e6e6e 濃中 /
+   #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡 / #c7c7c4 レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)を踏襲。対照だけ赤(#c0392b)を持ち込む(=対照の壊れ方1)。
+
+   芯: 「取った」担体(本線の点)と「捨てた」担体(捨て置き場の点)は
+   `.mz-discards-pile-up-dot` を共有する——値を揃えて数値的に一致させるのではなく、
+   同じCSSルールを読ませることで構造的に完全一致(C2)を保証している。 */
+
 .mz-discards-pile-up {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-discards-pile-up.is-active {
-  animation: mz-discards-pile-up-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: 操作ヒント + 既定/対照トグル ---------- */
+
+.mz-discards-pile-up-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-discards-pile-up-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-discards-pile-up-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-discards-pile-up-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-discards-pile-up-mode-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-discards-pile-up-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 今の値 + 交換ボタン ---------- */
+
+.mz-discards-pile-up-current-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+.mz-discards-pile-up-current-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+.mz-discards-pile-up-current-value {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 900;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+}
+.mz-discards-pile-up-exchange-btn {
+  flex: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-discards-pile-up-exchange-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.mz-discards-pile-up-exchange-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ---------- 本線: 取った値の履歴(点だけ。値のラベルは持たない) ---------- */
+
+.mz-discards-pile-up-mainline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mz-discards-pile-up-mainline-label {
+  flex: none;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #8c8c8c;
+}
+.mz-discards-pile-up-mainline-track {
+  position: relative;
+  flex: 1;
+  height: 16px;
+  display: flex;
+  align-items: center;
+}
+.mz-discards-pile-up-mainline-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  border-radius: 999px;
+  background: #c7c7c4;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+.mz-discards-pile-up-mainline-dots {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-left: 2px;
+}
+
+/* 取った点・捨てた点で共有する担体そのもの。ここに書かれた値がC2の実体 */
+.mz-discards-pile-up-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgb(61, 61, 61);
+  opacity: 1;
+}
+
+/* ---------- 捨て置き場(既定): トレイ + 溢れたら縦スクロール ---------- */
+
+.mz-discards-pile-up-yard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mz-discards-pile-up-yard-label {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #8c8c8c;
+}
+
+/* トレイ本体。ここが「担体の載る場所」(舞台の地色と別の色で、在ることを描く) */
+.mz-discards-pile-up-yard-viewport,
+.mz-discards-pile-up-contrast-viewport {
+  border: 1.5px solid #6e6e6e;
+  border-radius: 8px;
+  background: #d3d3d0;
+  padding: 6px;
+  min-height: 46px;
+}
+.mz-discards-pile-up-yard-viewport {
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+/* 中身。トレイの overflow はこちらではなく親(.yard-viewport)に付けてあるので、
+   getBoundingClientRect() はクリップされない実寸を返す(C3の測定対象)。 */
+.mz-discards-pile-up-yard-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 6px;
+}
+
+.mz-discards-pile-up-yard-slot {
+  flex: 0 0 auto;
+  width: 70px;
+  height: 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+.mz-discards-pile-up-yard-value-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #5c5c5c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 片付け後: マスを小さくして詳しさ(値のラベル)を落とす。点自体は1つも変えない。
+   一度付いたら外れない(不可逆・難所3)。 */
+.mz-discards-pile-up-yard-slot.is-folded {
+  width: 20px;
+  height: 20px;
+  box-shadow: none;
+  background: #ececeb;
+}
+
+/* ---------- 対照: 個別チップ(小さく・薄く・端寄せ)→ 時間で消える / 束ねられる ---------- */
+
+.mz-discards-pile-up-contrast-row {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-end;
+  align-content: flex-start;
+  gap: 4px;
+  min-height: 34px;
+}
+/* 壊れ方1: 最初から小さく(4px)・薄く(opacity .4) → 縛り1違反 */
+.mz-discards-pile-up-chip {
+  flex: none;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #b3b3b3;
+  opacity: 0.4;
+  transition: opacity 0.4s ease-in;
+}
+/* 壊れ方2: 一定時間で個別に消える */
+.mz-discards-pile-up-chip.is-fading {
+  opacity: 0;
+}
+
+/* 壊れ方3+4: 閾値到達で1個のバッジへ束ねる(=画面が自分で片付ける) */
+.mz-discards-pile-up-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #c0392b;
+  color: #f5f5f3;
+  font-size: 10.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 片付ける + 交換回数 ---------- */
+
+.mz-discards-pile-up-control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mz-discards-pile-up-tidy-btn {
+  flex: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #eaeae8;
+  font-size: 10px;
+  font-weight: 800;
+  color: #3d3d3d;
+  cursor: pointer;
+}
+.mz-discards-pile-up-tidy-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.mz-discards-pile-up-note {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
 }
