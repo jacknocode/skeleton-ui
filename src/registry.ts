@@ -133,6 +133,9 @@ import AsOfMismatch from './specimens/as-of-mismatch'
 import CompareAcrossAsOf from './specimens/compare-across-as-of'
 import BranchAbandoned from './specimens/branch-abandoned'
 import ThinnedToFit from './specimens/thinned-to-fit'
+import DiscardsPileUp from './specimens/discards-pile-up'
+import RateKnownOnlyAfter from './specimens/rate-known-only-after'
+import MovedThePriceMyself from './specimens/moved-the-price-myself'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -1763,6 +1766,39 @@ export const specimens: Specimen[] = [
     ecology:
       '5,000 点の系列を 400px の台に描く。1画素あたり 12.5 点あるので、**全部は描けない**——この回の3つめの交換を起こすのは読み手でも台帳でもなく、**画面の幅という物理**である。既定の答えは、**落としてよいのは点の個数だけで、極値は落とさない**こと（No.88「動かさずに同じことを言う」＝潰していいのは尺と反復だけ、の**データ版**）。各画素列を「その画素に落ちる点の min〜max を結ぶ縦の1本」として描くので、**1 点しか無いスパイクでも必ず画面に出る**。実測で系列の真の最大値は **150（y=5.56px）**、既定の描画上の最大値は **150.00（y=5.56px）** で**完全一致**。対照（等間隔サンプリングで 400 点を拾って結ぶ）は全体表示での最大値が **63.04（y=114.99px）**——**真の最大値より 109.43px 低い位置にしか線が無い＝スパイクが1本も画面に出ない**。第2の芯は**拡大しても絵の形が変わらない**ことで、y のドメインは系列全体から一度だけ算出して倍率で再計算しない（**35.22〜154.41** が全モード・全倍率で同一）。拡大区間（idx 2187〜2811）内の最大値の y は、既定が全体表示 **74.77px** → 拡大 **74.77px** で**差 0.000px**。対照は同じ区間が全体表示では **114.99px**（値 63.04）にしか無く、拡大すると **74.77px**（値 95.00）に跳ぶ——**40.22px 動く＝データは1点も変わっていないのに、無かった山が生えてくる**。しかも生え方が**動き**なので、読み手は「いま何かが起きた」と読む（No.102 の「湧く」＝出現の語彙の誤用）。第3に、**捨てた順序は帯の太さが言う**。帯にしても画素の中の点の順序は本当に捨てているが、**太い画素ほど「ここには中身がある」と言っている**ので、読み手が次にどこを拡大すべきかが画面から分かる（帯の高さの distinct 値は全体表示 **14**、拡大時 **15**）。交換レートを画面が決めず、**読み手に次の一手を渡す**形になっている。第4に、画面は**判定しない**——`間引いています` `一部は表示されていません` に相当するバッジ・文言は **0 個**（`data-badge-count="0"`）で、件数表示は既定・対照とも **`5,000 件`** の同一文字列。**数字は嘘をつかない。違うのは絵だけである。** 基本イージング（ぷるん）は使わない——行き過ぎて戻ると「一瞬だけ実際より大きい値があった」というデータについての嘘になる。**実物を見て企画の言葉が1つ足りないと分かった。** 初版は「落としていいのは点の個数だけ」を素直に実装したが、拡大すると1画素あたり 1.5 点に落ちて `min === max` の列が増え、**隣の列と値域が重ならない箇所が 248 件**発生した——帯が繋がらず、**折れ線が粒の散らばりになって系列の形が読めない**。直しは各列の値域に**直前の列の最後の点を必ず含める**こと（min/max 間引きの実務で知られた欠陥と同じ解き方）で、拡大時の途切れは **248 件 → 0 件**。極値は広がる方向にしか変わらないので、C1・C2 の実測値（150/5.56、74.77 → 74.77）は**修正前後で1つも変わっていない**。**正しい言い方は「落としていいのは点の個数だけで、値の範囲も、隣とのつながりも落としてはいけない」だった。**',
     Component: ThinnedToFit,
+  },
+  {
+    id: 'discards-pile-up',
+    no: 135,
+    nameJa: '捨てたものが場所を取る',
+    nameEn: 'Discards Pile Up',
+    category: 'ナビゲーション',
+    trigger: '（実装中）',
+    principles: ['（実装中）'],
+    ecology: '（実装中）',
+    Component: DiscardsPileUp,
+  },
+  {
+    id: 'rate-known-only-after',
+    no: 136,
+    nameJa: 'レートは後からしか分からない',
+    nameEn: 'Rate Known Only After',
+    category: 'ゲーム',
+    trigger: '（実装中）',
+    principles: ['（実装中）'],
+    ecology: '（実装中）',
+    Component: RateKnownOnlyAfter,
+  },
+  {
+    id: 'moved-the-price-myself',
+    no: 137,
+    nameJa: '値段を上げたのは自分',
+    nameEn: 'Moved the Price Myself',
+    category: 'フィードバック',
+    trigger: '（実装中）',
+    principles: ['（実装中）'],
+    ecology: '（実装中）',
+    Component: MovedThePriceMyself,
   },
 ]
 
