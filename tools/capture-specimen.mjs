@@ -1971,6 +1971,158 @@ const CHOREO = {
     await zoom().click()
     await sleep(2600)
   },
+
+  /* No.135: 見せ場は4つ。(1) 交換を繰り返すと捨て置き場が実際に育っていくこと
+     (2) 10回目あたりで器を溢れ、縦スクロールが要ること・スクロールすれば全部読めること
+     (3) 片付ける操作の前後(値のラベルが落ち、マスが縮んで場所が空く。点自体は残る)
+     (4) 対照は個別の点が小さく薄く現れて時間で消え、閾値でバッジ1個に束ねられること。
+     既定を先に最後まで見せ、対照は同じ操作数で追う。 */
+  'discards-pile-up': async (page) => {
+    const exchange = () => page.getByRole('button', { name: '交換する' }).click()
+    await sleep(800) // 「今の値 180」・空の捨て置き場・本線のレールを読ませる間
+    await exchange()
+    await sleep(700) // 1件目。まだ小さい
+    for (let i = 0; i < 3; i++) {
+      await exchange()
+      await sleep(450)
+    }
+    await sleep(900) // 4件、2段になったところで一拍止める(面積が育っているのが分かる間)
+    for (let i = 0; i < 3; i++) {
+      await exchange()
+      await sleep(500)
+    }
+    await sleep(700) // 7件。トレイの高さを超え始め、スクロールバーが要る
+    for (let i = 0; i < 3; i++) {
+      await exchange()
+      await sleep(550)
+    }
+    await sleep(1200) // 10件。下の行がトレイの縁で切れている(=溢れ)のを見せる間
+    // トレイの中へホイールを送って、切れていた下の行が読めることを見せる
+    const tray = await page.locator('[data-role="yard-viewport"]').boundingBox()
+    await page.mouse.move(tray.x + tray.width / 2, tray.y + tray.height / 2)
+    await page.mouse.wheel(0, 80)
+    await sleep(1300)
+    // 片付ける: マスが縮んで値のラベルが消える。点そのものと本線は1つも変わらない
+    await page.getByRole('button', { name: '片付ける' }).click()
+    await sleep(1600)
+    // 対照: 同じ操作数を追う。個別の点は小さく薄く右詰めで現れ、時間で消える
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(700)
+    for (let i = 0; i < 4; i++) {
+      await exchange()
+      await sleep(350)
+    }
+    await sleep(2700) // 触らずに待つ。個別の点が時間切れで消えていく(既定には無い挙動)
+    for (let i = 0; i < 2; i++) {
+      await exchange()
+      await sleep(300)
+    }
+    await sleep(1600) // 累計6件でバッジ「捨てた: 6」へ束ねられる。個別の点はもう見えない
+  },
+
+  /* No.136: 撮るべきは4つ。(1) 払った瞬間、受け取り枠が空のまま(幅0)動かないこと
+     (2) 未確定が3つ並ぶこと (3) 週を進めると1つ目から順に値が入ること
+     (4) 同じ¥40を払っても、返ってくる量(26h/9h/33h)が毎回違うこと。
+     既定を先に通し、対照で確認ダイアログ・推定+帯・トースト+消滅に化けるところを見せる */
+  'rate-known-only-after': async (page) => {
+    const pay = () => page.getByRole('button', { name: '現金を払う（¥40）' }).click()
+    const advance = () => page.getByRole('button', { name: '次の週へ' }).click()
+    await sleep(700)
+    await pay() // #1: 受け取り枠が空のまま生成される
+    await sleep(1400)
+    await advance() // 週1(まだ確定しない。resolveWeekは3)
+    await sleep(700)
+    await pay() // #2: 2つ目も空のまま並ぶ
+    await sleep(1300)
+    await advance() // 週2
+    await sleep(700)
+    await pay() // #3: 3つ未確定が並ぶ(この標本のC4が主張する場面)
+    await sleep(2000)
+    await advance() // 週3: #1が確定(26h)。動くのは#1の受け取り枠だけ
+    await sleep(1500)
+    await advance() // 週4: #2が確定(9h)
+    await sleep(1500)
+    await advance() // 週5: #3が確定(33h)。同じ額で3通りの量が並んで読める
+    await sleep(2000)
+    // 対照: 同じ手順が、確認ダイアログ→推定+帯→トースト+消滅に化ける
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(700)
+    await pay()
+    await sleep(1100) // 確認ダイアログ(レートは変動します)
+    await page.getByRole('button', { name: '払う', exact: true }).click()
+    await sleep(1500) // 推定+帯(確率の語彙の誤用)が出ているところ
+    await advance()
+    await sleep(600)
+    await advance()
+    await sleep(600)
+    await advance()
+    await sleep(1200) // トースト「確定しました✓」
+    await sleep(1700) // トーストが消え、行も履歴から消える(C7の縛り違反)
+  },
+
+  /* ---- No.137「値段を上げたのは自分」---- */
+  'moved-the-price-myself': async (page) => {
+    const buy = () => page.locator('[data-role="buy-btn"]')
+    const skip = () => page.locator('[data-role="skip-btn"]')
+    const nextRound = () => page.locator('[data-role="next-btn"]')
+
+    // 台本: 買う・買う・買う・見送る・見送る・買う。撮るべきは3つ。
+    // ひとつ、買うたびに次の回で単価が上がること。ふたつ、押した瞬間には
+    // 何も変わらず、上がるのは「次の回へ」を押した時だけであること。
+    // みっつ、見送りを挟むと自分の分のチップだけが0になり、外の分の帯は
+    // 動かないこと(第4回→第5回)。
+    await sleep(1000) // 第1回、まだ何も買っていない(自分の分0)
+    await buy().click()
+    await sleep(900) // 支払いました。単価はまだ第1回のまま(押した瞬間は変わらない)
+    await nextRound().click()
+    await sleep(1000) // 第2回。自分の分のチップが1個増え、単価が上がる
+
+    await buy().click()
+    await sleep(700)
+    await nextRound().click()
+    await sleep(1000) // 第3回。チップ2個
+
+    await buy().click()
+    await sleep(700)
+    await nextRound().click()
+    await sleep(1200) // 第4回。チップ3個。単価がここまでで最も高い
+
+    await skip().click()
+    await sleep(900) // 見送りました
+    await nextRound().click()
+    await sleep(1400) // 第5回。自分の分のチップが0個に戻る。外の分の帯は1pxも動いていない
+
+    await skip().click()
+    await sleep(700)
+    await nextRound().click()
+    await sleep(1000) // 第6回。自分の分はまだ0
+
+    await buy().click()
+    await sleep(700)
+    await nextRound().click()
+    await sleep(1400) // 第7回。買うと再び上がり始める
+
+    // 対照: 同じ台本。文言で名乗り、赤くなり、1つの数(合計+前回比%)に混ざり、
+    // 「次の回へ」を押す前から次の値札が見えてしまう。
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1200)
+    await buy().click()
+    await sleep(900) // 「次回の単価」がもう見えている(=画面がレートを先に決める)
+    await nextRound().click()
+    await sleep(900)
+    await buy().click()
+    await sleep(700)
+    await nextRound().click()
+    await sleep(900)
+    await buy().click()
+    await sleep(1200) // 単価が赤くなり、「買いすぎです」と名乗る
+    await nextRound().click()
+    await sleep(900)
+    await skip().click()
+    await sleep(1600) // 見送っても、外の分はそのまま混ざっているので下がり方が読めない
+    await nextRound().click()
+    await sleep(1200)
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
