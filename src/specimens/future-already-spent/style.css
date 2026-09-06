@@ -1,0 +1,304 @@
+/* No.139「先に使ってしまった未来」
+   モノクロ・自己完結。色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #8c8c8c 中 /
+   #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。
+   外形は340×330px以内。対照だけが使う警告色(#b33a3a)。
+
+   週の定規(.stage)は借りる回数・積み上げ数に関わらず幅・高さとも一度も変わらない
+   (難所4/C5)。中の子要素は全て position:absolute で .stage 基準に配置するので、
+   チップが何個積もっても .stage 自身の getBoundingClientRect は不動——溢れても
+   枠の外形自体は変わらない(No.135の「溢れたら溢れたまま」)。
+
+   空き枠の担体(.vacant)とチップ(.chip)は、どちらも罫線を持たない塗りの四角
+   ――未来の側に一切線(border)を引かない(難所1)。チップは共通語彙そのまま
+   (10px/10px/#3d3d3d/radius2px/border-style none=C6)。既定側のどの要素にも
+   animation も transition も width/opacity/transform を含む transition-property
+   も持たせていない(=宣言の不在でC3を保証する)。 */
+
+.mz-future-already-spent {
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-future-already-spent-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-future-already-spent-caption {
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-future-already-spent-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-future-already-spent-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-future-already-spent-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 操作行 ---------- */
+
+.mz-future-already-spent-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.mz-future-already-spent-primary {
+  flex: 1 1 auto;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.15s var(--zk-ease-boing),
+    background-color 0.15s;
+}
+.mz-future-already-spent-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-future-already-spent-primary:active:not(:disabled) {
+  transform: scale(1.03, 0.94);
+}
+.mz-future-already-spent-primary:disabled {
+  cursor: default;
+  background: #d6d6d3;
+  color: #b3b3b3;
+  box-shadow: none;
+}
+
+.mz-future-already-spent-secondary {
+  flex: none;
+  padding: 8px 11px;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    transform 0.15s var(--zk-ease-boing),
+    box-shadow 0.15s;
+}
+.mz-future-already-spent-secondary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-future-already-spent-secondary:active:not(:disabled) {
+  transform: scale(1.05, 0.9);
+}
+.mz-future-already-spent-secondary:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.mz-future-already-spent-week {
+  flex: none;
+  font-size: 10px;
+  font-weight: 800;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 週の定規: カード ---------- */
+
+.mz-future-already-spent-ruler-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 9px 10px 7px;
+  border-radius: 11px;
+  background: #eaeae8;
+}
+.mz-future-already-spent-ruler-label {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #8c8c8c;
+}
+
+/* 定規の描画エリア。幅・高さとも常に一定(=難所4/C5)。子は全て絶対配置。 */
+.mz-future-already-spent-stage {
+  position: relative;
+  height: 54px;
+}
+
+/* 台(レール): 常設。借りる前後・週の進行に関わらず1pxも動かない・変わらない。 */
+.mz-future-already-spent-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #d6d6d3;
+}
+
+/* 現在地の縦線: 面ではなく線。transitionを持たせない=瞬間移動(難所3。通過を演出しない)。 */
+.mz-future-already-spent-now-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+}
+
+.mz-future-already-spent-col {
+  /* レイアウトを持たない純粋なグルーピング用ラッパー。子(.vacant/.chip)は
+     position:absoluteで.stageを基準に配置される(このdiv自体はposition:staticのまま
+     ――containing blockにならないようにする)。 */
+}
+
+/* 空き枠の担体: 罫線なし・塗りのみ。共通のレール色(#d6d6d3)を使い、新しい色を
+   増やさない。埋まると存在しなくなる(=芯1)。animationもtransitionも持たせない。 */
+.mz-future-already-spent-vacant {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: #d6d6d3;
+}
+
+/* チップ: 共通語彙そのまま(週の定規・借りた履歴の両方で同じクラスを使う=芯2/C6)。
+   width/height/background/border-radiusのみを持ち、border/animation/transitionは
+   一切定義しない(=既定側でC3・C1を宣言の不在によって保証する)。 */
+.mz-future-already-spent-chip {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #3d3d3d;
+  border-radius: 2px;
+}
+
+/* 週の目盛り: 共通語彙どおり。定規の幅と同じ幅を持ち、xはチップ・空き枠と共有する
+   weekX()の計算式から来ているので、借りる前後で1pxも動かない(C5)。 */
+.mz-future-already-spent-ticks {
+  position: relative;
+  height: 11px;
+}
+.mz-future-already-spent-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 借りた履歴: 常に増えるだけ・消えない ---------- */
+
+.mz-future-already-spent-history-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 11px;
+  background: #f5f5f3;
+  min-height: 24px;
+}
+.mz-future-already-spent-history-label {
+  flex: none;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #8c8c8c;
+  white-space: nowrap;
+}
+.mz-future-already-spent-history-track {
+  position: relative;
+  flex: 1 1 auto;
+  height: 10px;
+  min-width: 1px;
+}
+.mz-future-already-spent-history-track .mz-future-already-spent-chip {
+  top: 0;
+}
+
+/* ---------- 対照: 破線の枠(=予告に見える誤用。C1のdashedはここだけ) ---------- */
+
+.mz-future-already-spent-contrast-frame {
+  position: absolute;
+  bottom: 0;
+  width: 16px;
+  height: 40px;
+  border: 1px dashed #b3b3b3;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+/* 対照3: 60ms刻みで現れるチップにだけ、ふるんと現れる演出を足す(既定は宣言自体が無い) */
+.mz-future-already-spent-chip-pop {
+  animation: mz-future-already-spent-pop-in 0.22s var(--zk-ease-boing) both;
+}
+@keyframes mz-future-already-spent-pop-in {
+  from {
+    transform: scale(0.3);
+    opacity: 0.2;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* 対照2: 「返済中 あとN週」+ 進捗バー + 警告色(#b33a3a) */
+.mz-future-already-spent-repay-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+.mz-future-already-spent-repay-text {
+  flex: none;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #b33a3a;
+  white-space: nowrap;
+}
+.mz-future-already-spent-repay-bar {
+  flex: 1 1 auto;
+  height: 5px;
+  border-radius: 999px;
+  background: #dcdcda;
+  overflow: hidden;
+}
+.mz-future-already-spent-repay-fill {
+  height: 100%;
+  background: #b33a3a;
+  transition: width 0.2s ease;
+}
+
+/* ---------- 動きを控えたい人へ ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .mz-future-already-spent-primary,
+  .mz-future-already-spent-secondary,
+  .mz-future-already-spent-mode-btn,
+  .mz-future-already-spent-chip-pop,
+  .mz-future-already-spent-repay-fill {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

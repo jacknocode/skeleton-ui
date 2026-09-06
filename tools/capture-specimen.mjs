@@ -2123,6 +2123,98 @@ const CHOREO = {
     await nextRound().click()
     await sleep(1200)
   },
+
+  'partly-known-price': async (page) => {
+    const order = () => page.getByRole('button', { name: '発注する', exact: true })
+    const skip = () => page.getByRole('button', { name: '見送る', exact: true })
+
+    // 台本: 発注・発注・発注・見送る・発注。撮るべきは3つ。
+    // ひとつ、自分の分（チップ）は押す前から個数が決まっていて、外の分（箱）は
+    // 空のまま生まれること。ふたつ、確定するのは次の発注を押した瞬間で、
+    // そのとき動くのは直前の行の塗りだけであること。みっつ、見送りを挟むと
+    // 自分の分だけが0個に戻り、箱の大きさはそのままであること。
+    await sleep(1000) // 台帳も行も空
+    await order().click()
+    await sleep(1100) // #1 が生まれる。自分の分0個・箱は空
+    await order().click()
+    await sleep(1200) // #1 の塗りだけが伸びる。#2 が生まれ、チップが1個
+    await order().click()
+    await sleep(1200) // #2 が確定。#3 のチップが2個
+    await skip().click()
+    await sleep(900) // 台帳に見送りが入る。#3 は未確定のまま残る
+    await order().click()
+    await sleep(1600) // #3 が確定。#4 は自分の分が0個に戻っている
+
+    // 対照: 同じ台本。合計を先に「約¥N」と推定し、未知を薄い延長で描き、
+    // 確定すると「¥N でした ✓」と名乗る。
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1200)
+    await order().click()
+    await sleep(1200) // 押した時点で「約¥300」が出ている
+    await order().click()
+    await sleep(1800) // 「¥180 でした ✓」が赤で名乗る
+  },
+
+  'future-already-spent': async (page) => {
+    const borrow = () => page.getByRole('button', { name: '借りる', exact: true })
+    const next = () => page.getByRole('button', { name: '次の週へ', exact: true })
+
+    // 台本: 借りる・週送り・もう一度借りる・6週送る。撮るべきは3つ。
+    // ひとつ、借りた瞬間に5週ぶんの空き枠が消えてチップに変わること（尺ゼロ・同時）。
+    // ふたつ、重なった週はチップが縦に積むこと。みっつ、完済すると枠は空きに戻るが、
+    // 履歴のチップは1個も減らないこと。
+    await sleep(1100) // 空き枠が10個ならんでいる
+    await borrow().click()
+    await sleep(1500) // 翌週から5週ぶんが一度に埋まる
+    await next().click()
+    await sleep(1100) // 追いついた週だけ空きに戻る
+    await borrow().click()
+    await sleep(1700) // 重なった週にチップが2段
+    for (let i = 0; i < 6; i++) {
+      await next().click()
+      await sleep(750)
+    }
+    await sleep(1300) // 完済。定規は空きに戻り、履歴のチップはそのまま
+
+    // 対照: 未来の枠が破線になり、返済中の文言と進捗バーが出て、
+    // 5つが60ms刻みで順に現れ、完済すると履歴も消える。
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1100)
+    await borrow().click()
+    await sleep(1400) // 5つが順に湧く＝1回の操作が5回の出来事に見える
+    for (let i = 0; i < 6; i++) {
+      await next().click()
+      await sleep(560)
+    }
+    await sleep(1400) // 完済で履歴まで消える
+  },
+
+  'due-date-arrives': async (page) => {
+    const next = () => page.getByRole('button', { name: '次の週へ', exact: true })
+
+    // 台本: 週送りだけを4回。撮るべきは2つ。
+    // ひとつ、押しても予定のチップは1pxも動かず、動くのは現在地の縦線だけであること。
+    // ふたつ、通過した予定は薄くも小さくもならず、現在地より左に来ただけであること。
+    // 週7には何も来ていない——「今週は何もありません」を言わないことも撮る。
+    await sleep(1200) // 週4。予定は読み手が来る前から入っている
+    await next().click()
+    await sleep(1100) // 週5の予定を追い越す。チップは何も変わらない
+    await next().click()
+    await sleep(1100) // 週6
+    await next().click()
+    await sleep(1200) // 週7。何も来ていないが、画面は何も言わない
+    await next().click()
+    await sleep(1600) // 週8
+
+    // 対照: 通過の瞬間に跳ねて光り、赤いトーストが名乗り、
+    // 済んだチップにチェックが付いて薄くなり、予定が現在の列へ飛ぶ。
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1200)
+    await next().click()
+    await sleep(1900)
+    await next().click()
+    await sleep(1900)
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
