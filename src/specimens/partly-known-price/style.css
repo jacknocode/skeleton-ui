@@ -1,26 +1,344 @@
+/* No.138「値段の一部だけが分かっている」
+   モノクロ・自己完結。色トークンは図鑑のパレットを踏襲(#3d3d3d 濃 / #8c8c8c 中 /
+   #b3b3b3 淡中 / #d6d6d3 淡・レール / #dededa 台 / #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。
+   対照だけが使う警告色(#b33a3a)。外形は340×330px以内。
+
+   台帳の点(.chip)と自分の分のチップ(.chip)は同一クラス――サイズ・色・角丸まで完全一致。
+   台帳ラベルと各発注行のラベルは同じ`.row-label`クラス(幅固定)を使うことで、
+   ラベル文字の長さに関係なく、台帳トラックと各行のトラックの左端が同じx座標から
+   始まる(No.137の「親のpaddingで座標がズレる」罠を、手計算ではなく共通クラスの
+   固定幅で塞ぐ)。
+
+   箱(.box)は生成時から幅・高さ確定で、transition/animationを一切持たない
+   (C2「確定まで1pxも動かない」を宣言の不在で保証)。中の.box-fillだけがwidthの
+   transitionを持ち、確定した瞬間に0から実測値ぶんへ伸びる。 */
+
 .mz-partly-known-price {
-  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 340px;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-partly-known-price-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.mz-partly-known-price-caption {
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+
+.mz-partly-known-price-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
   border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-partly-known-price-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-partly-known-price-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 共通: 行ラベル(台帳・各行で幅を揃える) ---------- */
+
+.mz-partly-known-price-row-label {
+  flex: none;
+  width: 28px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- 台帳: 発注(塗り)/見送り(中抜き)の全履歴。常設のレール地の上に置く ---------- */
+
+/* padding-left は .rail の padding(7px) と意図的に揃えている――揃えないと、台帳と
+   発注行のトラックが同じ絶対indexを使っていても、x座標が親のpaddingぶんズレる
+   (No.137の罠。実測(playwright)で7px の食い違いとして実際に踏んだ)。 */
+.mz-partly-known-price-ledger-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 7px;
+}
+
+.mz-partly-known-price-ledger-track {
+  position: relative;
+  height: 14px;
+  min-width: 10px;
+  border-bottom: 1px solid #d6d6d3;
+}
+
+/* チップ本体: 台帳の点と自分の分のチップで完全に同一のクラス(C3の担体そのもの)。 */
+.mz-partly-known-price-chip {
+  position: absolute;
+  top: 2px;
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: #3d3d3d;
+  border-style: none;
+}
+.mz-partly-known-price-chip.is-skip {
+  background: transparent;
+  border: 1.5px solid #8c8c8c;
+  border-style: solid;
+  width: 7px;
+  height: 7px;
+  top: 3.5px;
+}
+
+/* ---------- 発注のレール(発注ごとに1行。追記のみ・並べ替えない) ---------- */
+
+.mz-partly-known-price-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 32px;
+  padding: 7px;
+  border-radius: 11px;
+  background: #dededa;
+  box-shadow: inset 0 0 0 1px #d1d1cd;
+  overflow-x: auto;
+}
+
+.mz-partly-known-price-empty {
+  padding: 8px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #b3b3b3;
+  text-align: center;
+}
+
+.mz-partly-known-price-order-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+}
+
+/* 自分の分(チップ)と外の分(箱)を、同じ1本の水平トラックの上に左から順に置く。
+   区切り線・演算子・合計欄の数字はこの中に一切置かない(芯3)。 */
+.mz-partly-known-price-order-track {
+  position: relative;
+  flex: none;
+  height: 16px;
+  border-bottom: 1px solid #d6d6d3;
+}
+.mz-partly-known-price-order-track .mz-partly-known-price-chip {
+  top: 3px;
+}
+
+/* 箱: 実線・生成時から幅高さ確定。transition/animationを一切持たない(C2)。 */
+.mz-partly-known-price-box {
+  position: absolute;
+  top: 0;
+  border: 1px solid #3d3d3d;
+  border-radius: 3px;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
+  /* overflow: visible (意図的)。器の大きさは「過去の最大値」からの見積りでしかなく、
+     実測がその見積りを超えることがある(実測で確認した: 台本のOUTSIDE[1]=240円は
+     OUTSIDE[0]=180円しか知らない時点の器を超える)。overflow:hiddenで切ると、
+     器が小さすぎたという事実が「ちょうど満杯」に見えてしまい、器=確からしさの
+     誤読を招く(難所4の裏)。塗りは実測の量だけ伸ばし、器を超えたら正直にはみ出す。 */
+  overflow: visible;
+}
+.mz-partly-known-price-box-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: #3d3d3d;
+  border-radius: 2px;
+  transition: width 0.4s var(--zk-ease-boing, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+/* 読み上げ: 確定後だけ、実測の合計(¥N)を文字で出す。塗りの内側には置かない。 */
+.mz-partly-known-price-readout {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ---------- 対照: 単一のバーに知/未知を混ぜる。既定にはこの概念が存在しない ---------- */
+
+.mz-partly-known-price-contrast-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 0;
+}
+.mz-partly-known-price-contrast-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mz-partly-known-price-contrast-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.mz-partly-known-price-contrast-headline {
+  flex: none;
+  font-size: 12px;
+  font-weight: 800;
+  color: #3d3d3d;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.mz-partly-known-price-contrast-headline.is-settled {
+  color: #b33a3a;
+}
+.mz-partly-known-price-contrast-headline b {
+  color: #b33a3a;
+}
+
+/* 単一のバー。知っている分(opacity 1)に、未知/推定分を薄い延長(opacity 0.35)として
+   同じ棒に繋げる――箱でもチップでもない連続な1本(難所1の答えの誤用そのもの)。 */
+.mz-partly-known-price-contrast-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.mz-partly-known-price-contrast-known {
+  flex: none;
+  height: 100%;
+  background: #3d3d3d;
+  opacity: 1;
+}
+.mz-partly-known-price-contrast-unknown {
+  flex: none;
+  height: 100%;
+  background: #3d3d3d;
+  opacity: 0.35;
+}
+.mz-partly-known-price-contrast-annotation {
+  font-size: 8px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+
+/* ---------- 操作行 ---------- */
+
+.mz-partly-known-price-actions {
+  display: flex;
+  gap: 6px;
+}
+.mz-partly-known-price-primary {
+  flex: 1 1 auto;
+  padding: 8px 8px;
+  border-radius: 9px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.15s var(--zk-ease-boing, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    background-color 0.15s,
+    opacity 0.15s;
+}
+.mz-partly-known-price-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-partly-known-price-primary:active:not(:disabled) {
+  transform: scale(1.03, 0.94);
+}
+.mz-partly-known-price-primary:disabled {
+  cursor: default;
+  background: #d6d6d3;
+  color: #b3b3b3;
+  box-shadow: none;
+}
+
+.mz-partly-known-price-secondary {
+  flex: 1 1 auto;
+  padding: 8px 8px;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 11px;
   font-weight: 800;
   color: #5c5c5c;
   cursor: pointer;
+  transition:
+    transform 0.15s var(--zk-ease-boing, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    box-shadow 0.15s,
+    opacity 0.15s;
+}
+.mz-partly-known-price-secondary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-partly-known-price-secondary:active:not(:disabled) {
+  transform: scale(1.03, 0.94);
+}
+.mz-partly-known-price-secondary:disabled {
+  cursor: default;
+  color: #b3b3b3;
+  box-shadow: none;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-partly-known-price.is-active {
-  animation: mz-partly-known-price-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+.mz-partly-known-price-reset {
+  flex: none;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    transform 0.15s var(--zk-ease-boing, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    box-shadow 0.15s;
 }
-@keyframes mz-partly-known-price-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
+.mz-partly-known-price-reset:hover {
+  transform: translateY(-1px);
+}
+.mz-partly-known-price-reset:active {
+  transform: scale(1.05, 0.9);
+}
+
+/* ---------- 動きを控えたい人へ ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .mz-partly-known-price-box-fill,
+  .mz-partly-known-price-primary,
+  .mz-partly-known-price-secondary,
+  .mz-partly-known-price-reset,
+  .mz-partly-known-price-mode-btn {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
