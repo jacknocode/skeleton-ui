@@ -136,6 +136,9 @@ import ThinnedToFit from './specimens/thinned-to-fit'
 import DiscardsPileUp from './specimens/discards-pile-up'
 import RateKnownOnlyAfter from './specimens/rate-known-only-after'
 import MovedThePriceMyself from './specimens/moved-the-price-myself'
+import PartlyKnownPrice from './specimens/partly-known-price'
+import FutureAlreadySpent from './specimens/future-already-spent'
+import DueDateArrives from './specimens/due-date-arrives'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -1805,6 +1808,39 @@ export const specimens: Specimen[] = [
     ecology:
       '同じ枠を毎回 `買う` か `見送る` かで回す。単価は基準 **300円**に、**自分の分**（連続して買った回数 × 40円。見送ると即 0 へ切れる）と**外の分**（読み手の行動と無関係な決め打ちの推移）を足したものになる。台本どおり買う・買う・買う・見送る・見送る・買うと回すと、単価は **300 → 340 → 400 → 440 → 320 → 290 → 330円**と動く。**値段を上げているのは市場でも時間でも他人でもなく、読み手自身の直前の操作である。そして画面は一度もそれを言わない**——既定の受理の文言は `支払いました ¥400` / `見送りました` の2種のみ、「買いすぎ」に相当する語は全要素で **0 件**、警告色（赤系の `color` / `background-color`）**0 件**、computed `animation-name` は **35 要素すべて `none`**。この標本は No.129「過去のほうが変わった」・No.123「あとから答えが来る」・No.126「原因が画面に無い」の**どれとも違う場所**を撃つ——**過去は1つも動かず、遅れて分かるのでもなく、原因は最初から画面の中（読み手自身のクリック）にある**。第1の芯は**原因と結果が1手ずれている**ことで、`買う` / `見送る` を押した直後20フレーム、単価の担体は1文字も変わらない（どの回でもクリック直前の値と20フレーム後の値が完全一致）。**これはタイマー調整ではなく構造である**——第 r 回の自分の分は `history.slice(0, r - 1)`、つまり**いま記録した行動を最初から含まない添字**から計算するので、除外が計算式そのものに組み込まれている。第2の芯がこの標本の中心で、**止められる分（自分の分）と止められない分（外の分）を別の担体に置く**。No.132 は「分解できない差は幅のまま出す」と決めたが、こちらは**逆の判断をする**——そして逆にできる理由がある。**因果の出どころが台帳に記録されているからである**（自分の操作は履歴に在り、外の事情は在らない）。**分解できるかどうかは、台帳に書いてあるかどうかで決まる。** 実測で、1→2回・3→4回・4→5回は自分の分だけが変化して外の分は不変、5→6回は外の分だけが変化して自分の分は不変——**片方だけが動くフレームが両方向で存在する**。撃ち分けがいちばんはっきり出るのは**見送った回**で、第4回 → 第5回に自分の分は **120円 → 0円**へ落ち、外の分は **+20円 → +20円**で動かない。**止められるものと止められないものを同じ担体で描くと、読み手はどちらも諦める。** 第3の芯は**気づき方**である。読み手は「高くなった」を見ても自分のせいだと気づかない。強調すれば非難になり、しなければ気づかない。**答えは、値上がりの担体を読み手の操作の担体と同じ形にすること**——自分の分のチップと台帳の買った点は `width: 10px` / `height: 10px` / `rgb(61,61,61)` / `border-radius: 2px` / `border-style: none` が完全一致し、**x 座標も 184 / 198 / 212px で差 0px** に揃う。**同じ場所に同じ形で積まれ、見送ると同じように消える。UI は1文字も説明していない。** 過去は変わらない（`次の回へ` の前後で台帳4要素の座標・個数が完全一致、差 **0**）。実装が CSS の罠を1つ掘り当てた。**内訳行にだけ親の `padding: 8px 9px` が付いていたため、絶対配置の子の座標系（コンテナの border-box 基準）が台帳行とズレ、チップと点の x が 13px 食い違った**——数値で一致させるつもりの主張が、親のパディングで黙って壊れていた（内訳ラベル幅を 44 → 57px に逆算して解いた）。目視でしか見つからない不具合も出ている（ラベル `これまでの記録` が 66px 幅で2行に折り返していた。`台帳` に短縮）。対照は4つの壊れ方を同居させる——`次回の単価: ¥340` の**先出し**（1回買った直後に、実際の次回値と一致する値札を確定表示する＝画面がレートを決める）、`¥400 (+18%)` の **`rgb(179,58,58)` の赤**、`買いすぎです。単価が上がっています。` の**文言**、そして**内訳の要素が最初から存在しない**（自分の分のチップ **0 個**・外の分の担体 **0 個**）＝1つの数への統合。**対照では、読み手は止められるものまで諦める。** 正直に書いておくべきことが1つある。**企画が「差が1画面に写るか」と要求した点は、文字どおりには満たせなかった**——見送り前後の2枚を並べるか、時間軸のある GIF でしか、この標本の主張は伝わらない。',
     Component: MovedThePriceMyself,
+  },
+  {
+    id: 'partly-known-price',
+    no: 138,
+    nameJa: '値段の一部だけが分かっている',
+    nameEn: 'Partly Known Price',
+    category: 'ゲーム',
+    trigger: 'TODO',
+    principles: ['TODO'],
+    ecology: 'TODO',
+    Component: PartlyKnownPrice,
+  },
+  {
+    id: 'future-already-spent',
+    no: 139,
+    nameJa: '先に使ってしまった未来',
+    nameEn: 'Future Already Spent',
+    category: 'ゲーム',
+    trigger: 'TODO',
+    principles: ['TODO'],
+    ecology: 'TODO',
+    Component: FutureAlreadySpent,
+  },
+  {
+    id: 'due-date-arrives',
+    no: 140,
+    nameJa: '決めたのは、3週前の自分',
+    nameEn: 'Due Date Arrives',
+    category: 'ゲーム',
+    trigger: 'TODO',
+    principles: ['TODO'],
+    ecology: 'TODO',
+    Component: DueDateArrives,
   },
 ]
 
