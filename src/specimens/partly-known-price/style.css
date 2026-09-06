@@ -152,28 +152,38 @@
   top: 3px;
 }
 
-/* 箱: 実線・生成時から幅高さ確定。transition/animationを一切持たない(C2)。 */
+/* 箱と塗りは兄弟要素(塗りは箱の"中身"ではない)。塗りを下の層、箱の輪郭を上の層に
+   分けて描く――器の大きさは「過去の最大値」からの見積りでしかなく、実測がそれを
+   超えることがある(実測で確認した: 台本のOUTSIDE[1]=240円はOUTSIDE[0]=180円しか
+   知らない時点の器を超える)。塗りをそのまま子要素にして`overflow:visible`にしただけ
+   だと、塗りが箱の輪郭線の上に重なって描かれるため、はみ出した瞬間に**器の輪郭が
+   読めなくなり**「ただの長い棒」に見えてしまう(企画レビューで実際に指摘された不具合。
+   No.122の教訓そのもの)。だから箱は背景を持たない輪郭線だけの要素にして塗りより
+   常に上のレイヤーに描き、塗りがどれだけ伸びても器の右端(輪郭)だけは必ず見える
+   ようにする。色も文字も足さない――輪郭が1本、常に見えることだけが要件。 */
+.mz-partly-known-price-box-fill {
+  position: absolute;
+  top: 0;
+  background: #3d3d3d;
+  border-radius: 2px;
+  z-index: 0;
+  transition: width 0.4s var(--zk-ease-boing, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
 .mz-partly-known-price-box {
   position: absolute;
   top: 0;
   border: 1px solid #3d3d3d;
   border-radius: 3px;
-  background: #fff;
-  /* overflow: visible (意図的)。器の大きさは「過去の最大値」からの見積りでしかなく、
-     実測がその見積りを超えることがある(実測で確認した: 台本のOUTSIDE[1]=240円は
-     OUTSIDE[0]=180円しか知らない時点の器を超える)。overflow:hiddenで切ると、
-     器が小さすぎたという事実が「ちょうど満杯」に見えてしまい、器=確からしさの
-     誤読を招く(難所4の裏)。塗りは実測の量だけ伸ばし、器を超えたら正直にはみ出す。 */
-  overflow: visible;
-}
-.mz-partly-known-price-box-fill {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  background: #3d3d3d;
-  border-radius: 2px;
-  transition: width 0.4s var(--zk-ease-boing, cubic-bezier(0.34, 1.56, 0.64, 1));
+  background: transparent;
+  z-index: 1;
+  /* 輪郭線(#3d3d3d)と塗り(同じ#3d3d3d)は同じ濃さなので、z-indexで上に乗せただけでは
+     塗りが輪郭線に重なった瞬間、色が同化して輪郭が見えなくなる(実測で確認)。
+     パレット内の白(#fff)で輪郭の外側に1pxの縁を足し、暗い塗りの上でも輪郭線が
+     「暗い線+白い縁」として浮いて見えるようにする――新しい色ではなく、既存の
+     パレットの白を使っているだけ。塗りが無い場所(明るい地の上)では、この白い縁は
+     背景に溶けて見えず、これまでどおり暗い輪郭線だけが見える。 */
+  box-shadow: 0 0 0 1px #fff;
+  /* transition/animationを一切持たない(C2: 生成時から幅・高さ確定のまま動かない)。 */
 }
 
 /* 読み上げ: 確定後だけ、実測の合計(¥N)を文字で出す。塗りの内側には置かない。 */

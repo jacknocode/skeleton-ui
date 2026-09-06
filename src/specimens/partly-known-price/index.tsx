@@ -248,11 +248,15 @@ export default function PartlyKnownPrice() {
           ? orders.map((o) => {
               const boxW = Math.round(o.boxBasisYen * SCALE_YEN)
               const fillW = o.resolved ? Math.round((o.outsideValue as number) * SCALE_YEN) : 0
+              // 箱の左端は必ず「チップが終わった位置」(=streak*PITCH)にする。台帳の
+              // 絶対indexは使わない――絶対indexで置くと、見送りを挟んだ行(tailStart>0)
+              // だけチップが0個なのに箱が右へ流れ、同じ「自分の分0」の行なのに箱の
+              // 左端が揃わなくなる(企画レビューで実際に指摘された不具合)。
+              const boxLeft = o.streak * PITCH
               // 器(boxW)は過去の最大値からの見積りでしかなく、実測(fillW)がそれを
-              // 超えることがある(はみ出しは隠さず正直に見せる。上のstyle.css参照)。
-              // トラック自体の幅は、はみ出した分も含めて確保し、右隣の読み上げと
-              // 衝突しないようにする。
-              const trackW = o.r * PITCH + Math.max(boxW, fillW)
+              // 超えることがある(はみ出しは隠さず正直に見せる)。トラック自体の幅は、
+              // はみ出した分も含めて確保し、右隣の読み上げと衝突しないようにする。
+              const trackW = boxLeft + Math.max(boxW, fillW)
               return (
                 <div
                   key={o.id}
@@ -275,18 +279,24 @@ export default function PartlyKnownPrice() {
                         data-role="self-chip"
                         data-order-id={o.id}
                         data-chip-index={j}
-                        style={{ left: (o.tailStart + j) * PITCH }}
+                        style={{ left: j * PITCH }}
                       />
                     ))}
-                    {/* 外の分の箱: No.136の答えをそのまま再利用。生成時から幅・高さ確定、
-                        transition/animationを一切持たない(C2)。中の塗りだけが動く。 */}
+                    {/* 外の分の箱と塗りは兄弟要素(塗りが箱の"中身"ではない)。塗りを
+                        先に(下に)、箱の輪郭を後に(上に)描く――塗りが器を超えて
+                        伸びても、器の輪郭線は常に塗りの上に残る(No.122の教訓: 器が
+                        どこまでだったか読めないと、はみ出しは何も語らない)。色も
+                        文字も足さない。輪郭が1本、常に見えることだけが要件。 */}
+                    <span
+                      className="mz-partly-known-price-box-fill"
+                      data-role="unknown-fill"
+                      style={{ left: boxLeft, width: fillW, height: BOX_HEIGHT }}
+                    />
                     <span
                       className="mz-partly-known-price-box"
                       data-role="unknown-box"
-                      style={{ left: o.r * PITCH, width: boxW, height: BOX_HEIGHT }}
-                    >
-                      <span className="mz-partly-known-price-box-fill" data-role="unknown-fill" style={{ width: fillW }} />
-                    </span>
+                      style={{ left: boxLeft, width: boxW, height: BOX_HEIGHT }}
+                    />
                   </div>
                   <span className="mz-partly-known-price-readout" data-role="order-readout">
                     {o.resolved ? fmtYen(o.self + (o.outsideValue as number)) : ''}
