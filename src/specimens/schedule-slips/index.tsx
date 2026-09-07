@@ -28,10 +28,17 @@ import './style.css'
 
    ---- 芯4: ずらしたのが誰かは、動き方ではなく台帳が言う ----
    読み手がずらしたときと外の都合でずれたときは**まったく同じ見た目**
-   (同じCSSクラス・同じtransition)で動く。主語は「借りた」行(履歴)の点が
+   (同じCSSクラス・同じtransition)で動く。主語は「履歴」行の点が
    +1されるかどうかだけが言う。history配列に積むかどうかで分岐するのは
    ハンドラ側だけで、チップ自身の見た目やtransitionの宣言を分岐させない
    (=分岐したのはロジックであって表示ではない、という区別を保つ)。
+   ※ この行には由来の異なる2種の点(3週前に借りた跡／読み手がずらした跡)が
+   同じ形で同居している。行ラベルを「履歴」という中立な構造名にしたのは
+   そのため——**行が分けているのは由来ではない**。141が主語(読み手か外か)
+   を分けるのに使っているのは「行を分けること」ではなく「台帳(history配列)
+   に載るかどうか」であり、由来を行で分けるNo.142とはこの点で設計が異なる
+   (どちらも「分解できるかは台帳に書いてあるかで決まる」というNo.137/138の
+   直系ではあるが、141は主語を、142は由来を、それぞれ台帳側で言う)。
 
    ---- 芯5/難所: 「外の都合」は芯2の唯一の例外だが、中割りの非対称で名指しは保たれる ----
    `次の週へ`を押して週6に到達した回だけ、週8の予定が週9へ自動でずれる。
@@ -330,9 +337,11 @@ export default function ScheduleSlips() {
           ))}
         </div>
 
-        {/* 借りた(履歴)の行: 初期の1点 + ずれるたびに元の週の座標へ積まれる点 */}
+        {/* 履歴の行: 初期の1点(3週前に借りた跡) + ずれるたびに元の週の座標へ積まれる点。
+            由来の異なる2種の点が同じ形で同居するので、ラベルは「借りた」という
+            由来名ではなく「履歴」という中立な構造名にする(=ラベルが嘘をつかない)。 */}
         <span className="mz-schedule-slips-row-label" data-role="row-label-history">
-          借りた
+          履歴
         </span>
         <div className="mz-schedule-slips-track" data-role="history-track">
           <span className="mz-schedule-slips-rail" />
@@ -409,7 +418,7 @@ export default function ScheduleSlips() {
             ))}
         </div>
 
-        {/* 現在地の縦線: 借りた/予定/空きの3行を貫く。動くのはこれだけ(時間進行時)。
+        {/* 現在地の縦線: 履歴/予定/空きの3行を貫く。動くのはこれだけ(時間進行時)。
             transitionを持たない=尺ゼロで飛ぶ(芯1)。 */}
         <div className="mz-schedule-slips-marker-col" data-role="marker-col" aria-hidden="true">
           <span className="mz-schedule-slips-marker" data-role="marker" style={{ left: lineX(curWeek) }} />

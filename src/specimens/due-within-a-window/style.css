@@ -192,7 +192,10 @@
   z-index: 3;
 }
 /* 面ではなく線(2px)。帯の内部を貫いても帯の見た目は変わらない(芯3/C6)――
-   線が読めるよう、box-shadowで1pxの白いハローを敷く(No.104の再利用。新色ではない)。 */
+   線が読めるよう、box-shadowで1pxの白いハローを敷く(No.104の再利用。新色ではない)。
+   transitionを持たせない=尺ゼロの瞬間移動(No.139側に統一。バッチ内の統合指示)。
+   141の「中割りが出た側が動いた側」という見分け方をこの回の3種で共有するため、
+   現在地の縦線にも中割りを作らない――宣言の不在でC3(distinct 2値・中割り0)を保証する。 */
 .mz-due-within-a-window-marker {
   position: absolute;
   top: 0;
@@ -201,7 +204,6 @@
   background: #3d3d3d;
   box-shadow: 0 0 0 1px #fff;
   transform: translateX(-50%);
-  transition: left 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* ---------- 週送り + 確定 + 現在週 ---------- */
@@ -299,7 +301,6 @@
 
 /* ---------- 動きを控えたい人へ ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .mz-due-within-a-window-marker,
   .mz-due-within-a-window-chip.is-contrast-window,
   .mz-due-within-a-window-next-btn,
   .mz-due-within-a-window-confirm-btn,

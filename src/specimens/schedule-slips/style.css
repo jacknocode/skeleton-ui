@@ -59,7 +59,7 @@
 
 /* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ----------
    grid-template-columnsはindex.tsx側でLABEL_COL/RAIL_Wから直接styleに書き込む。
-   目盛り/借りた/予定/空きの4行がすべて同じトラック列(grid-column:2)を土台に
+   目盛り/履歴/予定/空きの4行がすべて同じトラック列(grid-column:2)を土台に
    するので、x座標のズレが構造上起こらない(共通ブリーフの縛り5)。 */
 .mz-schedule-slips-rail-wrap {
   display: grid;
@@ -134,7 +134,7 @@
 
 /* チップ本体: 履歴・予定、共通のクラス(共通ブリーフ指定の実値そのもの)。
    基底クラスにはtransition/animationを一切書かない――ここに書いてしまうと
-   「借りた」行の点まで動けることになり、芯1の非対称が壊れる。 */
+   「履歴」行の点まで動けることになり、芯1の非対称が壊れる。 */
 .mz-schedule-slips-chip {
   position: absolute;
   top: 50%;
@@ -189,7 +189,7 @@
 }
 
 /* 現在地の縦線を乗せる列。トラック列とまったく同じgrid-columnを共有する。
-   借りた/予定/空きの3行(grid-row 2..4)だけを貫き、目盛り行は貫かない。 */
+   履歴/予定/空きの3行(grid-row 2..4)だけを貫き、目盛り行は貫かない。 */
 .mz-schedule-slips-marker-col {
   grid-column: 2;
   grid-row: 2 / span 3;

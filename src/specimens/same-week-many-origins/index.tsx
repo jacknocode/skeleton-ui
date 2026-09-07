@@ -110,6 +110,8 @@ const PITCH = 30 // px/週。brief-common指定の定規刻み
 const RAIL_W = WEEK_MAX * PITCH // トラック列の全幅(270px)
 const LABEL_COL = 34 // ラベル列の幅
 const COL_GAP = 6 // ラベル列とトラック列の隙間
+const BUNDLE_SIZE = 14 // 対照2: 束ねチップの一辺(px)
+const BUNDLE_BADGE_OFFSET = BUNDLE_SIZE / 2 + 3 // 対照2: 束ねチップの右端からバッジまでの隙間
 
 const ROWS: { key: RowKey; label: string }[] = [
   { key: 'repay', label: '返済' },
@@ -291,9 +293,18 @@ export default function SameWeekManyOrigins() {
                         data-future={isFuture}
                         style={{ left: chipX(chip.week) }}
                         onClick={() => handleChipClick(chip)}
-                      >
-                        {isBundle && <span className="mz-same-week-many-origins-badge">×{group.length}</span>}
-                      </span>
+                      />
+                      {/* 対照2のバッジは.chipの子ではなく.trackの兄弟として置く――子にすると
+                          由来ごとのclip-path(▲)にバッジごと切り取られ、opacityも重ねて
+                          薄まって読めなくなる(目視で発覚し、企画の指摘で修正)。 */}
+                      {isBundle && (
+                        <span
+                          className="mz-same-week-many-origins-badge"
+                          style={{ left: chipX(chip.week) + BUNDLE_BADGE_OFFSET }}
+                        >
+                          ×{group.length}
+                        </span>
+                      )}
                     </Fragment>
                   )
                 })}

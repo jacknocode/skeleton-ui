@@ -247,12 +247,14 @@
   margin-left: -7px;
   z-index: 2;
 }
+/* .chip の子ではなく.trackの兄弟(index.tsx参照)。leftはchipX(week)+オフセット
+   をJS側から直接styleで渡す――chip(clip-path/opacityを持つ)の内側に置くと、
+   ▲(clip-path)にバッジ自体が切り取られ、かつopacityが重ねてかかって文字が
+   読めなくなる(目視で発覚。DOM上は存在するのに絵にならなかった原因)。 */
 .mz-same-week-many-origins-badge {
   position: absolute;
-  left: 100%;
   top: 50%;
   transform: translateY(-50%);
-  margin-left: 3px;
   padding: 1px 4px;
   border-radius: 999px;
   background: #8c8c8c;
@@ -260,17 +262,23 @@
   font-size: 8px;
   font-weight: 800;
   white-space: nowrap;
+  z-index: 2;
 }
 
-/* 対照3: 行ラベルからチップへの引き出し線(配線図) */
+/* 対照3: 行ラベルからチップへの引き出し線(配線図)。rail(#d6d6d3)と同じ1px・
+   同じy位置にsolidの近似グレー(#b3b3b3)を重ねただけでは、2本の線が完全に
+   重なって見分けが付かず「絵として見えない」(目視で発覚。DOM上は正しい幅で
+   存在していた)。railより濃いink色・破線にして、重なっても輪郭が読めるように
+   した――破線は既定側では使えない語彙(brief-common)だが、対照側の壊れ方として
+   使ってよい範囲内。 */
 .mz-same-week-many-origins-wire {
   position: absolute;
   left: 0;
   top: 50%;
-  height: 1px;
-  background: #b3b3b3;
+  height: 0;
+  border-top: 1.5px dashed #8c8c8c;
   transform: translateY(-50%);
-  z-index: 0;
+  z-index: 1;
 }
 
 /* 対照4: 合計・件数の文言行 */
