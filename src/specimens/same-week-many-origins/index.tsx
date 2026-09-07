@@ -69,6 +69,18 @@ import './style.css'
    実装側で足した(データ上も2つの別チップとして残るが、表示が重なるのを
    避ける)。企画はこの判断を採用済み(PR参照)。
 
+   ---- 難所4: 当たり判定は見た目から切り離す(企画からの差し戻し) ----
+   既定側のチップは10×10px(C1)のまま——当たり判定を広げるためにチップ自体へ
+   paddingを足すと、C1が要求する「distinct 1値」(width/height/border-radius/
+   background-color/border-style)が崩れる。答えは、見た目のチップとは**別の
+   透明な24×24の`<button>`を同じ中心座標に重ねる**こと(No.141の
+   `mz-schedule-slips-chip-hit`と同じ語彙——141と142が同じ操作の当たり判定を
+   共有していることの実装的な裏付け)。onClickも過去判定(disabled)も、この
+   透明ボタン側に移した——見た目のチップ(.chip)はもう一切のイベント・状態を
+   持たない、純粋な描画専用の要素になった。座標はchipX(week)を当たり判定側
+   にもそのまま渡しており、行ごとに新しい計算式を作っていない(芯5の座標一元化
+   を当たり判定にも適用)。
+
    ---- 対照(4つの壊れ方を同居させる) ----
    1. 由来ごとに形(●/■/▲)と濃さ(opacity 1.0/0.7/0.45)を変える
    2. 同じ週に複数の由来が重なったら1つの束チップ+`×N`バッジにまとめる
@@ -307,7 +319,7 @@ export default function SameWeekManyOrigins() {
                         data-future={isFuture}
                         style={{ left: chipX(chip.week) }}
                         disabled={!isFuture}
-                        aria-label={`${ROWS[rowIndex(key)].label} 週${chip.week}`}
+                        aria-label={`${label} 週${chip.week}`}
                         onClick={() => handleChipClick(chip)}
                       />
                       {/* 対照2のバッジは.chipの子ではなく.trackの兄弟として置く――子にすると

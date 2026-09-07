@@ -118,7 +118,9 @@
 }
 
 /* チップ本体: 3つの由来とも共通のクラス(brief-common指定の実値そのもの)。
-   クリックによる1週ぶんの移動だけがtransitionで起こる――animationは無い。 */
+   クリックによる1週ぶんの移動だけがtransitionで起こる――animationは無い。
+   イベント・cursorはすべて.chip-hit(当たり判定層)側が持つ――このクラスは
+   見た目(C1の6項目)だけを担う純粋な描画専用要素。 */
 .mz-same-week-many-origins-chip {
   position: absolute;
   top: 50%;
@@ -130,12 +132,31 @@
   border-radius: 3px;
   border-style: none;
   z-index: 1;
-  cursor: pointer;
+  pointer-events: none;
   transition: left 0.12s linear;
 }
-/* 過去(現在地の線以前)のチップは動かせない――クリックしても何も起きないので
-   カーソルだけ既定に戻す(色や印は足さない。芯・行の位置関係だけで読ませる)。 */
-.mz-same-week-many-origins-chip[data-future='false'] {
+
+/* チップの当たり判定(見た目10x10とは別の透明24x24)。見た目のチップに
+   paddingを足すとC1の「distinct 1値」が崩れるため、当たり判定だけを別要素
+   として同じ中心座標に重ねる(No.141のmz-schedule-slips-chip-hitと同じ語彙)。
+   位置はchipXで見た目と共有しているので、当たり判定と見た目がズレることは
+   ない。 */
+.mz-same-week-many-origins-chip-hit {
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  margin-left: -12px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  z-index: 2;
+  cursor: pointer;
+}
+/* 過去(現在地の線以前)のチップは動かせない――disabledにしてクリックそのもの
+   を無効化する(色や印は足さない。芯・行の位置関係だけで読ませる)。 */
+.mz-same-week-many-origins-chip-hit:disabled {
   cursor: default;
 }
 

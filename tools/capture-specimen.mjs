@@ -2249,7 +2249,7 @@ const CHOREO = {
        まず静止画として週5の縦の3つを見せ（現在地の線がそこを貫いている）、
        次に1件だけを押して、束ねていないのに1つだけ動くことを見せる。 */
     await sleep(1400) // 週5。返済・給与・家賃が縦に3つ
-    await page.locator('.mz-same-week-many-origins [data-role="chip"][data-week="7"][data-row="salary"]').click()
+    await page.locator('.mz-same-week-many-origins-chip-hit[data-week="7"][data-row="salary"]').click()
     await sleep(1300) // 1件だけが動く。他の2件も行も1pxも動かない
     await next().click()
     await sleep(1000)

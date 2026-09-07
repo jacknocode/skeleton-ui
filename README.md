@@ -1368,6 +1368,17 @@ React 以外のプロジェクトでも、`style.css` のクラスとキーフ�
 
 これだけで図鑑に自動掲載され、ソースコード表示も効きます。
 
+**配線する前に単体で見たいとき**は [`dev-preview.html`](dev-preview.html) を使います。
+
+```
+http://localhost:5173/dev-preview.html?id=<id>
+```
+
+`src/specimens/*/index.tsx` を `import.meta.glob` で拾うので、`registry.ts` に1行も足さずに
+1種だけを 560×360 のステージで触れます。3種を並列で実装するとき、
+**実装側に共有ファイル（`registry.ts`）を触らせないまま実物を見せる**ためのものです。
+`vite` の build 入口は `index.html` だけなので、本番の生成物には入りません。
+
 ## 標本を収録する（PRに動く証拠を載せる）
 
 動きの標本は静止画では良し悪しが判断できないので、GIF に収録する道具を置いてあります。
