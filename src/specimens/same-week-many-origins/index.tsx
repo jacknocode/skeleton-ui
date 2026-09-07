@@ -112,6 +112,7 @@ const LABEL_COL = 34 // ラベル列の幅
 const COL_GAP = 6 // ラベル列とトラック列の隙間
 const BUNDLE_SIZE = 14 // 対照2: 束ねチップの一辺(px)
 const BUNDLE_BADGE_OFFSET = BUNDLE_SIZE / 2 + 3 // 対照2: 束ねチップの右端からバッジまでの隙間
+const HIT_SIZE = 24 // チップの当たり判定の一辺(px)。見た目(10px)とは独立に広く取る
 
 const ROWS: { key: RowKey; label: string }[] = [
   { key: 'repay', label: '返済' },
@@ -292,6 +293,21 @@ export default function SameWeekManyOrigins() {
                         data-week={chip.week}
                         data-future={isFuture}
                         style={{ left: chipX(chip.week) }}
+                      />
+                      {/* 当たり判定: 見た目のチップ(10px)とは別の透明な24x24を同じ中心座標に
+                          重ねる(No.141のmz-schedule-slips-chip-hitと同じ語彙)。チップ自体に
+                          paddingを足すとC1の「distinct 1値」が崩れるので、当たり判定は必ず
+                          別要素にする。見た目のサイズ・色・角丸・座標は一切変えていない。 */}
+                      <button
+                        type="button"
+                        className="mz-same-week-many-origins-chip-hit"
+                        data-role="chip-hit"
+                        data-row={key}
+                        data-week={chip.week}
+                        data-future={isFuture}
+                        style={{ left: chipX(chip.week) }}
+                        disabled={!isFuture}
+                        aria-label={`${ROWS[rowIndex(key)].label} 週${chip.week}`}
                         onClick={() => handleChipClick(chip)}
                       />
                       {/* 対照2のバッジは.chipの子ではなく.trackの兄弟として置く――子にすると
