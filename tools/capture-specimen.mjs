@@ -2215,6 +2215,81 @@ const CHOREO = {
     await next().click()
     await sleep(1900)
   },
+
+  'schedule-slips': async (page) => {
+    const next = () => page.getByRole('button', { name: '次の週へ', exact: true })
+    const chip = (i) => page.locator('.mz-schedule-slips-chip-hit').nth(i)
+
+    /* 撮るべきは「どちらが動いたか」の撃ち分け。まず時間を進めて
+       線だけが飛ぶところ、次にチップを押してチップだけが等速で運ばれるところ。
+       この2つを続けて見せないと、この標本の主張は絵にならない。
+       ずれると履歴に点が増えること、空きが同時に入れ替わることも同じ画に入る。 */
+    await sleep(1100) // 週4。予定は週5・6・8
+    await next().click()
+    await sleep(1000) // 週5。動いたのは線だけ——中割りは1枚も無い
+    await chip(2).click()
+    await sleep(1300) // 週8の予定が週9へ。等速で運ばれ、履歴に点が増える
+    await chip(1).click()
+    await sleep(1500) // 週6の予定が週7へ。空きが週6へ戻り、週7から消える
+
+    /* 対照: 同じ操作が跳ねて光り、元の週にゴーストと点線が残り、
+       赤いトーストが「延期されました」と名乗る。時間を進めるだけでも予定が動く。 */
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1000)
+    await next().click()
+    await sleep(1100)
+    await chip(1).click()
+    await sleep(2000)
+  },
+
+  'same-week-many-origins': async (page) => {
+    const next = () => page.getByRole('button', { name: '次の週へ', exact: true })
+
+    /* 撮るべきは、3つの由来が同じ形のまま別々の行に居ること。
+       まず静止画として週5の縦の3つを見せ（現在地の線がそこを貫いている）、
+       次に1件だけを押して、束ねていないのに1つだけ動くことを見せる。 */
+    await sleep(1400) // 週5。返済・給与・家賃が縦に3つ
+    await page.locator('.mz-same-week-many-origins-chip-hit[data-week="7"][data-row="salary"]').click()
+    await sleep(1300) // 1件だけが動く。他の2件も行も1pxも動かない
+    await next().click()
+    await sleep(1000)
+    await next().click()
+    await sleep(1300) // 線が進んでも、由来は縦の位置が言い続ける
+
+    /* 対照: 由来ごとに形と濃さが変わり、同じ週が束ねられて ×N になり、
+       引き出し線が画面を配線図にし、合計行が重なりを数で言う。 */
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(2200)
+    await next().click()
+    await sleep(1600)
+  },
+
+  'due-within-a-window': async (page) => {
+    const next = () => page.getByRole('button', { name: '次の週へ', exact: true })
+    const arrived = () => page.getByRole('button', { name: 'いま来た', exact: true })
+
+    /* 撮るべきは3つ。ひとつ、稼働の帯と支払いの帯が同じ長さで、
+       空きの減り方だけが違うこと。ふたつ、線が帯を貫いても帯が動かないこと。
+       みっつ、確定しても帯が消えず、チップが1つ増えるだけであること。 */
+    await sleep(1400) // 週4。同じ 90px の帯が2本、空きは4個
+    await next().click()
+    await sleep(800)
+    await next().click()
+    await sleep(1000) // 週6。線が窓の中へ入る——帯は1pxも動かない
+    await next().click()
+    await sleep(1200) // 週7
+    await arrived().click()
+    await sleep(2000) // 確定。帯はそのまま、チップが1つ増える
+
+    /* 対照: 帯が破線になり、`未定` バッジと注記が名乗り、
+       週が進むと帯の左端が縮み、幅ぶんの空きを3つ消す。 */
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1400)
+    await next().click()
+    await sleep(900)
+    await next().click()
+    await sleep(1800)
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))

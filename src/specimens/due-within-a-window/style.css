@@ -1,0 +1,311 @@
+/* No.143「いつ来るかは、幅でしか決まっていない」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。対照だけが使う警告色: #b33a3a。外形は340×330px以内。
+
+   .mz-due-within-a-window-chip(帯もチップも共通の1個)には既定側でwidth以外の
+   見た目(border-style/background-color/height/border-radius)しか書かない――
+   left/widthはindex.tsx側のinline styleでしか変えない。既定側はtransition/
+   animationを一切定義しない(=芯3・芯4・C1・C7の実体。動かない/伸び縮みしないを
+   宣言の不在で保証する)。動くのは現在地の縦線(.marker)のleftだけ。 */
+
+.mz-due-within-a-window {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-due-within-a-window-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-due-within-a-window-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-due-within-a-window-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-due-within-a-window-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-due-within-a-window-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ----------
+   grid-template-columnsはindex.tsx側でLABEL_COL/RAIL_Wから直接styleに書き込む。
+   `稼働`・`支払い`・`空き`の3行と現在地の縦線は、すべて同じ列(トラック列)を
+   土台にするので、x座標のズレが構造上起こらない(brief-common則5)。 */
+.mz-due-within-a-window-rail-wrap {
+  display: grid;
+  grid-template-rows: 12px 22px 26px 22px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り: 定規。事実(時間そのもの)なので常に同じ見た目 */
+.mz-due-within-a-window-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 12px;
+}
+.mz-due-within-a-window-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-due-within-a-window-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-due-within-a-window-row-label[data-role='row-label-ongoing'] {
+  grid-row: 2;
+}
+.mz-due-within-a-window-row-label[data-role='row-label-window'] {
+  grid-row: 3;
+}
+.mz-due-within-a-window-row-label[data-role='row-label-vacant'] {
+  grid-row: 4;
+}
+
+/* 台(レール): 「ここは何かを測る場だ」を言う下地。常設する */
+.mz-due-within-a-window-track {
+  grid-column: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-due-within-a-window-track[data-role='ongoing-track'] {
+  grid-row: 2;
+}
+.mz-due-within-a-window-track[data-role='window-track'] {
+  grid-row: 3;
+  /* この行だけ2段に分けて使う: 週7の確定チップが`支払い`帯(週6〜8)の内側に
+     x座標として収まってしまい、同色・同形のままでは帯に埋もれて見えなくなる
+     (実測で気づいた不具合)。No.139の「重ねず縦に積む」を1行の中で再演し、
+     上段(点の担体: 週5比較チップ/確定チップ)と下段(帯)を別レーンに分ける。 */
+  height: 26px;
+}
+.mz-due-within-a-window-track[data-role='vacant-track'] {
+  grid-row: 4;
+}
+.mz-due-within-a-window-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* チップ/帯 本体: 共通の1個(brief-common指定の実値そのもの)。left/widthだけを
+   inline styleで受け取り、それ以外(border-style/background-color/height/
+   border-radius)はここにしか書かない――帯とチップが同じクラスから来ている
+   ことそのものがC1(computed styleの文字列一致)を保証する。transition/animation
+   は一切書かない(=既定側は「動かない・伸び縮みしない」を宣言の不在で保証)。 */
+.mz-due-within-a-window-chip {
+  position: absolute;
+  height: 10px;
+  background: #3d3d3d;
+  border-radius: 3px;
+  border-style: none;
+  z-index: 1;
+}
+/* `稼働`行は帯1個だけなので単純に上下中央 */
+.mz-due-within-a-window-chip[data-role='ongoing-band'] {
+  top: 50%;
+  margin-top: -5px;
+}
+/* `支払い`行だけ2段: 上段=点の担体(週5比較チップ・確定チップ)、下段=帯。
+   週7の確定チップは帯(週6〜8)のx範囲に完全に収まるため、同じレーンに置くと
+   同色・同形のまま埋もれて見えなくなる(実測で気づいた不具合への対処)。
+   x座標(chipX/bandLeft/bandWidthから導出)は一切変えず、y方向だけを分けるので
+   芯1(帯とチップの左右位置関係)には影響しない。 */
+.mz-due-within-a-window-chip[data-role='point-chip'],
+.mz-due-within-a-window-chip[data-role='confirm-chip'] {
+  top: 2px;
+}
+.mz-due-within-a-window-chip[data-role='window-band'] {
+  bottom: 2px;
+}
+
+/* 空き枠の点: 6x6pxの輪郭だけの丸(brief-common指定)。埋まると存在しなくなる
+   ことそのものが占有を言う(芯2)。animationもtransitionも持たせない。 */
+.mz-due-within-a-window-vacant {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  border: 1px solid #d6d6d3;
+  background: transparent;
+  z-index: 1;
+}
+
+/* 現在地の縦線を乗せる列。トラック列とまったく同じgrid-columnを共有するので
+   x座標の基準が物理的に一致する。`稼働`〜`空き`の3行をspanして貫く。 */
+.mz-due-within-a-window-marker-col {
+  grid-column: 2;
+  grid-row: 2 / span 3;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* 面ではなく線(2px)。帯の内部を貫いても帯の見た目は変わらない(芯3/C6)――
+   線が読めるよう、box-shadowで1pxの白いハローを敷く(No.104の再利用。新色ではない)。
+   transitionを持たせない=尺ゼロの瞬間移動(No.139側に統一。バッチ内の統合指示)。
+   141の「中割りが出た側が動いた側」という見分け方をこの回の3種で共有するため、
+   現在地の縦線にも中割りを作らない――宣言の不在でC3(distinct 2値・中割り0)を保証する。 */
+.mz-due-within-a-window-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transform: translateX(-50%);
+}
+
+/* ---------- 週送り + 確定 + 現在週 ---------- */
+
+.mz-due-within-a-window-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.mz-due-within-a-window-next-btn,
+.mz-due-within-a-window-confirm-btn {
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.15s,
+    opacity 0.15s;
+}
+.mz-due-within-a-window-confirm-btn {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+.mz-due-within-a-window-next-btn:hover:not(:disabled),
+.mz-due-within-a-window-confirm-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-due-within-a-window-next-btn:active:not(:disabled),
+.mz-due-within-a-window-confirm-btn:active:not(:disabled) {
+  transform: scale(1.05, 0.9);
+}
+.mz-due-within-a-window-next-btn:disabled {
+  cursor: default;
+  background: #d6d6d3;
+  color: #b3b3b3;
+  box-shadow: none;
+}
+.mz-due-within-a-window-confirm-btn:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+.mz-due-within-a-window-week {
+  font-size: 10px;
+  font-weight: 800;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 対照: 5つの壊れ方 ---------- */
+
+/* 壊れ方1: `支払い`帯を破線で描く(=不確かの語彙を借りる。既定側には出ない) */
+.mz-due-within-a-window-chip.is-contrast-window {
+  border-style: dashed;
+  border-width: 1px;
+  border-color: #8c8c8c;
+  background: transparent;
+  box-sizing: border-box;
+  transition:
+    left 0.12s linear,
+    width 0.12s linear;
+}
+/* 壊れ方4: 確定の瞬間、帯が確定週へ「しゅっ」と収束する(=担体が動く=「起きた」の演出) */
+.mz-due-within-a-window-chip.is-contrast-window.is-converging {
+  transition:
+    left 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+    width 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 壊れ方2: 「6〜8週のどこか(予定)」の注記+「未定」バッジ(=主張を文章で言う) */
+.mz-due-within-a-window-note-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mz-due-within-a-window-note-text {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+.mz-due-within-a-window-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #b33a3a;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+/* ---------- 動きを控えたい人へ ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .mz-due-within-a-window-chip.is-contrast-window,
+  .mz-due-within-a-window-next-btn,
+  .mz-due-within-a-window-confirm-btn,
+  .mz-due-within-a-window-mode-btn {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

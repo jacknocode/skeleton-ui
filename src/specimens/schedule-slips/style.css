@@ -1,0 +1,330 @@
+/* No.141「予定のほうがずれる」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / rgb(214,214,211) 淡・レール /
+   #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。対照だけが使う警告色: #b33a3a。
+   外形は340×330px以内。
+
+   .mz-schedule-slips-chip[data-role="sched-chip"] にだけ`transition: left`を
+   持たせる(=動いた側にだけ中割りを与える/芯1)。現在地の縦線(.marker)は
+   transitionを一切持たない=尺ゼロで飛ぶ。この「有る/無い」の非対称だけで、
+   いま動いているのがどちらかを名指しする。 */
+
+.mz-schedule-slips {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-schedule-slips-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-schedule-slips-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--zk-ink-faint, #b3b3b3);
+  flex: 1 1 auto;
+}
+.mz-schedule-slips-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--zk-card, #eaeae8);
+}
+.mz-schedule-slips-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--zk-ink-soft, #8c8c8c);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-schedule-slips-mode-btn.is-active {
+  background: var(--zk-ink, #3d3d3d);
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ----------
+   grid-template-columnsはindex.tsx側でLABEL_COL/RAIL_Wから直接styleに書き込む。
+   目盛り/履歴/予定/空きの4行がすべて同じトラック列(grid-column:2)を土台に
+   するので、x座標のズレが構造上起こらない(共通ブリーフの縛り5)。 */
+.mz-schedule-slips-rail-wrap {
+  display: grid;
+  grid-template-rows: 12px 24px 24px 18px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り: 定規。事実(時間そのもの)なので常に同じ見た目 */
+.mz-schedule-slips-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 12px;
+}
+.mz-schedule-slips-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--zk-ink-faint, #b3b3b3);
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-schedule-slips-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--zk-ink-soft, #8c8c8c);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-schedule-slips-row-label[data-role='row-label-history'] {
+  grid-row: 2;
+}
+.mz-schedule-slips-row-label[data-role='row-label-schedule'] {
+  grid-row: 3;
+}
+.mz-schedule-slips-row-label[data-role='row-label-vacant'] {
+  grid-row: 4;
+}
+
+/* 台(レール): 「ここは何かを測る場だ」を言う下地。常設する。2px線。 */
+.mz-schedule-slips-track {
+  grid-column: 2;
+  position: relative;
+  height: 24px;
+}
+.mz-schedule-slips-track[data-role='history-track'] {
+  grid-row: 2;
+}
+.mz-schedule-slips-track[data-role='schedule-track'] {
+  grid-row: 3;
+}
+.mz-schedule-slips-track[data-role='vacant-track'] {
+  grid-row: 4;
+  height: 18px;
+}
+.mz-schedule-slips-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background: rgb(214, 214, 211);
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* チップ本体: 履歴・予定、共通のクラス(共通ブリーフ指定の実値そのもの)。
+   基底クラスにはtransition/animationを一切書かない――ここに書いてしまうと
+   「履歴」行の点まで動けることになり、芯1の非対称が壊れる。 */
+.mz-schedule-slips-chip {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  margin-left: -5px;
+  background: var(--zk-ink, #3d3d3d);
+  border-radius: 3px;
+  border-style: none;
+  z-index: 1;
+}
+/* 予定チップにだけ、動いた側の中割りを与える(芯1の実体)。等速・120ms。 */
+.mz-schedule-slips-chip[data-role='sched-chip'] {
+  transition: left 0.12s linear;
+}
+
+/* 予定チップの当たり判定を10x10のまま24x24に広げる透明ボタン(brief-common許可)。
+   見た目は一切足さない――背景も枠線も無し。チップと同じleft・同じtransitionを
+   持たせ、常に視覚上のチップと重なって動く。 */
+.mz-schedule-slips-chip-hit {
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  margin-left: -12px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  z-index: 2;
+  transition: left 0.12s linear;
+}
+.mz-schedule-slips-chip-hit:disabled {
+  cursor: default;
+}
+
+/* 空き枠の担体: 6x6pxの輪郭だけの丸(共通ブリーフ指定)。塗りを持たない――
+   「まだ何も置かれていない」を面ではなく輪郭だけで言う。予定が入っている
+   週だけこの担体そのものが無い(=占有は担体の不在だけが言う/No.139の厳守)。 */
+.mz-schedule-slips-vacant {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  margin-left: -3px;
+  border-radius: 50%;
+  border: 1px solid rgb(214, 214, 211);
+  background: transparent;
+}
+
+/* 現在地の縦線を乗せる列。トラック列とまったく同じgrid-columnを共有する。
+   履歴/予定/空きの3行(grid-row 2..4)だけを貫き、目盛り行は貫かない。 */
+.mz-schedule-slips-marker-col {
+  grid-column: 2;
+  grid-row: 2 / span 3;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* 面ではなく線(2px)。ここにtransitionを一切持たせない――時間の進行は
+   尺ゼロで飛ぶ(芯1)。これが予定チップ(120ms/linear)との非対称の片側。 */
+.mz-schedule-slips-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--zk-ink, #3d3d3d);
+  transform: translateX(-50%);
+}
+.mz-schedule-slips-marker::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  background: var(--zk-ink, #3d3d3d);
+  border-radius: 2px;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+/* ---------- 週送り + 現在週 ---------- */
+
+.mz-schedule-slips-control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mz-schedule-slips-next-btn {
+  flex: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--zk-ink, #3d3d3d);
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.15s var(--zk-ease-boing, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    background-color 0.15s,
+    opacity 0.15s;
+}
+.mz-schedule-slips-next-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-schedule-slips-next-btn:active:not(:disabled) {
+  transform: scale(1.05, 0.9);
+}
+.mz-schedule-slips-next-btn:disabled {
+  cursor: default;
+  background: rgb(214, 214, 211);
+  color: var(--zk-ink-faint, #b3b3b3);
+  box-shadow: none;
+}
+.mz-schedule-slips-week {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--zk-ink-soft, #8c8c8c);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   対照専用(壊れ方1〜4)。既定側のクラス(.chip/.marker等)はここから一切
+   参照されない――対照が壊すのはあくまで「対照だけに付くクラス」の側。
+   ========================================================================== */
+
+/* 壊れ方1: ずれをバウンスさせる(等速直線運動をやめる=祝うべき出来事に見せる) */
+.mz-schedule-slips-chip.is-bounce {
+  transition: left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mz-schedule-slips-chip.is-glowing {
+  box-shadow: 0 0 0 5px rgba(179, 58, 58, 0.35);
+}
+
+/* 壊れ方2: 元の週に残る薄いゴースト+点線の矢印(=来ていない日が来たように見える) */
+.mz-schedule-slips-ghost-wrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.mz-schedule-slips-ghost {
+  opacity: 0.35;
+}
+.mz-schedule-slips-ghost-arrow {
+  position: absolute;
+  top: 50%;
+  height: 0;
+  border-top: 1px dashed var(--zk-ink-faint, #b3b3b3);
+  transform: translateY(-50%);
+}
+
+/* 壊れ方3: 警告色トースト(主張を文章で言う) */
+.mz-schedule-slips-toast {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #b33a3a;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  animation: mz-schedule-slips-toast-in 0.2s ease-out;
+}
+@keyframes mz-schedule-slips-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 壊れ方4(時間進行でもチップが3pxずつ動く)は専用クラスを持たない――
+   index.tsx側でcDriftPxをそのままleftへ加算しているだけ(=相対運動の
+   曖昧さそのものを再現するための最小の壊し方)。 */
+
+/* ---------- 動きを控えたい人へ ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .mz-schedule-slips-chip,
+  .mz-schedule-slips-chip-hit,
+  .mz-schedule-slips-toast,
+  .mz-schedule-slips-next-btn,
+  .mz-schedule-slips-mode-btn {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
