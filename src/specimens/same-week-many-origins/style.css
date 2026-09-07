@@ -1,0 +1,281 @@
+/* No.142「同じ日に、別々の理由で来る」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字)。対照だけが使う警告色は無し(この標本の壊れ方は形・束ね・
+   配線・文言であって警告色ではない)。外形は340×330px以内(brief-common)。
+
+   .mz-same-week-many-origins-chip には既定側で `transition: left 0.12s linear`
+   だけを持たせる――クリックでの1週ぶんの移動(30px/120ms・等速)がこれで起こる。
+   animationは一切使わない(animation-nameは既定側の全担体でnone)。
+   現在地の縦線(.marker)にも同じtransitionを与え、「次の週へ」の1週ぶんの
+   進行も同じ緩急にそろえる。No.141と文字列一致させるべきはチップの移動の
+   ほう――共通ブリーフの値をそのまま使うことで一致させる(C6)。 */
+
+.mz-same-week-many-origins {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-same-week-many-origins-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-same-week-many-origins-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-same-week-many-origins-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-same-week-many-origins-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-same-week-many-origins-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ----------
+   grid-template-columnsはindex.tsx側でLABEL_COL/RAIL_Wから直接styleに書き込む。
+   目盛り行・返済/給与/家賃の3行・現在地の線は、すべてこの1つのコンテナが
+   共有するgrid-columnを土台にする――行を包む個別の容器・個別のpaddingが
+   存在しないので、x座標のズレは構造上起こりようがない(難所1・C2)。 */
+.mz-same-week-many-origins-rail-wrap {
+  display: grid;
+  grid-template-columns: 34px 270px; /* JS側からstyleで上書きされる既定値 */
+  grid-template-rows: 12px 22px 22px 22px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り: 定規。事実(時間そのもの)なので常に同じ見た目 */
+.mz-same-week-many-origins-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 12px;
+}
+.mz-same-week-many-origins-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-same-week-many-origins-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 台(レール): 「ここは何かを測る場だ」を言う下地。3行とも同じ見た目で常設する */
+.mz-same-week-many-origins-track {
+  grid-column: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-same-week-many-origins-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* チップ本体: 3つの由来とも共通のクラス(brief-common指定の実値そのもの)。
+   クリックによる1週ぶんの移動だけがtransitionで起こる――animationは無い。 */
+.mz-same-week-many-origins-chip {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  margin-left: -5px;
+  background: #3d3d3d;
+  border-radius: 3px;
+  border-style: none;
+  z-index: 1;
+  cursor: pointer;
+  transition: left 0.12s linear;
+}
+/* 過去(現在地の線以前)のチップは動かせない――クリックしても何も起きないので
+   カーソルだけ既定に戻す(色や印は足さない。芯・行の位置関係だけで読ませる)。 */
+.mz-same-week-many-origins-chip[data-future='false'] {
+  cursor: default;
+}
+
+/* 現在地の縦線を乗せる列。トラック列とまったく同じgrid-columnを共有するので
+   x座標の基準が物理的に一致する。目盛り+3行をspanして貫く。 */
+.mz-same-week-many-origins-marker-col {
+  grid-column: 2;
+  grid-row: 1 / span 4;
+  /* rail-wrapのalign-items:centerは他のgrid item(ラベル/トラック)を行内で
+     中央寄せするためのものだが、これは4行をspanして貫く縦線の土台なので、
+     shrink-to-fitではなく行の全高にstretchさせる必要がある */
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* 面ではなく線(2px)。チップ(10px)の中心とは常に半セル分(15px)離れているので
+   重ならない(C4)。「次の週へ」で1週ぶん進む――チップの移動と同じ緩急。 */
+.mz-same-week-many-origins-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  transform: translateX(-50%);
+  transition: left 0.12s linear;
+}
+.mz-same-week-many-origins-marker::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  background: #3d3d3d;
+  border-radius: 2px;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+/* ---------- 週送り + 現在週 ---------- */
+
+.mz-same-week-many-origins-control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mz-same-week-many-origins-next-btn {
+  flex: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.15s,
+    opacity 0.15s;
+}
+.mz-same-week-many-origins-next-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-same-week-many-origins-next-btn:active:not(:disabled) {
+  transform: scale(1.05, 0.9);
+}
+.mz-same-week-many-origins-next-btn:disabled {
+  cursor: default;
+  background: #d6d6d3;
+  color: #b3b3b3;
+  box-shadow: none;
+}
+.mz-same-week-many-origins-week {
+  font-size: 10px;
+  font-weight: 800;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================
+   対照専用(4つの壊れ方を同居させる)。既定側のクラスには一切適用されない。
+   ========================================================== */
+
+/* 対照1: 由来ごとに形と濃さを変える(No.137「同じ形でしか気づかない」を裏返す) */
+.mz-same-week-many-origins-chip-repay {
+  border-radius: 50%; /* ● */
+  opacity: 1;
+}
+.mz-same-week-many-origins-chip-salary {
+  border-radius: 0; /* ■ */
+  opacity: 0.7;
+}
+.mz-same-week-many-origins-chip-rent {
+  border-radius: 0;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%); /* ▲ */
+  opacity: 0.45;
+}
+
+/* 対照2: 束ねチップ(重なった週を1つにまとめ、由来を個別に読めなくする)。
+   サイズだけ大きくして「複数を束ねている」ことを言い、形(border-radius/
+   clip-path)と濃さ(opacity)は対照1のアンカー行(いちばん下の行)自身の値を
+   そのまま使う――上書きすると、企画から指摘された「アンカー行の形と濃さが
+   一度も画面に出ない」問題が別の形で再発するため。 */
+.mz-same-week-many-origins-chip.is-bundle {
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  margin-left: -7px;
+  z-index: 2;
+}
+.mz-same-week-many-origins-badge {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 3px;
+  padding: 1px 4px;
+  border-radius: 999px;
+  background: #8c8c8c;
+  color: #f5f5f3;
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* 対照3: 行ラベルからチップへの引き出し線(配線図) */
+.mz-same-week-many-origins-wire {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 1px;
+  background: #b3b3b3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 対照4: 合計・件数の文言行 */
+.mz-same-week-many-origins-total-row {
+  font-size: 10px;
+  font-weight: 800;
+  color: #8c8c8c;
+}
