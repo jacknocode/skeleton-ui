@@ -2290,6 +2290,97 @@ const CHOREO = {
     await next().click()
     await sleep(1800)
   },
+
+  'occupancy-without-an-owner': async (page) => {
+    const next = () => page.getByRole('button', { name: '次の週へ', exact: true })
+    const arrived = () => page.getByRole('button', { name: 'いま来た', exact: true })
+    const chip = (i) => page.locator('.mz-occupancy-without-an-owner-chip-hit').nth(i)
+
+    /* 撮るべきは2つ。ひとつ、確定の前に窓の3週の空きが在ること——
+       ここが前回（No.143）からの撤回そのものなので、押す前の絵を長めに置く。
+       ふたつ、読み手がずらしたときと、確定で決まったときで、
+       空きの見た目がまったく同じであること（違うのは履歴に点が増えるかだけ）。 */
+    await sleep(1500) // 週3。窓は週6〜8、その3週の空きは3つとも在る
+    await chip(1).click()
+    await sleep(1500) // 週5の予定が週6へ。空きが週5へ戻り、週6から消える。履歴 +1
+    await next().click()
+    await sleep(700)
+    await next().click()
+    await sleep(700)
+    await next().click()
+    await sleep(1100) // 週6。線が窓に入っても、空きは1つも減らない
+    await arrived().click()
+    await sleep(2200) // 確定。週7の空きだけが消え、履歴は増えない
+
+    /* 対照: 空きが由来ごとに色分けされ、窓が確定前から3週を薄い点で押さえ、
+       戻った空きにゴーストが残り、引き出し線とカウンタが数え上げる。 */
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1500)
+    await chip(1).click()
+    await sleep(2000)
+  },
+
+  'order-within-a-week': async (page) => {
+    const next = () => page.getByRole('button', { name: '次の週へ', exact: true })
+
+    /* この標本の主張は履歴に点が増える「順」そのものなので、
+       週6を通過した直後を長めに置く（片方だけが載っている 140ms を挟んで2点になる）。
+       そのあと週8で、同じ絵の中の2点が同時に載るところを撮る。
+       この2つを続けて見せないと、時間差が語彙であることが絵にならない。 */
+    await sleep(1200) // 週1。入る/出るが週3・4・6・8に置いてある
+    for (const wait of [700, 700, 1200, 700]) {
+      await next().click()
+      await sleep(wait)
+    }
+    await next().click()
+    await sleep(2200) // 週6。出る→入るの順に、時間差で履歴に2点。底は一点
+    await next().click()
+    await sleep(800)
+    await next().click()
+    await sleep(2400) // 週8。2点が同時に載り、底は1週ぶんの幅になる
+
+    /* 対照: ①②の番号が付き、週が2列に割れ、先着が大きく濃くなり、
+       決まっていない週にも順序が付き、底は一点のまま。 */
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1200)
+    for (let i = 0; i < 7; i++) {
+      await next().click()
+      await sleep(i === 4 ? 1400 : 600)
+    }
+    await sleep(1600)
+  },
+
+  'runway-ends-before-the-plan': async (page) => {
+    const next = () => page.getByRole('button', { name: '次の週へ', exact: true })
+    const spend = () => page.getByRole('button', { name: '使う', exact: true })
+    const add = () => page.getByRole('button', { name: '足す', exact: true })
+
+    /* 撮るべきは「予定が1pxも動かないまま、成立するかどうかだけが変わる」こと。
+       週7の予定の真下に空きの点が無い状態から、`足す` で点が届くところまでを
+       1本の流れで見せる。点は滑らずに増減するので、増えた瞬間しか動きが無い。 */
+    await sleep(1600) // 初期。原資は週5まで。週7の予定は空きの無い列に載っている
+    await spend().click()
+    await sleep(1200) // 右端が週4へ。予定は動かない
+    await add().click()
+    await sleep(900)
+    await add().click()
+    await sleep(900)
+    await add().click()
+    await sleep(1800) // 週7に点が届く——増えたのは点1個だけ
+    await next().click()
+    await sleep(700)
+    await next().click()
+    await sleep(1400) // 線だけが進む
+
+    /* 対照: 届かない予定が薄くなり、尽きる週に旗が立ち、文言が名乗り、
+       旗が0.4秒かけて滑って動く。 */
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1500)
+    await spend().click()
+    await sleep(1400)
+    await spend().click()
+    await sleep(2000)
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
