@@ -1,0 +1,271 @@
+/* No.145「同じ週の、どちらが先か」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。対照だけが使う警告色: #b33a3a。外形は340×330px以内。
+
+   .mz-order-within-a-week-chip は`入る`・`出る`・`底`・`履歴`の**全ての点**が共有する
+   1個のクラス。border-style/background-color/height/border-radius はここにしか書かない
+   ——left/width/top はindex.tsx側のinline styleでしか変えない。既定側はtransition/
+   animationを一切定義しない(=芯2「履歴は位置の移動ではなく要素が増えることで言う」の実体、
+   C7の保証)。動くのは現在地の縦線(.marker)のleftだけで、しかもtransitionを持たない
+   (=尺ゼロの瞬間移動。中割りを作らない)。 */
+
+.mz-order-within-a-week {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-order-within-a-week-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-order-within-a-week-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-order-within-a-week-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-order-within-a-week-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-order-within-a-week-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ----------
+   grid-template-columnsはindex.tsx側でLABEL_COL/RAIL_Wから直接styleに書き込む。
+   `入る`・`出る`・`底`・`履歴`の4行と現在地の縦線は、すべて同じ列(トラック列)を
+   土台にするので、x座標のズレが構造上起こらない(brief-common則3)。 */
+.mz-order-within-a-week-rail-wrap {
+  display: grid;
+  grid-template-rows: 12px 22px 22px 22px 30px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り: 定規。事実(時間そのもの)なので常に同じ見た目 */
+.mz-order-within-a-week-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 12px;
+}
+.mz-order-within-a-week-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-order-within-a-week-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  align-self: center;
+}
+.mz-order-within-a-week-row-label[data-role='row-label-enter'] {
+  grid-row: 2;
+}
+.mz-order-within-a-week-row-label[data-role='row-label-exit'] {
+  grid-row: 3;
+}
+.mz-order-within-a-week-row-label[data-role='row-label-bottom'] {
+  grid-row: 4;
+}
+.mz-order-within-a-week-row-label[data-role='row-label-history'] {
+  grid-row: 5;
+}
+
+/* 台(レール): 「ここは何かを測る場だ」を言う下地。中身が0個の行でも常設する
+   ——担体は、それが載る場所が描かれていないと読めない(README既知の教訓)。 */
+.mz-order-within-a-week-track {
+  grid-column: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-order-within-a-week-track[data-role='enter-track'] {
+  grid-row: 2;
+}
+.mz-order-within-a-week-track[data-role='exit-track'] {
+  grid-row: 3;
+}
+.mz-order-within-a-week-track[data-role='bottom-track'] {
+  grid-row: 4;
+}
+.mz-order-within-a-week-track[data-role='history-track'] {
+  grid-row: 5;
+  height: 30px;
+}
+.mz-order-within-a-week-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+.mz-order-within-a-week-track[data-role='history-track'] .mz-order-within-a-week-rail {
+  top: auto;
+  bottom: 5px;
+}
+
+/* チップ/点 本体: `入る`・`出る`・`底`・`履歴`の全ての点が共有する1個(brief-common指定の
+   実値そのもの)。left/width/top だけをinline styleで受け取り、それ以外
+   (border-style/background-color/height/border-radius)はここにしか書かない——
+   4つの行の点が同じクラスから来ていること自体がC3(履歴2点のcomputed style文字列一致)・
+   C4(底のcomputed style文字列一致、違うのはwidthだけ)を保証する。transition/animationは
+   一切書かない(既定側は「動かない・伸び縮みしない・移動で現れない」を宣言の不在で保証)。 */
+.mz-order-within-a-week-chip {
+  position: absolute;
+  height: 10px;
+  background: #3d3d3d;
+  border-radius: 3px;
+  border-style: none;
+  z-index: 1;
+}
+/* `入る`・`出る`・`底`は1週につき1点(または1帯)なので上下中央 */
+.mz-order-within-a-week-chip[data-role='enter-chip'],
+.mz-order-within-a-week-chip[data-role='exit-chip'],
+.mz-order-within-a-week-chip[data-role='bottom-carrier'] {
+  top: 50%;
+  margin-top: -5px;
+}
+/* `履歴`の点だけ top をinline style(縦の積み段)で直接指定するので、CSS側の
+   centeringを持たせない(margin-topを0のままにする)。 */
+.mz-order-within-a-week-chip[data-role='history-point'] {
+  top: 0;
+}
+
+/* 現在地の縦線を乗せる列。トラック列とまったく同じgrid-columnを共有するので
+   x座標の基準が物理的に一致する。`入る`〜`履歴`の4行をspanして貫く。 */
+.mz-order-within-a-week-marker-col {
+  grid-column: 2;
+  grid-row: 2 / span 4;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* 面ではなく線(2px)。transitionを持たせない=尺ゼロの瞬間移動(No.139/143の継承)。
+   線が読めるよう、box-shadowで1pxの白いハローを敷く(No.104の再利用。新色ではない)。 */
+.mz-order-within-a-week-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transform: translateX(-50%);
+}
+
+/* ---------- 週送り + 現在週 ---------- */
+
+.mz-order-within-a-week-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.mz-order-within-a-week-next-btn {
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.15s,
+    opacity 0.15s;
+}
+.mz-order-within-a-week-next-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-order-within-a-week-next-btn:active:not(:disabled) {
+  transform: scale(1.05, 0.9);
+}
+.mz-order-within-a-week-next-btn:disabled {
+  cursor: default;
+  background: #d6d6d3;
+  color: #b3b3b3;
+  box-shadow: none;
+}
+.mz-order-within-a-week-week {
+  font-size: 10px;
+  font-weight: 800;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 対照: 5つの壊れ方 ---------- */
+
+/* 壊れ方3: 台本上「先」とされる方を一回り大きく・濃く(既定は完全に同じ大きさ・濃さ) */
+.mz-order-within-a-week-chip.is-contrast {
+  background: #8c8c8c;
+}
+.mz-order-within-a-week-chip.is-contrast.is-contrast-first {
+  width: 13px !important;
+  height: 13px !important;
+  margin-top: -6.5px !important;
+  background: #3d3d3d;
+}
+
+/* 壊れ方1: ①②の番号バッジ。マウント時から静的に付く(=時間を待たず答えを名乗る) */
+.mz-order-within-a-week-badge {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  margin-bottom: 2px;
+  font-size: 8px;
+  font-weight: 800;
+  color: #b33a3a;
+  white-space: nowrap;
+}
+
+/* ---------- 動きを控えたい人へ ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .mz-order-within-a-week-next-btn,
+  .mz-order-within-a-week-mode-btn {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

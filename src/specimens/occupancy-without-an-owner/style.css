@@ -1,0 +1,347 @@
+/* No.144「その空きは、誰のものか」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール /
+   #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。外形は340×330px以内。
+
+   .mz-occupancy-without-an-owner-vacant には既定側で常に同じ1組の宣言しか無い
+   ――修飾クラスは対照専用の is-cat-* ・ is-dim ・ is-ghost だけで、既定側のJSXは
+   これらのクラスを一度も生成しない(=芯1がcomputed styleの文字列一致で保証される)。
+   既定側は transition/animation を .chip[point-chip] 以外のどの担体にも持たせない。 */
+
+.mz-occupancy-without-an-owner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-occupancy-without-an-owner-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-occupancy-without-an-owner-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-occupancy-without-an-owner-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-occupancy-without-an-owner-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-occupancy-without-an-owner-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ----------
+   grid-template-columnsはindex.tsx側でLABEL_COL/RAIL_Wから直接styleに書き込む。
+   `予定`・`窓`・`空き`・`履歴`の4行と現在地の縦線・引き出し線層は、すべて同じ
+   トラック列(grid-column:2)を土台にする(brief-common則3)。 */
+.mz-occupancy-without-an-owner-rail-wrap {
+  display: grid;
+  grid-template-rows: 12px 22px 26px 22px 22px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り: 定規。事実(時間そのもの)なので常に同じ見た目 */
+.mz-occupancy-without-an-owner-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 12px;
+}
+.mz-occupancy-without-an-owner-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-occupancy-without-an-owner-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-occupancy-without-an-owner-row-label[data-role='row-label-point'] {
+  grid-row: 2;
+}
+.mz-occupancy-without-an-owner-row-label[data-role='row-label-window'] {
+  grid-row: 3;
+}
+.mz-occupancy-without-an-owner-row-label[data-role='row-label-vacant'] {
+  grid-row: 4;
+}
+.mz-occupancy-without-an-owner-row-label[data-role='row-label-history'] {
+  grid-row: 5;
+}
+
+/* 台(レール): 「ここは何かを測る場だ」を言う下地。常設する */
+.mz-occupancy-without-an-owner-track {
+  grid-column: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-occupancy-without-an-owner-track[data-role='point-track'] {
+  grid-row: 2;
+}
+.mz-occupancy-without-an-owner-track[data-role='window-track'] {
+  grid-row: 3;
+  height: 26px; /* 上段=確定チップ/下段=帯の2レーン(143の実測で見つかった埋没を避ける) */
+}
+.mz-occupancy-without-an-owner-track[data-role='vacant-track'] {
+  grid-row: 4;
+}
+.mz-occupancy-without-an-owner-track[data-role='history-track'] {
+  grid-row: 5;
+}
+.mz-occupancy-without-an-owner-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* チップ: `予定`・`窓`(確定)・`履歴`が共有する1個(brief-common指定の実値そのもの)。
+   left/widthだけをinline styleで受け取り、それ以外(border-style/background-color/
+   height/border-radius)はここにしか書かない。transitionは持たせない――動けるのは
+   `.point-chip`にヒットボックス側で与えるのではなく、このクラス自身には
+   .chip-hitと同じleftのtransitionだけを足す(下記)。 */
+.mz-occupancy-without-an-owner-chip {
+  position: absolute;
+  top: 50%;
+  height: 10px;
+  margin-top: -5px;
+  background: #3d3d3d;
+  border-radius: 3px;
+  border-style: none;
+  z-index: 1;
+}
+/* `予定`チップにだけ動いた側の中割りを与える(brief-common則4: 等速0.12s) */
+.mz-occupancy-without-an-owner-chip[data-role='point-chip'] {
+  transition: left 0.12s linear;
+}
+/* `窓`行の確定チップは上段(帯より上)に固定。帯と同色・同形のまま埋もれないよう
+   レーンをy方向だけ分ける(x座標はchipXから変えない)。 */
+.mz-occupancy-without-an-owner-chip-window {
+  top: 2px;
+  margin-top: 0;
+}
+
+/* 予定チップの当たり判定を10x10のまま24x24に広げる透明ボタン。見た目は何も足さない。
+   チップ本体と同じleft・同じtransitionを持ち、常に視覚上のチップと重なって動く。 */
+.mz-occupancy-without-an-owner-chip-hit {
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  margin-left: -12px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  z-index: 2;
+  transition: left 0.12s linear;
+}
+.mz-occupancy-without-an-owner-chip-hit:disabled {
+  cursor: default;
+}
+
+/* `窓`行の帯: チップと同じ寸法(高さ・角丸・線種)。left/widthは生成時から一度も
+   変わらない――transitionを持たせない(=芯2の「帯は動かない」を宣言の不在で保証)。 */
+.mz-occupancy-without-an-owner-band {
+  position: absolute;
+  bottom: 2px;
+  height: 10px;
+  background: #3d3d3d;
+  border-radius: 3px;
+  border-style: none;
+  z-index: 1;
+}
+
+/* 空き枠の点: 6x6pxの輪郭だけの丸(brief-common指定)。埋まると担体そのものが
+   存在しなくなることだけが占有を言う(芯1/芯2)。既定側はこの1組の宣言だけを
+   常に使う――修飾クラス(is-cat-* ・ is-dim ・ is-ghost)は対照でしか付かない。 */
+.mz-occupancy-without-an-owner-vacant {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  border: 1px solid #b3b3b3;
+  background: transparent;
+  z-index: 1;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じgrid-columnを共有する。`予定`〜`空き`の
+   3行(grid-row 2..4)をspanして貫く。`履歴`行は貫かない(現在地は台帳の外)。 */
+.mz-occupancy-without-an-owner-marker-col {
+  grid-column: 2;
+  grid-row: 2 / span 3;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* 面ではなく線(2px)+1pxの白いハロー(No.104の再利用。新色ではない)。transitionを
+   持たせない=尺ゼロの瞬間移動(brief-common則5)。 */
+.mz-occupancy-without-an-owner-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transform: translateX(-50%);
+}
+
+/* ---------- 週送り + 確定 + 現在週 ---------- */
+
+.mz-occupancy-without-an-owner-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.mz-occupancy-without-an-owner-next-btn,
+.mz-occupancy-without-an-owner-confirm-btn {
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.15s,
+    opacity 0.15s;
+}
+.mz-occupancy-without-an-owner-confirm-btn {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+.mz-occupancy-without-an-owner-next-btn:hover:not(:disabled),
+.mz-occupancy-without-an-owner-confirm-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-occupancy-without-an-owner-next-btn:active:not(:disabled),
+.mz-occupancy-without-an-owner-confirm-btn:active:not(:disabled) {
+  transform: scale(1.05, 0.9);
+}
+.mz-occupancy-without-an-owner-next-btn:disabled {
+  cursor: default;
+  background: #d6d6d3;
+  color: #b3b3b3;
+  box-shadow: none;
+}
+.mz-occupancy-without-an-owner-confirm-btn:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+.mz-occupancy-without-an-owner-week {
+  font-size: 10px;
+  font-weight: 800;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 対照: 5つの壊れ方(既定はこれらの概念を最初から持たない) ---------- */
+
+/* 壊れ方1: 空きの点を由来(週の領域)で色分けする(=二値を壊す。芯1の逆) */
+.mz-occupancy-without-an-owner-vacant.is-cat-point {
+  border-color: #3d6cb3;
+}
+.mz-occupancy-without-an-owner-vacant.is-cat-window {
+  border-color: #b3823a;
+}
+
+/* 壊れ方2: 窓が確定する前から週6〜8の空きを薄くして「仮に押さえている」を描く
+   (=143の仮の押さえの再現+薄さの導入。芯2の逆) */
+.mz-occupancy-without-an-owner-vacant.is-dim {
+  opacity: 0.4;
+}
+
+/* 壊れ方3: 戻った空きに永続するゴーストの輪郭(破線)を残す(=芯3の逆。No.113に触れる) */
+.mz-occupancy-without-an-owner-vacant.is-ghost {
+  border-style: dashed;
+  border-width: 1.5px;
+}
+
+/* 壊れ方4: 占有している予定/確定チップと、空きの在るべき場所を結ぶ引き出し線
+   (=画面が配線図になる)。既定はこの層自体を持たない。 */
+.mz-occupancy-without-an-owner-leader-layer {
+  grid-column: 2;
+  grid-row: 2 / span 3;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 2;
+}
+.mz-occupancy-without-an-owner-leader {
+  position: absolute;
+  width: 0;
+  border-left: 1px dashed #8c8c8c;
+}
+
+/* 壊れ方5: `空き X/9`のカウンタ(=占有の語彙を数え上げに置き換える) */
+.mz-occupancy-without-an-owner-counter-row {
+  display: flex;
+}
+.mz-occupancy-without-an-owner-counter-text {
+  font-size: 10px;
+  font-weight: 800;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 動きを控えたい人へ ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .mz-occupancy-without-an-owner-chip,
+  .mz-occupancy-without-an-owner-chip-hit,
+  .mz-occupancy-without-an-owner-next-btn,
+  .mz-occupancy-without-an-owner-confirm-btn,
+  .mz-occupancy-without-an-owner-mode-btn {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
