@@ -1,0 +1,330 @@
+/* No.146「予定より先に、続けられなくなる」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。対照だけが使う警告色: #b33a3a。外形は340×330px以内。
+
+   既定側は transition / animation を一切定義しない——`予定`チップは1pxも動かず、
+   `空き`の点は生成時のleftから不変(増減するのは個数だけ)、現在地の縦線(.marker)
+   だけがleftを持つがtransitionは無い(=尺ゼロの瞬間移動)。「動かない/滑らない」を
+   宣言の不在で保証する(芯1・芯4・C1・C2・C7の実体)。 */
+
+.mz-runway-ends-before-the-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-runway-ends-before-the-plan-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-runway-ends-before-the-plan-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-runway-ends-before-the-plan-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-runway-ends-before-the-plan-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-runway-ends-before-the-plan-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ----------
+   grid-template-columnsはindex.tsx側でLABEL_COL/RAIL_Wから直接styleに書き込む。
+   `予定`・`空き`の2行と現在地の縦線・尽きる週の旗(対照)は、すべて同じ列(トラック列)
+   を土台にするので、x座標のズレが構造上起こらない(brief-common則3)。 */
+.mz-runway-ends-before-the-plan-rail-wrap {
+  display: grid;
+  grid-template-rows: 12px 34px 22px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り: 定規。事実(時間そのもの)なので常に同じ見た目 */
+.mz-runway-ends-before-the-plan-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 12px;
+}
+.mz-runway-ends-before-the-plan-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-runway-ends-before-the-plan-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-runway-ends-before-the-plan-row-label[data-role='row-label-plan'] {
+  grid-row: 2;
+}
+.mz-runway-ends-before-the-plan-row-label[data-role='row-label-vacant'] {
+  grid-row: 3;
+}
+
+/* 台(レール): 「ここは何かを測る場だ」を言う下地。常設する */
+.mz-runway-ends-before-the-plan-track {
+  grid-column: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-runway-ends-before-the-plan-track[data-role='plan-track'] {
+  grid-row: 2;
+  /* 対照(壊れ方5)が予定チップを下へ落とす分の余白を持たせる。既定はこの余白を使わず
+     チップは常に上段(top:50%)に居る——高さそのものは既定・対照で共通(分岐しない)。 */
+  height: 34px;
+}
+.mz-runway-ends-before-the-plan-track[data-role='vacant-track'] {
+  grid-row: 3;
+}
+.mz-runway-ends-before-the-plan-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+.mz-runway-ends-before-the-plan-track[data-role='plan-track'] .mz-runway-ends-before-the-plan-rail {
+  top: 15px;
+}
+
+/* チップ本体: 予定チップと履歴の点が共有する1個(brief-common指定の実値)。
+   left以外(border-style/background-color/height/border-radius)はここにしか
+   書かない。transition/animationは一切書かない(=既定側は「動かない」を宣言の
+   不在で保証)。 */
+.mz-runway-ends-before-the-plan-chip {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #3d3d3d;
+  border-radius: 3px;
+  border-style: none;
+  z-index: 1;
+}
+.mz-runway-ends-before-the-plan-chip[data-role='plan-chip'] {
+  top: 15px;
+  margin-top: -5px;
+}
+.mz-runway-ends-before-the-plan-chip[data-role='history-chip'] {
+  top: 0;
+}
+
+/* 空き枠の点: 6x6pxの輪郭だけの丸(brief-common指定)。増えるのは個数だけで、
+   leftは生成時から不変(=既存の点は座標を再計算せず同じ位置に留まり続ける)。 */
+.mz-runway-ends-before-the-plan-vacant {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  border: 1px solid #d6d6d3;
+  background: transparent;
+  z-index: 1;
+}
+
+/* 現在地の縦線を乗せる列。トラック列とまったく同じgrid-columnを共有するので
+   x座標の基準が物理的に一致する。`予定`〜`空き`の2行をspanして貫く。 */
+.mz-runway-ends-before-the-plan-marker-col {
+  grid-column: 2;
+  grid-row: 2 / span 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* 面ではなく線(2px)。transitionを持たせない=尺ゼロの瞬間移動(No.139/143の継承)。
+   線が読めるよう、box-shadowで1pxの白いハローを敷く(No.104の再利用。新色ではない)。 */
+.mz-runway-ends-before-the-plan-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transform: translateX(-50%);
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本(難所を参照) ---------- */
+.mz-runway-ends-before-the-plan-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-runway-ends-before-the-plan-history-track {
+  grid-column: 2;
+  position: relative;
+  width: 270px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-runway-ends-before-the-plan-history-inner {
+  position: relative;
+  height: 10px;
+}
+
+/* ---------- 使う/足す/次の週へ + 現在週 ---------- */
+
+.mz-runway-ends-before-the-plan-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.mz-runway-ends-before-the-plan-btn {
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.15s,
+    opacity 0.15s;
+}
+.mz-runway-ends-before-the-plan-btn-next {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+.mz-runway-ends-before-the-plan-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-runway-ends-before-the-plan-btn:active:not(:disabled) {
+  transform: scale(1.05, 0.9);
+}
+.mz-runway-ends-before-the-plan-btn:disabled {
+  cursor: default;
+  background: #d6d6d3;
+  color: #b3b3b3;
+  box-shadow: none;
+}
+.mz-runway-ends-before-the-plan-btn-next:disabled {
+  background: #eaeae8;
+  color: #b3b3b3;
+}
+.mz-runway-ends-before-the-plan-week {
+  font-size: 10px;
+  font-weight: 800;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+
+/* ---------- 対照: 5つの壊れ方 ---------- */
+
+/* 壊れ方1+5: 届かない予定を薄くし(opacity)、同時に定規から下へ落とす(top)。
+   1要素に2つの壊れ方を同居させる——既定側にはこのクラスがそもそも出現しない。 */
+.mz-runway-ends-before-the-plan-chip.is-contrast-unreached {
+  opacity: 0.4;
+  top: 26px;
+  margin-top: 0;
+}
+
+/* 壊れ方2+4: 尽きる週に赤い縦線+旗。原資が変わるたび0.4sかけて滑って動く
+   (=誰かが動かしたように読める誤用)。既定の.markerとは別クラスで、既定の
+   マーカーにこのtransitionが漏れ出すことはない。 */
+.mz-runway-ends-before-the-plan-flag-col {
+  grid-column: 2;
+  grid-row: 2 / span 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 2;
+}
+.mz-runway-ends-before-the-plan-flag-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #b33a3a;
+  transform: translateX(-50%);
+  transition: left 0.4s ease;
+}
+.mz-runway-ends-before-the-plan-flag-pennant {
+  position: absolute;
+  top: -2px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 5px 0 5px 8px;
+  border-color: transparent transparent transparent #b33a3a;
+  transform: translateX(0);
+  transition: left 0.4s ease;
+}
+
+/* 壊れ方3: 「残りN週」の文言+「資金不足」バッジ+警告色(=主張を文章で言う) */
+.mz-runway-ends-before-the-plan-note-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mz-runway-ends-before-the-plan-note-text {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b33a3a;
+}
+.mz-runway-ends-before-the-plan-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #b33a3a;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+/* ---------- 動きを控えたい人へ ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .mz-runway-ends-before-the-plan-flag-line,
+  .mz-runway-ends-before-the-plan-flag-pennant,
+  .mz-runway-ends-before-the-plan-btn,
+  .mz-runway-ends-before-the-plan-mode-btn {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

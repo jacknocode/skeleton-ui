@@ -4,7 +4,7 @@
    #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。外形は340×330px以内。
 
    .mz-occupancy-without-an-owner-vacant には既定側で常に同じ1組の宣言しか無い
-   ――修飾クラスは対照専用の is-cat-*/is-dim/is-ghost だけで、既定側のJSXは
+   ――修飾クラスは対照専用の is-cat-* ・ is-dim ・ is-ghost だけで、既定側のJSXは
    これらのクラスを一度も生成しない(=芯1がcomputed styleの文字列一致で保証される)。
    既定側は transition/animation を .chip[point-chip] 以外のどの担体にも持たせない。 */
 
@@ -197,7 +197,7 @@
 
 /* 空き枠の点: 6x6pxの輪郭だけの丸(brief-common指定)。埋まると担体そのものが
    存在しなくなることだけが占有を言う(芯1/芯2)。既定側はこの1組の宣言だけを
-   常に使う――修飾クラス(is-cat-*/is-dim/is-ghost)は対照でしか付かない。 */
+   常に使う――修飾クラス(is-cat-* ・ is-dim ・ is-ghost)は対照でしか付かない。 */
 .mz-occupancy-without-an-owner-vacant {
   position: absolute;
   top: 50%;
