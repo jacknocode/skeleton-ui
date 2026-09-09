@@ -1,26 +1,314 @@
+/* No.149「やろうとして、出来なかったこと」
+   モノクロ・自己完結。この回(147-149)の共通パレット厳守:
+   地 #eaeae8 / 濃線 #3d3d3d / 中線 #6e6e6e / 区間・トラックの地 #d3d3d0 / 反転文字 #f5f5f3 / #fff。
+   対照だけが使う警告色: #b33a3a。外形は340px幅・240px高以内。
+
+   既定側は`.mz-tried-and-could-not-trace`(跡)・`.mz-tried-and-could-not-chip`(配置済み予定)・
+   `.mz-tried-and-could-not-vacant-dot`(空きの点)のどれにも animation / transition を
+   一切定義しない——computed styleの既定値どおり `animation-name: none` /
+   `transition-duration: 0s` になることを、宣言の不在で保証する(C3・C5の実体)。
+   `.mz-tried-and-could-not-marker`(現在地)だけが `left` を持つが、これも transition は無い
+   (=尺ゼロの瞬間移動。No.139/143/146の継承)。 */
+
 .mz-tried-and-could-not {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+  background: #eaeae8;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-tried-and-could-not.is-active {
-  animation: mz-tried-and-could-not-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-tried-and-could-not-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-tried-and-could-not-pop {
-  30% {
-    transform: scale(1.2, 0.8);
+.mz-tried-and-could-not-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #8c8c8c;
+  flex: 1 1 auto;
+}
+.mz-tried-and-could-not-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #d3d3d0;
+}
+.mz-tried-and-could-not-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #6e6e6e;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-tried-and-could-not-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ----------
+   grid-column/grid-rowはindex.tsx側でstyleに直接書き込む(行が3種類あり、
+   CSS属性セレクタで振り分けるより明快なため)。全ての行が同じ列(トラック列)を
+   土台にするので、x座標のズレが構造上起こらない(brief-common則)。 */
+.mz-tried-and-could-not-rail-wrap {
+  display: grid;
+  grid-template-rows: 12px 32px 26px 26px;
+  row-gap: 5px;
+  align-items: stretch;
+  position: relative;
+}
+
+/* 週の目盛り: 定規。事実(時間そのもの)なので常に同じ見た目 */
+.mz-tried-and-could-not-ticks {
+  position: relative;
+  height: 12px;
+}
+.mz-tried-and-could-not-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-tried-and-could-not-row-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #6e6e6e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+}
+
+/* 台(レール): 「ここは何かを測る場だ」を言う下地。常設する */
+.mz-tried-and-could-not-track {
+  position: relative;
+  height: 100%;
+}
+.mz-tried-and-could-not-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d3d3d0;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+/* 空き行のレールは、点が積み上がる底として下寄りに置く(「棚」の見た目) */
+.mz-tried-and-could-not-rail-vacant {
+  top: auto;
+  bottom: 3px;
+  transform: none;
+}
+
+/* ---------- `空き`行: 週セルそのもの。押せるボタン ---------- */
+.mz-tried-and-could-not-vacant-btn {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 3px;
+  z-index: 1;
+}
+.mz-tried-and-could-not-vacant-btn:hover {
+  background: rgba(61, 61, 61, 0.05);
+}
+.mz-tried-and-could-not-vacant-stack {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+}
+/* 空きの点: 6x6pxの輪郭だけの丸。由来を問わず常に同じ見た目(C2の実体) */
+.mz-tried-and-could-not-vacant-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid #6e6e6e;
+  background: transparent;
+}
+
+/* ---------- `採用`/`出展`行: 配置済みチップ + 跡(試した週の縦線) ---------- */
+.mz-tried-and-could-not-chip-lane {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+}
+.mz-tried-and-could-not-chip-slot {
+  position: relative;
+  height: 10px;
+}
+.mz-tried-and-could-not-trace-slot {
+  position: relative;
+  height: 9px;
+}
+
+/* チップ本体: 配置済みの予定。left以外に動きを持たせない */
+.mz-tried-and-could-not-chip {
+  position: absolute;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  background: #3d3d3d;
+  border-radius: 3px;
+  z-index: 1;
+}
+
+/* 跡: 試した週の位置に立つ短い縦線。border-colorは通常の中線(#6e6e6e)と同一値——
+   専用の「失敗色」を作らない(C5の実体)。下端にわずかな横足を足して、9週に並んだ
+   定規のどの列を指しているかを目で追いやすくしている(実物を見て追加。色は増やさず
+   同じborder-colorのbox-shadowだけを使う)。animation/transitionは一切書かない。 */
+.mz-tried-and-could-not-trace {
+  position: absolute;
+  top: 0;
+  width: 0;
+  height: 7px;
+  transform: translateX(-50%);
+  border-style: solid;
+  border-width: 0 0 0 2px;
+  border-color: #6e6e6e;
+  box-shadow: -1px 6px 0 0 #6e6e6e;
+}
+
+/* 現在地の縦線を乗せる列。トラック列とまったく同じgrid-columnを共有するので
+   x座標の基準が物理的に一致する。空き〜出展の3行をspanして貫く。 */
+.mz-tried-and-could-not-marker-col {
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+.mz-tried-and-could-not-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transform: translateX(-50%);
+}
+
+/* ---------- チップ選択 + 次の週へ + 現在週 ---------- */
+
+.mz-tried-and-could-not-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.mz-tried-and-could-not-btn {
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #d3d3d0;
+  color: #3d3d3d;
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.15s,
+    color 0.15s,
+    opacity 0.15s;
+}
+.mz-tried-and-could-not-chip-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-tried-and-could-not-btn-next {
+  background: #fff;
+  color: #6e6e6e;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+.mz-tried-and-could-not-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mz-tried-and-could-not-btn:active:not(:disabled) {
+  transform: scale(1.05, 0.9);
+}
+.mz-tried-and-could-not-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.mz-tried-and-could-not-week {
+  font-size: 10px;
+  font-weight: 800;
+  color: #6e6e6e;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+
+/* ---------- 対照: 5つの壊れ方 ---------- */
+
+/* 壊れ方2: 赤く震える。既定の`.mz-tried-and-could-not-chip`とは別クラスの追加分だけで、
+   既定側にこのアニメーションが漏れ出すことはない(既定は`is-contrast-shake`を一度も付けない)。 */
+.mz-tried-and-could-not-chip.is-contrast-shake {
+  border: 1px solid #b33a3a;
+  animation: mz-tried-and-could-not-shake 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mz-tried-and-could-not-shake {
+  20% {
+    transform: translateX(-3px);
+  }
+  40% {
+    transform: translateX(3px);
   }
   60% {
-    transform: scale(0.9, 1.1);
+    transform: translateX(-2px);
+  }
+  80% {
+    transform: translateX(2px);
   }
   100% {
-    transform: none;
+    transform: translateX(0);
   }
+}
+
+/* 壊れ方1+3: 「◯回失敗しました」の文言(回数のカウンタ) */
+.mz-tried-and-could-not-note-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mz-tried-and-could-not-note-text {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b33a3a;
+}
+
+/* 壊れ方3+5: 「この予定は置けません」のトースト。時間で消える */
+.mz-tried-and-could-not-toast {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #b33a3a;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
