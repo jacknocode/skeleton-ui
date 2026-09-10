@@ -1,0 +1,328 @@
+/* No.147「その約束を、まだ知らない」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。対照だけが使う警告色: #b33a3a。外形は340×330px以内。
+
+   既定側は transition / animation を一切定義しない――`予定`チップ・`空き`の点は
+   生成時のleftから不変、現在地の縦線(.marker)だけがleftを持つがtransitionは無い
+   (=尺ゼロの瞬間移動)。「動かない/教えない」を宣言の不在で保証する(C1・C2・C5・C6・C7の実体)。 */
+
+.mz-promise-not-yet-known {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-promise-not-yet-known-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-promise-not-yet-known-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-promise-not-yet-known-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-promise-not-yet-known-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-promise-not-yet-known-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ----------
+   grid-template-columnsはindex.tsx側でLABEL_COL/RAIL_Wから直接styleに書き込む。
+   `予定`・`空き`の2行と現在地の縦線は、すべて同じ列(トラック列)を土台にするので、
+   x座標のズレが構造上起こらない(brief-common則3)。 */
+.mz-promise-not-yet-known-rail-wrap {
+  display: grid;
+  grid-template-rows: 12px 22px 22px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り: 定規。事実(時間そのもの)なので常に同じ見た目 */
+.mz-promise-not-yet-known-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 12px;
+}
+.mz-promise-not-yet-known-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-promise-not-yet-known-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-promise-not-yet-known-row-label[data-role='row-label-plan'] {
+  grid-row: 2;
+}
+.mz-promise-not-yet-known-row-label[data-role='row-label-vacant'] {
+  grid-row: 3;
+}
+
+/* 台(レール): 「ここは何かを測る場だ」を言う下地。常設する */
+.mz-promise-not-yet-known-track {
+  grid-column: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-promise-not-yet-known-track[data-role='plan-track'] {
+  grid-row: 2;
+}
+.mz-promise-not-yet-known-track[data-role='vacant-track'] {
+  grid-row: 3;
+}
+.mz-promise-not-yet-known-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* チップ本体: 予定チップと履歴の点が共有する1個(brief-common指定の実値)。
+   left以外(border-style/background-color/height/border-radius)はここにしか
+   書かない。transition/animationは一切書かない(=既定側は「動かない」を宣言の
+   不在で保証)。 */
+.mz-promise-not-yet-known-chip {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  background: #3d3d3d;
+  border-radius: 3px;
+  border-style: none;
+  z-index: 1;
+}
+.mz-promise-not-yet-known-chip[data-role='dot'] {
+  top: 0;
+  margin-top: 0;
+}
+
+/* 空き枠の点: 6x6pxの輪郭だけの丸(brief-common指定)。増えるのは個数だけで、
+   leftは生成時から不変(=既存の点は座標を再計算せず同じ位置に留まり続ける)。 */
+.mz-promise-not-yet-known-vacant {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  border: 1px solid #b3b3b3;
+  background: transparent;
+  z-index: 1;
+}
+
+/* 現在地の縦線を乗せる列。トラック列とまったく同じgrid-columnを共有するので
+   x座標の基準が物理的に一致する。`予定`〜`空き`の2行をspanして貫く。 */
+.mz-promise-not-yet-known-marker-col {
+  grid-column: 2;
+  grid-row: 2 / span 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* 面ではなく線(2px)。transitionを持たせない=尺ゼロの瞬間移動(No.146の継承)。
+   線が読めるよう、box-shadowで1pxの白いハローを敷く(No.104の再利用。新色ではない)。 */
+.mz-promise-not-yet-known-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transform: translateX(-50%);
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-promise-not-yet-known-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-promise-not-yet-known-history-track {
+  grid-column: 2;
+  position: relative;
+  width: 270px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-promise-not-yet-known-history-inner {
+  position: relative;
+  height: 10px;
+}
+
+/* ---------- ◀ ▶ 置く 足す + 現在週 ---------- */
+
+.mz-promise-not-yet-known-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  position: relative;
+}
+.mz-promise-not-yet-known-btn {
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+  /* transform(translateY/scale)によるhover/active演出は持たせない――
+     getBoundingClientRectがtransformの影響を受けるため、連打(C2)で測定タイミングが
+     ずれると同一操作の前後スナップショットに実体の無い1pxのブレが出る(実測で発覚)。
+     視覚フィードバックはbox-shadow/opacityだけで作る(レイアウトに影響しない)。 */
+  transition:
+    background-color 0.15s,
+    box-shadow 0.15s,
+    opacity 0.15s;
+}
+.mz-promise-not-yet-known-btn-nav {
+  padding: 8px 10px;
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+.mz-promise-not-yet-known-btn:hover:not(:disabled) {
+  box-shadow: 0 4px 13px rgba(0, 0, 0, 0.18);
+}
+.mz-promise-not-yet-known-btn:active:not(:disabled) {
+  opacity: 0.85;
+}
+.mz-promise-not-yet-known-btn:disabled {
+  cursor: default;
+  background: #d6d6d3;
+  color: #b3b3b3;
+  box-shadow: none;
+}
+.mz-promise-not-yet-known-btn-nav:disabled {
+  background: #eaeae8;
+  color: #b3b3b3;
+}
+.mz-promise-not-yet-known-week {
+  font-size: 10px;
+  font-weight: 800;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+
+/* ---------- 対照: 4つの壊れ方 ---------- */
+
+/* 壊れ方(c): 対照へ切り替えた直後、空きの点が左から順に光る(=教えたことが出来事になる)。
+   JSトリガーは持たない――マウントと同時にCSS animationが自走するのでuseEffectを
+   増やさずに済む(既定のコード経路に一切現れない)。 */
+@keyframes mz-promise-not-yet-known-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(61, 61, 61, 0);
+    border-color: #b3b3b3;
+  }
+  40% {
+    box-shadow: 0 0 0 4px rgba(61, 61, 61, 0.28);
+    border-color: #3d3d3d;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(61, 61, 61, 0);
+    border-color: #b3b3b3;
+  }
+}
+.mz-promise-not-yet-known-vacant.is-contrast-glow {
+  animation: mz-promise-not-yet-known-glow 0.5s ease both;
+}
+
+/* 壊れ方(d): 置けない週でボタンを無効化+赤くする(=操作の前に答えを出してしまう) */
+.mz-promise-not-yet-known-btn-place.is-contrast-blocked:disabled {
+  background: #b33a3a;
+  color: #fff;
+  opacity: 0.55;
+}
+
+/* 壊れ方(a): 凡例を常設(=文言で言う) */
+.mz-promise-not-yet-known-legend-row {
+  display: flex;
+  align-items: center;
+}
+.mz-promise-not-yet-known-legend-text {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+
+/* 壊れ方(b): 初回だけの吹き出し(=画面が読み手の既視状態を知っている前提) */
+.mz-promise-not-yet-known-tip {
+  position: relative;
+  align-self: flex-start;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+.mz-promise-not-yet-known-tip::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 20px;
+  width: 8px;
+  height: 8px;
+  background: #3d3d3d;
+  transform: rotate(45deg);
+}
+
+/* ---------- 動きを控えたい人へ ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .mz-promise-not-yet-known-vacant.is-contrast-glow,
+  .mz-promise-not-yet-known-btn,
+  .mz-promise-not-yet-known-mode-btn {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

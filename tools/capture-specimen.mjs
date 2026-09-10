@@ -2381,6 +2381,82 @@ const CHOREO = {
     await spend().click()
     await sleep(2000)
   },
+  /* No.147〜149「はい／いいえで返らない問い」の3種は、**何も起きないこと**が主題に
+     入っている。撮り方の要点は「押した瞬間」ではなく「押したのに絵が動かない時間」を
+     十分に残すこと——ここを詰めると、ただの反応の遅いUIに見える。
+     ボタンは data-role で指す（◀ ▶ はアクセシブル名が取りにくい）。 */
+  'promise-not-yet-known': async (page) => {
+    const click = (role) => page.click(`[data-role="${role}"]`)
+    await sleep(1500) // 初期。空きの点は週1〜5
+    for (let i = 0; i < 6; i++) {
+      await click('next-btn') // 週7へ。縦線は瞬間移動する
+      await sleep(220)
+    }
+    await sleep(900)
+    await click('place-btn')
+    await sleep(1700) // ★ 何も起きない。この静止が中身そのもの
+    await click('place-btn')
+    await sleep(600)
+    await click('place-btn')
+    await sleep(1500) // 連打しても同じ。画面は学習しない
+    await click('add-btn')
+    await sleep(1600) // 週6に点が1個増える。既にある点は動かない
+    await click('prev-btn')
+    await sleep(700)
+    await click('place-btn')
+    await sleep(2000) // ★ さっき効かなかった操作が、今度は効く
+    /* 対照: 凡例・初回の吹き出し・読み込み直後の光る演出・赤い無効化 */
+    await page.getByText('対照', { exact: true }).click()
+    await sleep(2200)
+    for (let i = 0; i < 6; i++) {
+      await click('next-btn')
+      await sleep(180)
+    }
+    await sleep(1800)
+  },
+  'plan-too-large-for-a-slot': async (page) => {
+    const click = (role) => page.click(`[data-role="${role}"]`)
+    const pick = (p) => page.click(`[data-plan="${p}"]`)
+    await sleep(1800) // 初期。粒と空きの点が同じ大きさ・同じ間隔で並んでいる
+    await pick('A')
+    await sleep(500)
+    await click('place-btn')
+    await sleep(1300) // 粒1個 → 週1の空きが1個消える
+    await pick('B')
+    await sleep(500)
+    await click('place-btn')
+    await sleep(1800) // 粒3個 → 週2・4・6へ**飛び飛びで**載る（続くことと重いことの違い）
+    await pick('C')
+    await sleep(600)
+    await click('place-btn')
+    await sleep(1900) // ★ 空きが1個しか無いので何も起きない
+    await click('add-btn')
+    await sleep(1400) // 空きが1個増える。既にある点は動かない
+    await click('place-btn')
+    await sleep(2000) // ★ 今度は置ける
+    await page.getByText('対照', { exact: true }).click()
+    await sleep(1600)
+    await pick('C')
+    await sleep(900)
+    await click('place-btn')
+    await sleep(2200) // 対照は一部だけ置いて「未配置」を残す
+  },
+  'partly-done': async (page) => {
+    const click = (role) => page.click(`[data-role="${role}"]`)
+    await sleep(1800) // 初期。粒4個・原資3個。3つの点はすべて同じ物差し
+    await click('pay-btn')
+    await sleep(2200) // 3個ぶん済む。粒 4→1、チップは1pxも動かない。履歴 +1
+    await click('pay-btn')
+    await sleep(1800) // ★ 原資が0なので何も起きない
+    await click('add-btn')
+    await sleep(1200)
+    await click('pay-btn')
+    await sleep(2200) // 粒が0になり、チップが消える＝「済んだ」を言う唯一の担体
+    await page.getByText('対照', { exact: true }).click()
+    await sleep(1600)
+    await click('pay-btn')
+    await sleep(2400) // 対照は「2/4 完了」を名乗り、足りなければ全部戻す
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
