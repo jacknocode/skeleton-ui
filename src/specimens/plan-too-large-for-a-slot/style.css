@@ -1,3 +1,321 @@
+/* No.148「1週ぶんでは足りない予定」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。対照だけが使う警告色: #b33a3a。外形は340×280px以内。
+
+   芯2の実体: `.mz-plan-too-large-for-a-slot-dot` は空きの点(data-role="vacancy")と
+   粒(data-role="grain")が共有する唯一のクラス。width/height/border-radius/border/
+   backgroundはここにしか書かない——2箇所で値を揃えるのではなく、1箇所だけに
+   書くことで揃える(C1の保証)。既定側は transition / animation を一切定義しない。 */
+
 .mz-plan-too-large-for-a-slot {
-  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-plan-too-large-for-a-slot-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-plan-too-large-for-a-slot-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-plan-too-large-for-a-slot-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-plan-too-large-for-a-slot-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-plan-too-large-for-a-slot-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ----------
+   grid-template-columnsはindex.tsx側でLABEL_COL/RAIL_Wから直接styleに書き込む。
+   `予定`・`空き`の2行はすべて同じ列(トラック列)を土台にするので、x座標のズレが
+   構造上起こらない(brief-common則3)。`手元`・`履歴`行も同じgridColsを使い、
+   ラベル列の縦の並びを揃える。 */
+.mz-plan-too-large-for-a-slot-rail-wrap {
+  display: grid;
+  grid-template-rows: 12px 22px 22px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+.mz-plan-too-large-for-a-slot-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 12px;
+}
+.mz-plan-too-large-for-a-slot-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-plan-too-large-for-a-slot-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-plan-too-large-for-a-slot-row-label[data-role='row-label-plan'] {
+  grid-row: 2;
+}
+.mz-plan-too-large-for-a-slot-row-label[data-role='row-label-vacant'] {
+  grid-row: 3;
+}
+
+.mz-plan-too-large-for-a-slot-track {
+  grid-column: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-plan-too-large-for-a-slot-track[data-role='plan-track'] {
+  grid-row: 2;
+}
+.mz-plan-too-large-for-a-slot-track[data-role='vacant-track'] {
+  grid-row: 3;
+}
+.mz-plan-too-large-for-a-slot-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 置かれた予定の断片: 10x10の角丸正方形。予定チップ・履歴の点が共有する1個 */
+.mz-plan-too-large-for-a-slot-plan-chip {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  background: #3d3d3d;
+  border-radius: 3px;
+  border-style: none;
+  z-index: 1;
+}
+
+/* 空きの点・粒が共有する唯一のクラス(芯2)。輪郭だけの6x6の丸。 */
+.mz-plan-too-large-for-a-slot-dot {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid #b3b3b3;
+  background: transparent;
+  box-sizing: border-box;
+}
+.mz-plan-too-large-for-a-slot-dot[data-role='vacancy'] {
+  position: absolute;
+  top: 50%;
+  margin-top: -3px;
+  z-index: 1;
+}
+
+/* ---------- `手元`行: 選べる予定。週の座標系とは独立(x座標を共有しない) ---------- */
+.mz-plan-too-large-for-a-slot-hand-row {
+  display: grid;
+  align-items: center;
+}
+.mz-plan-too-large-for-a-slot-hand-track {
+  grid-column: 2;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.mz-plan-too-large-for-a-slot-hand-plan {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 9px;
+  border: 1.5px solid #d6d6d3;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  /* transitionを持たせない: 選択状態の変化とは無関係な操作(例: 台本3の`置く`失敗)の
+     直後にbackground-colorの遷移が測定へ混入するのを避ける(C2の0.000要件・実測で発覚)。 */
+}
+.mz-plan-too-large-for-a-slot-hand-plan.is-selected {
+  border-color: #3d3d3d;
+  background: #eaeae8;
+}
+.mz-plan-too-large-for-a-slot-hand-id {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #8c8c8c;
+  line-height: 1;
+}
+.mz-plan-too-large-for-a-slot-hand-plan.is-selected .mz-plan-too-large-for-a-slot-hand-id {
+  color: #3d3d3d;
+}
+.mz-plan-too-large-for-a-slot-grains {
+  display: flex;
+  align-items: center;
+  gap: 24px; /* PITCH(30) - DOT(6)。隣り合う空きの点と同じ間隔になる値(芯2) */
+}
+
+/* ---------- `履歴`行 ---------- */
+.mz-plan-too-large-for-a-slot-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-plan-too-large-for-a-slot-history-track {
+  grid-column: 2;
+  position: relative;
+  width: 270px;
+  height: 14px;
+}
+
+/* ---------- 置く/足す ---------- */
+.mz-plan-too-large-for-a-slot-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+/* C2(台本3: 置けない場面で押した前後の全要素差分0.000)を満たすため、この標本の
+   ボタンはtransform系のhover/active演出を持たない——`置く`ボタンはPlaywrightの
+   click()でマウスがhoverし続けた状態のまま前後を測るので、translateYやscaleの
+   ようなbounding boxを動かす演出があると、状態が何も変わらない操作でも
+   座標に差分が出てしまう(実測して気づいた罠)。色・box-shadowの変化だけに留める。 */
+.mz-plan-too-large-for-a-slot-btn {
+  flex: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-plan-too-large-for-a-slot-btn-add {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+.mz-plan-too-large-for-a-slot-btn:disabled {
+  cursor: default;
+  background: #d6d6d3;
+  color: #b3b3b3;
+  box-shadow: none;
+}
+.mz-plan-too-large-for-a-slot-btn-add:disabled {
+  background: #eaeae8;
+  color: #b3b3b3;
+}
+
+/* ---------- 対照: 3つの壊れ方 ---------- */
+
+/* 壊れ方(a): 触る前に予告する吹き出し。足りない場合だけホバーで出る */
+.mz-plan-too-large-for-a-slot-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #b33a3a;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+}
+.mz-plan-too-large-for-a-slot-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #b33a3a;
+}
+
+/* 壊れ方(b): 一部だけ置いた残りを「未配置」として手元に戻す。破線+薄い赤 */
+.mz-plan-too-large-for-a-slot-hand-plan.is-contrast-partial {
+  border-style: dashed;
+  border-color: #b33a3a;
+  background: #fbecec;
+}
+
+/* 壊れ方(c): 現在の空きの数で足りない予定は、常に赤く点滅する(=触る前に答えを出す) */
+.mz-plan-too-large-for-a-slot-hand-plan.is-contrast-insufficient {
+  border-color: #b33a3a;
+}
+.mz-plan-too-large-for-a-slot-hand-plan.is-contrast-insufficient .mz-plan-too-large-for-a-slot-hand-id {
+  color: #b33a3a;
+  animation: mz-plan-too-large-for-a-slot-blink 0.9s ease-in-out infinite;
+}
+@keyframes mz-plan-too-large-for-a-slot-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.mz-plan-too-large-for-a-slot-partial-note {
+  font-size: 8px;
+  font-weight: 700;
+  color: #b33a3a;
+}
+
+/* ---------- 動きを控えたい人へ ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .mz-plan-too-large-for-a-slot-hand-plan.is-contrast-insufficient .mz-plan-too-large-for-a-slot-hand-id,
+  .mz-plan-too-large-for-a-slot-btn,
+  .mz-plan-too-large-for-a-slot-mode-btn {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
