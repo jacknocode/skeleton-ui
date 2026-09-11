@@ -1,26 +1,256 @@
+/* No.151「1粒に満たない」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。対照だけが使う警告色は使わない(この標本の対照は
+   色ではなく「塗りの量・大きさ・数字」で壊すため、警告色そのものは持たない)。
+   外形は340×330px以内。
+
+   既定側は transition / animation を一切定義しない——`原資`の点は生成時のleftから
+   不変(増減するのは配列の長さと、同じindexのクラスだけ)。「動かない」を
+   宣言の不在で保証する(C3・C4・C8の実体)。 */
+
 .mz-less-than-one-grain {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-less-than-one-grain.is-active {
-  animation: mz-less-than-one-grain-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-less-than-one-grain-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-less-than-one-grain-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
+.mz-less-than-one-grain-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-less-than-one-grain-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-less-than-one-grain-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-less-than-one-grain-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-less-than-one-grain-rail-wrap {
+  display: grid;
+  grid-template-rows: 12px 30px 22px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り: 定規。先行標本の寸法をそのまま引き継ぐ */
+.mz-less-than-one-grain-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 12px;
+}
+.mz-less-than-one-grain-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-less-than-one-grain-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-less-than-one-grain-row-label[data-role='row-label-plan'] {
+  grid-row: 2;
+}
+.mz-less-than-one-grain-row-label[data-role='row-label-funds'] {
+  grid-row: 3;
+}
+
+/* 台(レール): 「ここは何かを測る場だ」を言う下地。常設する(担体が沈む罠を避ける) */
+.mz-less-than-one-grain-track {
+  grid-column: 2;
+  position: relative;
+}
+.mz-less-than-one-grain-track[data-role='plan-track'] {
+  grid-row: 2;
+  height: 30px;
+}
+.mz-less-than-one-grain-track[data-role='funds-track'] {
+  grid-row: 3;
+  height: 22px;
+}
+.mz-less-than-one-grain-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* `予定`チップ: 常に同じ大きさ・同じ位置・同じ見た目のカード。中の`必要な粒`の個数
+   だけが変わる。left/top/width/height/opacity/background-color/border-styleに
+   触れるのはこの1ブロックだけ——`curPlanGrainsLeft`を読む場所はJSX側の
+   「描くか描かないか」の分岐であって、このCSSには存在しない。 */
+.mz-less-than-one-grain-plan {
+  position: absolute;
+  top: 50%;
+  width: 40px;
+  height: 20px;
+  margin-top: -10px;
+  box-sizing: border-box;
+  border: 1px solid #b3b3b3;
+  border-radius: 6px;
+  background: #eaeae8;
+  z-index: 1;
+}
+
+/* 点(必要な粒・原資の粒/場所・履歴の点)が共有する1個の基底クラス。直径・角丸・
+   box-sizingはここにしか書かない——「塗り」も「輪郭」も同じ物差しであることの
+   実体(C5・C6)。 */
+.mz-less-than-one-grain-point {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  z-index: 1;
+}
+/* 輪郭のみ: 必要な粒・原資の「場所」。まだ済んでいない/まだ満ちていない、を言う見た目 */
+.mz-less-than-one-grain-point.is-outline {
+  border-color: #b3b3b3;
+  background: rgba(0, 0, 0, 0);
+}
+/* 塗り: 満ちた粒・履歴の点。既定側はこの1種類しか無い */
+.mz-less-than-one-grain-point.is-filled {
+  border-color: #3d3d3d;
+  background: #3d3d3d;
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-less-than-one-grain-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-less-than-one-grain-history-track {
+  grid-column: 2;
+  position: relative;
+  width: 270px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-less-than-one-grain-history-inner {
+  position: relative;
+  height: 10px;
+}
+.mz-less-than-one-grain-history-inner .mz-less-than-one-grain-point {
+  top: 5px;
+}
+
+/* ---------- 入る/払う/足す ---------- */
+
+.mz-less-than-one-grain-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.mz-less-than-one-grain-btn {
+  flex: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.15s;
+}
+.mz-less-than-one-grain-btn-enter,
+.mz-less-than-one-grain-btn-add {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+.mz-less-than-one-grain-btn:hover {
+  transform: translateY(-1px);
+}
+.mz-less-than-one-grain-btn:active {
+  transform: scale(1.05, 0.9);
+}
+
+/* ---------- 対照: 端数の点を、量として描く ---------- */
+
+/* 壊れ方(a+b): 半分塗り(linear-gradientの割合)+ 大きさを端数に比例して縮める。
+   width/height/marginTop/backgroundImageはindex.tsx側のstyleで端数から直接算出する
+   ——このクラス自体はborder-colorだけを既定のis-outlineから変える。 */
+.mz-less-than-one-grain-point.is-contrast-partial {
+  border-color: #b3b3b3;
+  background-color: transparent;
+}
+
+/* 壊れ方(c): 現在の端数を数字のバッジで出す */
+.mz-less-than-one-grain-note-row {
+  display: flex;
+  align-items: center;
+}
+.mz-less-than-one-grain-badge {
+  flex: none;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #eaeae8;
+  color: #3d3d3d;
+  font-size: 9.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 動きを控えたい人へ ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .mz-less-than-one-grain-btn,
+  .mz-less-than-one-grain-mode-btn {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
