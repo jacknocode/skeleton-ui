@@ -1,0 +1,330 @@
+/* No.150「何も起きないことが、2つある」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。対照だけが使う警告色: #b33a3a。外形は340×330px以内。
+
+   既定側は`.mz-no-response-two-kinds-marker`(現在地の縦線)を除き、transition/
+   animationを一切定義しない——空き・未達・履歴の点はどれも生成時のleftから不変で、
+   増減するのは配列の長さだけ(共通則4・6の実体)。 */
+
+.mz-no-response-two-kinds {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-no-response-two-kinds-row1 {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-no-response-two-kinds-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-no-response-two-kinds-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-no-response-two-kinds-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.mz-no-response-two-kinds-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ----------
+   grid-template-columnsはindex.tsx側でLABEL_COL/RAIL_Wから直接styleに書き込む。
+   `予定`・`空き`・`操作`の3行と現在地の縦線は、すべて同じ列(トラック列)を土台に
+   するので、x座標のズレが構造上起こらない。 */
+.mz-no-response-two-kinds-rail-wrap {
+  display: grid;
+  grid-template-rows: 12px 22px 22px 26px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+.mz-no-response-two-kinds-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 12px;
+}
+.mz-no-response-two-kinds-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-no-response-two-kinds-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-no-response-two-kinds-row-label[data-role='row-label-plan'] {
+  grid-row: 2;
+}
+.mz-no-response-two-kinds-row-label[data-role='row-label-slot'] {
+  grid-row: 3;
+}
+.mz-no-response-two-kinds-row-label[data-role='row-label-pending'] {
+  grid-row: 4;
+}
+
+/* 台(レール): 「ここは何かを測る場だ」を言う下地。常設する(担体が沈む罠を避ける) */
+.mz-no-response-two-kinds-track {
+  grid-column: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-no-response-two-kinds-track[data-role='plan-track'] {
+  grid-row: 2;
+}
+.mz-no-response-two-kinds-track[data-role='slot-track'] {
+  grid-row: 3;
+}
+.mz-no-response-two-kinds-track-pending {
+  grid-row: 4;
+  height: 26px;
+}
+.mz-no-response-two-kinds-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 予定チップ: 10x10の角丸正方形。置けた操作だけが載る */
+.mz-no-response-two-kinds-chip {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  background: #3d3d3d;
+  border-radius: 3px;
+  border-style: none;
+  z-index: 1;
+}
+
+/* 点(空き・未達・履歴)が共有する唯一の基底クラス。直径・角丸・box-sizingは
+   ここにしか書かない——3列が「同じ物差し」であることの実体。 */
+.mz-no-response-two-kinds-dot {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1px solid #b3b3b3;
+  background: transparent;
+  z-index: 1;
+}
+/* 履歴の点だけが塗り(届いた操作)。直接置いても、回線復帰で届いても、まったく同じ
+   このクラスから来る(C6: computed styleの一致はここで構造的に保証される)。 */
+.mz-no-response-two-kinds-dot.is-filled {
+  border-color: #3d3d3d;
+  background: #3d3d3d;
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-no-response-two-kinds-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-no-response-two-kinds-history-track {
+  grid-column: 2;
+  position: relative;
+  width: 270px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-no-response-two-kinds-history-inner {
+  position: relative;
+  height: 10px;
+}
+.mz-no-response-two-kinds-history-inner .mz-no-response-two-kinds-dot {
+  top: 5px;
+  margin-top: -3px;
+}
+
+/* 現在地の縦線を乗せる列。トラック列とまったく同じgrid-columnを共有するので
+   x座標の基準が物理的に一致する。`予定`〜`操作`の3行をspanして貫く。 */
+.mz-no-response-two-kinds-marker-col {
+  grid-column: 2;
+  grid-row: 2 / span 3;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* 面ではなく線(2px)。この標本で中割りを持ってよい唯一の担体——`次の週へ`のときだけ
+   0.28sで滑る。それ以外の要素にtransitionは一切無い。 */
+.mz-no-response-two-kinds-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transform: translateX(-1px);
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- 置く/次の週へ/足す/回線 ---------- */
+
+.mz-no-response-two-kinds-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+/* この標本のボタンはtransform系のhover/active演出を持たない——C1〜C5の座標差分
+   0.000要件を、hoverしたままclick()するPlaywrightの挙動でも満たすため
+   (先例plan-too-large-for-a-slotの罠を踏まえた予防)。色の変化だけに留める。 */
+.mz-no-response-two-kinds-btn {
+  flex: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-no-response-two-kinds-btn-sub {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+
+/* 回線トグル: 舞台の仕掛け(標本の担体ではない)。文言は固定「回線」のみで、
+   状態はスイッチの位置・濃淡だけで示す。警告色は既定側では使わない。 */
+.mz-no-response-two-kinds-line {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1.5px solid #d6d6d3;
+  background: #fff;
+  cursor: pointer;
+  margin-left: auto;
+}
+.mz-no-response-two-kinds-line-label {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #8c8c8c;
+}
+.mz-no-response-two-kinds-line-track {
+  position: relative;
+  width: 22px;
+  height: 12px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-no-response-two-kinds-line-knob {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #b3b3b3;
+}
+.mz-no-response-two-kinds-line.is-on .mz-no-response-two-kinds-line-track {
+  background: #3d3d3d;
+}
+.mz-no-response-two-kinds-line.is-on .mz-no-response-two-kinds-line-knob {
+  left: 11px;
+  background: #f5f5f3;
+}
+
+/* ---------- 対照: 原則の反転(無反応を説明で分ける) ---------- */
+
+.mz-no-response-two-kinds-btn:disabled.is-contrast-blocked {
+  cursor: default;
+  background: #b33a3a;
+  color: #fff;
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+.mz-no-response-two-kinds-note-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mz-no-response-two-kinds-badge {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #b33a3a;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+}
+.mz-no-response-two-kinds-note-text {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b33a3a;
+}
+.mz-no-response-two-kinds-retry-btn {
+  flex: none;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #b33a3a;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* ---------- 動きを控えたい人へ ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .mz-no-response-two-kinds-marker,
+  .mz-no-response-two-kinds-mode-btn {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

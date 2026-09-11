@@ -2457,6 +2457,74 @@ const CHOREO = {
     await click('pay-btn')
     await sleep(2400) // 対照は「2/4 完了」を名乗り、足りなければ全部戻す
   },
+  /* No.150〜152 は「その『無い』は、待てば変わるのか」の3種。
+     どれも**何も起きない時間**が中身なので、起きない間をきちんと撮ることが台本になる。
+     詰めると「ただ反応の遅いUI」に見えて、主題が消える。 */
+  'no-response-two-kinds': async (page) => {
+    const click = (role) => page.click(`[data-role="${role}"]`)
+    await sleep(1600) // 初期。現在地は週3、空きは週3・4・5
+    await click('place-btn')
+    await sleep(1800) // 回線が生きているので即座に置かれる（履歴 +1）
+    await click('next-btn')
+    await sleep(1400)
+    await click('line-toggle')
+    await sleep(1000) // 回線を落とす
+    await click('place-btn')
+    await sleep(2400) // ★ 届いていない: 「操作」の行に粒が1個。空きも履歴も1pxも動かない
+    await click('next-btn')
+    await sleep(1200)
+    await click('next-btn')
+    await sleep(1800) // 現在地だけが離れていく。粒は押した週に留まる＝ズレの長さが待ち時間
+    await click('place-btn')
+    await sleep(2400) // ★ 規則の無反応: 空きの無い週なので、回線が落ちていても粒すら増えない
+    await click('line-toggle')
+    await sleep(2600) // 回線が戻ると、待っていた粒が届いて履歴の点になる
+  },
+  'less-than-one-grain': async (page) => {
+    const click = (role) => page.click(`[data-role="${role}"]`)
+    await sleep(1600) // 初期。原資は0個——点が1つも無い
+    await click('enter-btn')
+    await sleep(2000) // 1粒に満たない量が入ると、輪郭の点が1個（＝次の粒が満ちる場所）
+    await click('enter-btn')
+    await sleep(2600) // ★ ここが主題: もう一度入れても、絵は1pxも変わらない
+    await click('enter-btn')
+    await sleep(2400) // 場所がその場で満ちる。粒は湧かない。右に次の場所が1個
+    await click('add-btn')
+    await sleep(1600)
+    await click('pay-btn')
+    await sleep(2000) // 払っても、端数の場所は動かない
+    await page.getByText('対照', { exact: true }).click()
+    await sleep(1400)
+    await click('enter-btn')
+    await sleep(1400)
+    await click('enter-btn')
+    await sleep(2400) // 対照は端数を塗りの量と大きさで描き、数字でも名乗る
+  },
+  'not-yet-or-no-longer': async (page) => {
+    const click = (role) => page.click(`[data-role="${role}"]`)
+    const tick = (w) => page.click(`[data-role="tick"][data-week="${w}"]`)
+    await sleep(1600) // 初期。現在地は週3、空きは週3・4・5。週1・2 と 週6〜9 はどちらも点が無い
+    await tick(2)
+    await sleep(1000)
+    await click('place-btn')
+    await sleep(2200) // ★ もう過ぎた側: 何も起きない
+    await tick(7)
+    await sleep(1000)
+    await click('place-btn')
+    await sleep(2200) // ★ まだ届かない側: まったく同じく、何も起きない
+    await click('add-btn')
+    await sleep(1200)
+    await click('add-btn')
+    await sleep(1800) // 右端が伸びる。既にある点は動かない
+    await tick(7)
+    await sleep(900)
+    await click('place-btn')
+    await sleep(2000) // さっき何も起きなかった週7に、今度は置ける
+    await click('next-btn')
+    await sleep(1600)
+    await click('next-btn')
+    await sleep(2400) // 左端は時間が削る。動くのは現在地の縦線だけで、戻らない
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
