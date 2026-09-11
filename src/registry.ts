@@ -148,6 +148,9 @@ import RunwayEndsBeforeThePlan from './specimens/runway-ends-before-the-plan'
 import PromiseNotYetKnown from './specimens/promise-not-yet-known'
 import PlanTooLargeForASlot from './specimens/plan-too-large-for-a-slot'
 import PartlyDone from './specimens/partly-done'
+import NoResponseTwoKinds from './specimens/no-response-two-kinds'
+import LessThanOneGrain from './specimens/less-than-one-grain'
+import NotYetOrNoLonger from './specimens/not-yet-or-no-longer'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -1994,6 +1997,51 @@ export const specimens: Specimen[] = [
     ecology:
       'この語彙圏は**結果を二値で受けてきた**。No.116「戻せない操作」は履歴の点が**増えるか増えないか**で、No.122「先に取られていた」は**塗りの点か輪郭だけの点か**で言った。**部分成功は、そのどちらでもない。** No.148 が「置く前に足りない」を無反応の規則で解いたのに対し、こちらは**実行してみたら一部しか済まなかった**——**事後**の側である。素直な答えは「点を半分塗る」だが、それは**塗りの量を新しい担体にする**ことであり、この回の共通則（量は個数で言う。幅でも面積でも塗りの量でもない）に反する。既定の第1の芯は**点を分けないこと**で、**1回の操作は1つの点**。実測で、**3個ぶん払えたときの点と 1個ぶん払えたときの点は、`6×6px`・`rgb(61,61,61)`・`solid` まで完全に一致し、computed style の distinct は 1 通り**——内部の `data-paid` は **3 と 1** で違うのに、**画面には 1px の差も出ない**。**届いた操作は成功している**（一部は本当に済んだのだから）。**どこまで済んだかは、履歴の仕事ではない。** 第2の芯は**済んだかは、残りが言う**である。予定チップは No.148 の粒を持ち、払うと**済んだぶんだけ粒が減って、その場に残る**。実測で、3個ぶん払った前後、予定チップの `left` / `top` / `width` / `height` の差分は**すべて 0.000px**、`opacity` / `background-color` / `border-style` も一致——**変わったのは粒の個数だけ（4 → 1）**。残った粒も動かない（`left` **278px** が払う前と同一。減るのは右端からで、詰め直しをしない）。そして全部済むと**粒が 0 個になり、予定チップが消える**（`[data-role="plan"]` **1 → 0 個**）——**「済んだ」を言っている担体は、チップが無いことだけ**である（No.139「埋まっていることは、担体が無いことだけが言う」の系）。✓ も ✕ も `%` も持たない（禁止語 4 語すべて **0 件**、バッジ **0 個**・バー **0 個**・トースト **0 個**）。第3は**オールオアナッシングにしないこと**で、足りないからといって**本当に済むはずだったぶんまで無かったことにしない**（No.122 の「届いた操作を無かったことにしない」の継承）。原資が 0 のときだけ**何も起きない**——実測でページ内**全 193 要素**の差分 **0.000px**・履歴 **±0**・`払う` は `disabled` にならない。第4は**可逆**で、`足す` で原資を足せば続きが済む（原資 **0 → 2**、粒 **1 → 0**、履歴 **+1**）。**部分成功は宣言ではなく、状態である。** 既定は `animation-name` **0 個**・警告色 **0 箇所**、外形 **340×190px**。対照は履歴の点が **3 通り**（塗り／半分塗り／輪郭）に割れ、**読み手が覚える語彙が1つ増える**。実装が踏んだ罠が1つ: **先例（No.122）のトーストを `position: absolute; bottom: 4px` のまま持ち込むと、行数が可変なこの標本ではバッジ行と完全に重なる。** 先例は固定高のキャンバスだった。**先例の CSS を座標系ごと引き継ぐのは、コンテナの高さが可変かどうかを見てからにする。** そして**配線側（企画）がここでも1つ直した**——初版のキャプションが「残る粒が、済んでいないことを言う」と**この標本の芯そのものを文章で名乗っていた**。同じ回の No.148 と、遡れば No.118 とまったく同じ直しである。**3度目なので、もう偶然ではない: 実装者は、主張を文章で1行書き足したくなる。**',
     Component: PartlyDone,
+  },
+  {
+    id: 'no-response-two-kinds',
+    no: 150,
+    nameJa: '何も起きないことが、2つある',
+    nameEn: 'Two Kinds of Nothing',
+    category: 'フィードバック',
+    trigger: '`回線` を落としたまま `置く` を押す。置けない週でも押す（右上で「無反応を説明で分ける」対照に切り替え）',
+    principles: [
+      '届いていないことは、不在ではない',
+      '画面は、待てとも諦めろとも言わない',
+      '返事の無いものは、束ねない',
+    ],
+    ecology: 'TODO',
+    Component: NoResponseTwoKinds,
+  },
+  {
+    id: 'less-than-one-grain',
+    no: 151,
+    nameJa: '1粒に満たない',
+    nameEn: 'Less Than One Grain',
+    category: 'ゲーム',
+    trigger: '`入る` を押して、1粒に満たない量を溜める（右上で「端数を量として描く」対照に切り替え）',
+    principles: [
+      '1粒に満たない量は、粒にしない。場所として置く',
+      'どれだけ溜まったかは言わない。言うのは、溜まりはじめたことだけ',
+      '粒は湧かない。場所が先に在り、そこが満ちる',
+    ],
+    ecology: 'TODO',
+    Component: LessThanOneGrain,
+  },
+  {
+    id: 'not-yet-or-no-longer',
+    no: 152,
+    nameJa: 'まだなのか、もう過ぎたのか',
+    nameEn: 'Not Yet or No Longer',
+    category: 'ナビゲーション',
+    trigger: '現在地より手前の週と、原資の先の週で `置く` を押す（右上で「不在に理由を書く」対照に切り替え）',
+    principles: [
+      '不在に理由は書けない。書けるのは、不在の場所の側',
+      '同じ列の両端を、時間と原資が別々に動かす',
+      '意味が変わっても、絵は変わらない。変わるのは現在地だけ',
+    ],
+    ecology: 'TODO',
+    Component: NotYetOrNoLonger,
   },
 ]
 
