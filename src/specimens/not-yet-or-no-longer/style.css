@@ -1,26 +1,277 @@
+/* No.152「まだなのか、もう過ぎたのか」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。対照だけが使う警告色は使わない代わりに、斜線・破線・
+   文言だけで壊れ方を作る。外形は340×330px以内。
+
+   この回の共通則4/6・C8のため、現在地の縦線(.marker)以外のどの要素にも
+   transition / animation を一切書かない——ボタンのhover/activeも含めて瞬間切り替え。
+   marker以外は宣言そのものが無いので computed transition-duration は既定の 0s になる。 */
+
 .mz-not-yet-or-no-longer {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-not-yet-or-no-longer.is-active {
-  animation: mz-not-yet-or-no-longer-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-not-yet-or-no-longer-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-not-yet-or-no-longer-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-not-yet-or-no-longer-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-not-yet-or-no-longer-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-not-yet-or-no-longer-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-not-yet-or-no-longer-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-not-yet-or-no-longer-rail-wrap {
+  display: grid;
+  grid-template-rows: 18px 22px 22px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り兼・選択の当たり判定(芯3)。ボタンのブラウザ既定見た目をリセットする。 */
+.mz-not-yet-or-no-longer-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 18px;
+  z-index: 2;
+}
+.mz-not-yet-or-no-longer-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  padding: 1px 5px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+/* 選択の印: 空きの点(.vacant/[data-role="slot"])とは別の担体(枠線+文字色のピル)。
+   selectedWeekだけを見て決まり、空きの有無を一切参照しない
+   ——在る週・無い週で見た目が完全に同じになる(仕様の要求そのもの)。
+   背景色だけだと収録用ステージ地色(#eaeae8)と同化して見えなくなるため、枠線で
+   独立して視認できるようにした(実測のスクリーンショットで気づいた罠)。 */
+.mz-not-yet-or-no-longer-tick.is-selected {
+  border-color: #3d3d3d;
+  background: #fff;
+  color: #3d3d3d;
+}
+
+.mz-not-yet-or-no-longer-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-not-yet-or-no-longer-row-label[data-role='row-label-plan'] {
+  grid-row: 2;
+}
+.mz-not-yet-or-no-longer-row-label[data-role='row-label-vacant'] {
+  grid-row: 3;
+}
+
+/* 台(レール): 「ここは何かを測る場だ」を言う下地。常設する。 */
+.mz-not-yet-or-no-longer-track {
+  grid-column: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-not-yet-or-no-longer-track[data-role='plan-track'] {
+  grid-row: 2;
+}
+.mz-not-yet-or-no-longer-track[data-role='vacant-track'] {
+  grid-row: 3;
+}
+.mz-not-yet-or-no-longer-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* チップ本体: 予定チップと履歴の点が共有する1個。leftとtop以外はここにしか書かない。 */
+.mz-not-yet-or-no-longer-chip {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  background: #3d3d3d;
+  border-radius: 3px;
+  border-style: none;
+  z-index: 1;
+}
+
+/* 空き枠の点(data-role="slot"): 6x6pxの輪郭だけの丸(brief-common指定)。
+   このクラス以外に空きの点の見た目を決める場所はどこにも無い(C2)。 */
+.mz-not-yet-or-no-longer-vacant {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  border: 1px solid rgb(179, 179, 179);
+  background: rgba(0, 0, 0, 0);
+  z-index: 1;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じgrid-columnを共有するのでx座標が一致する。 */
+.mz-not-yet-or-no-longer-marker-col {
+  grid-column: 2;
+  grid-row: 2 / span 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* この標本で唯一transitionを持つ要素。左端が時間で削れる様子だけを中割りで見せる。 */
+.mz-not-yet-or-no-longer-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 対照専用: 過ぎた/まだ届かない週の背景セル。既定にはこのクラスも要素も存在しない。 */
+.mz-not-yet-or-no-longer-cell-col {
+  grid-column: 2;
+  grid-row: 2 / span 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 0;
+}
+.mz-not-yet-or-no-longer-cell {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  box-sizing: border-box;
+}
+.mz-not-yet-or-no-longer-cell.is-contrast-passed {
+  background-image: repeating-linear-gradient(
+    45deg,
+    #d6d6d3,
+    #d6d6d3 2px,
+    transparent 2px,
+    transparent 7px
+  );
+}
+.mz-not-yet-or-no-longer-cell.is-contrast-notyet {
+  margin: 3px 2px;
+  border: 1.5px dashed #d6d6d3;
+  border-radius: 3px;
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-not-yet-or-no-longer-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-not-yet-or-no-longer-history-track {
+  grid-column: 2;
+  position: relative;
+  width: 270px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-not-yet-or-no-longer-history-inner {
+  position: relative;
+  height: 10px;
+}
+
+/* ---------- 置く/次の週へ/足す + 現在週 ---------- */
+
+.mz-not-yet-or-no-longer-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.mz-not-yet-or-no-longer-btn {
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-not-yet-or-no-longer-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+.mz-not-yet-or-no-longer-btn:disabled {
+  cursor: default;
+  background: #d6d6d3;
+  color: #b3b3b3;
+  box-shadow: none;
+}
+.mz-not-yet-or-no-longer-btn-ghost:disabled {
+  background: #eaeae8;
+  color: #b3b3b3;
+}
+/* ---------- 対照: 壊れ方3(文言の出し分け) ---------- */
+.mz-not-yet-or-no-longer-note-row {
+  display: flex;
+  align-items: center;
+}
+.mz-not-yet-or-no-longer-note-text {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
 }
