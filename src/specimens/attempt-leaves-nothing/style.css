@@ -209,11 +209,14 @@
   height: 10px;
 }
 /* 対照専用: 連続失敗を束ねた回数バッジ。数字を使うのは対照の壊れ方そのもの
-   (画面が規則を知っている側)であり、既定のコードにはこのクラスも要素も存在しない。 */
+   (画面が規則を知っている側)であり、既定のコードにはこのクラスも要素も存在しない。
+   点の真上に置くとhistory-trackのoverflow-y:hiddenで見切れる(実測で気づいた罠)ため、
+   点と同じ縦位置のまま右隣に置く。 */
 .mz-attempt-leaves-nothing-count-badge {
   position: absolute;
-  left: 3px;
-  top: -9px;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 7.5px;
   font-weight: 700;
   color: #8c8c8c;
