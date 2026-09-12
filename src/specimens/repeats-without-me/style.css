@@ -1,26 +1,244 @@
+/* No.155「もう押していないのに、続いている」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。警告色は既定でも対照でも使わない。
+
+   共通則3・C8のため、現在地の縦線(.marker)以外のどの要素にも
+   transition / animation を一切書かない——ボタンのhover/activeも含めて瞬間切り替え。
+   marker以外は宣言そのものが無いので computed transition-duration は既定の 0s になる。 */
+
 .mz-repeats-without-me {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-repeats-without-me.is-active {
-  animation: mz-repeats-without-me-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-repeats-without-me-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-repeats-without-me-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-repeats-without-me-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-repeats-without-me-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-repeats-without-me-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-repeats-without-me-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-repeats-without-me-rail-wrap {
+  display: grid;
+  grid-template-rows: 18px 22px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り。この標本ではクリック操作を持たない、ただの数字。 */
+.mz-repeats-without-me-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 18px;
+  z-index: 2;
+}
+.mz-repeats-without-me-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-repeats-without-me-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* rail-wrap内(定規ラベル)だけrow2を指定する。history-row側は
+   grid-row未指定のまま(=暗黙のrow1)にして、履歴の点(history-track、同じく
+   row未指定)と同じ行に揃える——共通クラスに書くとhistory-row側まで
+   row2に押し出されてラベルと担体の行がズレる(配線側の目視で発見された不具合)。 */
+.mz-repeats-without-me-row-label[data-role='row-label-rail'] {
+  grid-row: 2;
+}
+
+/* 台(レール): 「ここは何かを数えている場だ」を言う下地。常設する。 */
+.mz-repeats-without-me-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-repeats-without-me-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 粒・履歴の点が共有する1個の見た目(brief-common則1: 6x6の塗り)。
+   leftとtop以外はここにしか書かない——定規の粒と履歴の点は
+   「載っている台帳」だけが違う(C7)。 */
+.mz-repeats-without-me-dot {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  background: #3d3d3d;
+  border-radius: 50%;
+  border-style: none;
+  z-index: 1;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じgrid-columnを共有するのでx座標が一致する。 */
+.mz-repeats-without-me-marker-col {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* この標本で唯一transitionを持つ要素(共通則3の唯一の例外)。 */
+.mz-repeats-without-me-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 対照専用: 予告する次の1週だけの破線セル。既定にはこのクラスも要素も存在しない。 */
+.mz-repeats-without-me-cell-col {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 0;
+}
+.mz-repeats-without-me-cell {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  box-sizing: border-box;
+}
+.mz-repeats-without-me-cell.is-contrast-preview {
+  margin: 3px 2px;
+  border: 1.5px dashed #d6d6d3;
+  border-radius: 3px;
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-repeats-without-me-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-repeats-without-me-history-track {
+  grid-column: 2;
+  position: relative;
+  width: 270px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-repeats-without-me-history-inner {
+  position: relative;
+  height: 10px;
+}
+
+/* ---------- 始める/止める/次の週へ ---------- */
+
+.mz-repeats-without-me-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.mz-repeats-without-me-btn {
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-repeats-without-me-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+.mz-repeats-without-me-btn:disabled {
+  cursor: default;
+  background: #d6d6d3;
+  color: #b3b3b3;
+  box-shadow: none;
+}
+.mz-repeats-without-me-btn-ghost:disabled {
+  background: #eaeae8;
+  color: #b3b3b3;
+}
+
+/* ---------- 対照: 壊れ方3(バッジ+次回文言) ---------- */
+.mz-repeats-without-me-note-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mz-repeats-without-me-badge {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 9px;
+  font-weight: 800;
+}
+.mz-repeats-without-me-note-text {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
 }

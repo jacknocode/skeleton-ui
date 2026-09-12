@@ -1,26 +1,263 @@
+/* No.153「やってみたことが、残らない」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。対照だけが壊れ方を示すが、警告色は使わない。
+   外形は340×330px以内。
+
+   この回の共通則3/6・C8のため、現在地の縦線(.marker)以外のどの要素にも
+   transition / animation を一切書かない——ボタンのhover/activeも含めて瞬間切り替え。
+   marker以外は宣言そのものが無いので computed transition-duration は既定の 0s になる。 */
+
 .mz-attempt-leaves-nothing {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-attempt-leaves-nothing.is-active {
-  animation: mz-attempt-leaves-nothing-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-attempt-leaves-nothing-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-attempt-leaves-nothing-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-attempt-leaves-nothing-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-attempt-leaves-nothing-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-attempt-leaves-nothing-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-attempt-leaves-nothing-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-attempt-leaves-nothing-rail-wrap {
+  display: grid;
+  grid-template-rows: 18px 20px 20px 20px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り兼・対象週選択の当たり判定。ボタンのブラウザ既定見た目をリセットする。 */
+.mz-attempt-leaves-nothing-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 18px;
+  z-index: 2;
+}
+.mz-attempt-leaves-nothing-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  padding: 1px 5px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+/* 選択の印: 空き・粒とは別の担体(枠線+文字色のピル)。現在地の縦線とも別物
+   ——選ぶ週(次に置く場所)と、今どこに居るか(marker)は別の主張なので担体を分ける。 */
+.mz-attempt-leaves-nothing-tick.is-selected {
+  border-color: #3d3d3d;
+  background: #fff;
+  color: #3d3d3d;
+}
+
+.mz-attempt-leaves-nothing-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mz-attempt-leaves-nothing-row-label[data-role='row-label-plan'] {
+  grid-row: 2;
+}
+.mz-attempt-leaves-nothing-row-label[data-role='row-label-slot'] {
+  grid-row: 3;
+}
+.mz-attempt-leaves-nothing-row-label[data-role='row-label-grain'] {
+  grid-row: 4;
+}
+
+/* 台(レール): 「ここは何かを測る場だ」を言う下地。3行とも常設する(共通則10)。 */
+.mz-attempt-leaves-nothing-track {
+  grid-column: 2;
+  position: relative;
+  height: 20px;
+}
+.mz-attempt-leaves-nothing-track[data-role='plan-track'] {
+  grid-row: 2;
+}
+.mz-attempt-leaves-nothing-track[data-role='slot-track'] {
+  grid-row: 3;
+}
+.mz-attempt-leaves-nothing-track[data-role='grain-track'] {
+  grid-row: 4;
+}
+.mz-attempt-leaves-nothing-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* チップ本体: 予定チップが使う唯一の見た目。leftとtop以外はここにしか書かない。 */
+.mz-attempt-leaves-nothing-chip {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  background: #3d3d3d;
+  border-radius: 3px;
+  border-style: none;
+  z-index: 1;
+}
+
+/* 点本体: 空き・操作の粒・履歴が共有する唯一のクラス(6x6の輪郭)。
+   .is-filledを付けると塗りの粒(履歴・対照の成功試行)になる。
+   このクラス以外に空き/粒の見た目を決める場所はどこにも無い(C3)。 */
+.mz-attempt-leaves-nothing-dot {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  border: 1px solid rgb(179, 179, 179);
+  background: rgba(0, 0, 0, 0);
+  z-index: 1;
+}
+.mz-attempt-leaves-nothing-dot.is-filled {
+  border-style: none;
+  background: #3d3d3d;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じgrid-columnを共有するのでx座標が一致する。 */
+.mz-attempt-leaves-nothing-marker-col {
+  grid-column: 2;
+  grid-row: 2 / span 3;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* この標本で唯一transitionを持つ要素。左端が現在地とともに動く様子だけを中割りで見せる。 */
+.mz-attempt-leaves-nothing-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-attempt-leaves-nothing-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-attempt-leaves-nothing-history-track {
+  grid-column: 2;
+  position: relative;
+  width: 270px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-attempt-leaves-nothing-history-inner {
+  position: relative;
+  height: 10px;
+}
+/* 対照専用: 連続失敗を束ねた回数バッジ。数字を使うのは対照の壊れ方そのもの
+   (画面が規則を知っている側)であり、既定のコードにはこのクラスも要素も存在しない。 */
+.mz-attempt-leaves-nothing-count-badge {
+  position: absolute;
+  left: 3px;
+  top: -9px;
+  font-size: 7.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+}
+
+/* ---------- 置く/次の週へ/足す ---------- */
+
+.mz-attempt-leaves-nothing-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.mz-attempt-leaves-nothing-btn {
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-attempt-leaves-nothing-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+.mz-attempt-leaves-nothing-btn:disabled {
+  cursor: default;
+  background: #d6d6d3;
+  color: #b3b3b3;
+  box-shadow: none;
+}
+
+/* ---------- 対照: 画面が規則を知っている側の文言 ---------- */
+.mz-attempt-leaves-nothing-note-row {
+  display: flex;
+  align-items: center;
+}
+.mz-attempt-leaves-nothing-note-text {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
 }
