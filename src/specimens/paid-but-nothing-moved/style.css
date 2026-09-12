@@ -1,26 +1,213 @@
+/* No.154「払ったのに、減らない」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。警告色は使わない。外形は340×330px以内。
+
+   この標本には現在地の縦線(marker)が無い。共通則3・C8により、ボタン・
+   モード切替を含む**全要素**でtransition/animationを一切定義しない
+   (No.151のボタンが持っていた`transform`のtransitionも、この回の共通則では
+   継承しない対象)。「動かない」は宣言の不在で保証する。 */
+
 .mz-paid-but-nothing-moved {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+  background: #eaeae8;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-paid-but-nothing-moved.is-active {
-  animation: mz-paid-but-nothing-moved-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-paid-but-nothing-moved-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-paid-but-nothing-moved-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-paid-but-nothing-moved-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-paid-but-nothing-moved-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+  border: 1px solid #d6d6d3;
+}
+.mz-paid-but-nothing-moved-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-paid-but-nothing-moved-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- `原資`行 ---------- */
+
+.mz-paid-but-nothing-moved-funds-row {
+  display: grid;
+  align-items: center;
+}
+.mz-paid-but-nothing-moved-history-row {
+  display: grid;
+  align-items: center;
+}
+
+.mz-paid-but-nothing-moved-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mz-paid-but-nothing-moved-track {
+  grid-column: 2;
+  position: relative;
+  height: 22px;
+}
+
+/* 台(レール): 「ここは何かを測る場だ」を言う下地。常設する(担体が地色に沈む罠を避ける) */
+.mz-paid-but-nothing-moved-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 点(原資の粒/場所・履歴の点)が共有する1個の基底クラス。直径・角丸・box-sizing・
+   border-widthはここにしか書かない——「塗り」も「輪郭」も同じ物差しであることの
+   実体(C3)。No.151の同クラスと寸法を完全一致させている。 */
+.mz-paid-but-nothing-moved-point {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  z-index: 1;
+}
+/* 輪郭のみ: 1粒に満たない量が在る場所。まだ渡っていない、を言う見た目 */
+.mz-paid-but-nothing-moved-point.is-outline {
+  border-color: #b3b3b3;
+  background: rgba(0, 0, 0, 0);
+}
+/* 塗り: 満ちた粒・履歴の点。既定側はこの1種類しか無い */
+.mz-paid-but-nothing-moved-point.is-filled {
+  border-color: #3d3d3d;
+  background: #3d3d3d;
+}
+
+/* ---------- `履歴`行: 読み手の操作だけを積む、独立した時系列の1本 ---------- */
+.mz-paid-but-nothing-moved-history-track {
+  grid-column: 2;
+  position: relative;
+  width: 260px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-paid-but-nothing-moved-history-inner {
+  position: relative;
+  height: 10px;
+}
+.mz-paid-but-nothing-moved-history-inner .mz-paid-but-nothing-moved-point {
+  top: 5px;
+}
+
+/* ---------- 払う/入る ---------- */
+
+.mz-paid-but-nothing-moved-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.mz-paid-but-nothing-moved-btn {
+  flex: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-paid-but-nothing-moved-btn-enter {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+/* hover/activeは瞬間切り替え(共通則3・transitionは一切書かない)。色はパレット厳守
+   (#3d3d3d/#8c8c8c/#b3b3b3/#d6d6d3/#eaeae8/#f5f5f3/#fff の7色のみ)なので、
+   濃淡の中間色を新しく作らずパレット内の値だけでフィードバックする。 */
+.mz-paid-but-nothing-moved-btn:hover {
+  background: #8c8c8c;
+}
+.mz-paid-but-nothing-moved-btn-enter:hover {
+  background: #f5f5f3;
+}
+.mz-paid-but-nothing-moved-btn:active {
+  background: #3d3d3d;
+}
+.mz-paid-but-nothing-moved-btn-enter:active {
+  background: #eaeae8;
+}
+
+/* ---------- 対照: 端数を、量として描く ---------- */
+
+/* 壊れ方(a+b): 場所の点を半分塗り(linear-gradientの割合)+ 大きさを端数に比例して
+   縮める。width/height/marginTop/backgroundImageはindex.tsx側のstyleで端数から
+   直接算出する——このクラス自体はborder-colorだけを既定のis-outlineから変える。 */
+.mz-paid-but-nothing-moved-point.is-contrast-partial {
+  border-color: #b3b3b3;
+  background-color: transparent;
+}
+
+/* 壊れ方(c): 払うたびに-0.4バッジと合計の数字を出す */
+.mz-paid-but-nothing-moved-note-row {
+  display: flex;
+  align-items: center;
+}
+.mz-paid-but-nothing-moved-badge {
+  flex: none;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #d6d6d3;
+  color: #3d3d3d;
+  font-size: 9.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 壊れ方(d): 払えないとき「原資が足りません」の文言(画面が規則を知っている) */
+.mz-paid-but-nothing-moved-toast {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 9.5px;
+  font-weight: 700;
 }
