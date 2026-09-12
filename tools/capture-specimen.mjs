@@ -2525,6 +2525,72 @@ const CHOREO = {
     await click('next-btn')
     await sleep(2400) // 左端は時間が削る。動くのは現在地の縦線だけで、戻らない
   },
+  /* No.153〜155 は「押した回数と、起きた回数は合わない」の3種。
+     押した回数と起きた回数のズレが中身なので、**押した瞬間を1回ずつ離して撮る**のが台本。
+     連打を速く撮ると「連打したこと」自体が見えず、跡が足りないことも伝わらない。 */
+  'attempt-leaves-nothing': async (page) => {
+    const click = (role) => page.click(`[data-role="${role}"]`)
+    const tick = (w) => page.click(`[data-role="tick"][data-week="${w}"]`)
+    await sleep(1600) // 初期。現在地は週3、空きは週3・4・5
+    await click('place-btn')
+    await sleep(1500) // 空きがあるので置かれる（粒は残らず、履歴の点になる）
+    await click('place-btn')
+    await sleep(1300)
+    await click('place-btn')
+    await sleep(2200) // ★ 2回目・3回目は何も起きない。履歴は1個のまま
+    await tick(7)
+    await sleep(1000)
+    await click('place-btn')
+    await sleep(2200) // ★ 原資の外の週7。粒が立って、そこに留まる
+    await click('next-btn')
+    await sleep(1300)
+    await click('next-btn')
+    await sleep(2000) // 現在地だけが近づく。粒は押した週に留まったまま
+    await click('add-btn')
+    await sleep(1400)
+    await click('add-btn')
+    await sleep(2600) // 原資が届くと、留まっていた粒がそこで列に入る＝保留だった
+  },
+  'paid-but-nothing-moved': async (page) => {
+    const click = (role) => page.click(`[data-role="${role}"]`)
+    await sleep(1600) // 初期。原資は3粒（塗り3個）
+    await click('pay-btn')
+    await sleep(2000) // 1粒に満たない額を払う。右端が塗りから輪郭に変わるだけ
+    await click('pay-btn')
+    await sleep(2800) // ★ ここが主題: 絵は1pxも変わらない。増えたのは履歴の点だけ
+    await click('pay-btn')
+    await sleep(2200) // 1粒ぶん払い切ると、点が1個減る
+    await click('enter-btn')
+    await sleep(2200) // 入れると同じ絵に戻る＝場所は向きを持たない
+    await click('pay-btn')
+    await sleep(1200)
+    await click('pay-btn')
+    await sleep(1200)
+    await click('pay-btn')
+    await sleep(2000) // 払い続ける。絵はときどき変わらない
+    await click('pay-btn')
+    await sleep(2600) // ★ 足りなくなると本当に何も起きない。差は履歴の点だけ
+  },
+  'repeats-without-me': async (page) => {
+    const click = (role) => page.click(`[data-role="${role}"]`)
+    await sleep(1600) // 初期。粒も履歴も0個
+    await click('start-btn')
+    await sleep(2000) // 読み手が押した1回。履歴に点1個、今週の粒が1個
+    await click('next-btn')
+    await sleep(1500)
+    await click('next-btn')
+    await sleep(1500)
+    await click('next-btn')
+    await sleep(1500)
+    await click('next-btn')
+    await sleep(2600) // ★ 押していないのに粒が増える。履歴は1個のまま
+    await click('stop-btn')
+    await sleep(2400) // 止めたことは読み手の操作なので履歴に載る。粒は1つも消えない
+    await click('next-btn')
+    await sleep(1600)
+    await click('next-btn')
+    await sleep(2600) // ★ 同じ週送りで、もう粒は増えない。動くのは縦線だけ
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
