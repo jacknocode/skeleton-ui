@@ -177,6 +177,8 @@
 }
 .mz-repeats-without-me-history-track {
   grid-column: 2;
+  display: flex;
+  align-items: center;
   position: relative;
   width: 270px;
   height: 14px;
