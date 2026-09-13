@@ -2591,6 +2591,79 @@ const CHOREO = {
     await click('next-btn')
     await sleep(2600) // ★ 同じ週送りで、もう粒は増えない。動くのは縦線だけ
   },
+  /* No.156〜158 は「代行が週の終わりに起きる」1つの舞台を共有する。
+     3種とも主題は"空いている週"なので、撮り方は「空いたまま通り過ぎる時間」を
+     詰めずに見せることが要になる——早送りすると、空白がただの間に見えてしまう。 */
+  'this-week-not-arrived': async (page) => {
+    const click = (role) => page.click(`[data-role="${role}"]`)
+    await sleep(1600) // 初期。現在地は週2、粒も履歴も0個
+    await click('next-btn')
+    await sleep(1500)
+    await click('next-btn')
+    await sleep(2400) // まだ始めていない。週2・3は空のまま通り過ぎる
+    await click('start-btn')
+    await sleep(2600) // ★ 押したのに定規は何も変わらない。増えるのは履歴の点だけ
+    await click('next-btn')
+    await sleep(2000) // 出て行く週4に粒が置かれる（今週ではなく、過ぎる週）
+    await click('next-btn')
+    await sleep(1600)
+    await click('next-btn')
+    await sleep(2600) // ★ 現在地の週はいつも空。続きを言うのは縦線のすぐ左の粒
+    await click('next-btn')
+    await sleep(2400)
+  },
+  'proxy-attempt-failed': async (page) => {
+    const click = (role) => page.click(`[data-role="${role}"]`)
+    await sleep(1500) // 初期。原資0粒
+    await click('add-btn')
+    await sleep(900)
+    await click('add-btn')
+    await sleep(900)
+    await click('add-btn')
+    await sleep(1400) // 原資3粒
+    await click('start-btn')
+    await sleep(1600)
+    await click('next-btn')
+    await sleep(1400)
+    await click('next-btn')
+    await sleep(1400)
+    await click('next-btn')
+    await sleep(2200) // 3週ぶん払い終えて原資が尽きる
+    await click('next-btn')
+    await sleep(2600) // ★ 落ちた週。塗りではなく輪郭が置かれる（跡は残る）
+    await click('next-btn')
+    await sleep(2400) // ★ 2週目も輪郭。止めたのではないことは、輪郭が在ることが言う
+    await click('add-btn')
+    await sleep(900)
+    await click('add-btn')
+    await sleep(1600) // 原資が戻る
+    await click('next-btn')
+    await sleep(2800) // ★ 塗りが再開する＝失敗は停止ではなかった、と事後に分かる
+  },
+  'stop-takes-effect-next': async (page) => {
+    const click = (role) => page.click(`[data-role="${role}"]`)
+    await sleep(1500) // 初期
+    await click('start-btn')
+    await sleep(1600)
+    await click('next-btn')
+    await sleep(1400)
+    await click('next-btn')
+    await sleep(1400)
+    await click('next-btn')
+    await sleep(2000) // 週2・3・4に粒。続いている
+    await click('stop-btn')
+    await sleep(2600) // ★ 現在地の週に輪郭が立つ。履歴はまだ増えない（効いていない）
+    await click('stop-btn')
+    await sleep(1000)
+    await click('stop-btn')
+    await sleep(2200) // ★ 二度押しても何も起きない
+    await click('next-btn')
+    await sleep(2800) // ★ 最後の1回は起きる。輪郭が塗りに替わり、履歴が増える
+    await click('next-btn')
+    await sleep(1500)
+    await click('next-btn')
+    await sleep(2400) // もう増えない。動くのは縦線だけ
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
