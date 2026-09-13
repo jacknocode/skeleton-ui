@@ -1,0 +1,259 @@
+/* No.157「代わりにやったことが、できなかった」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。既定の警告色は0箇所。外形は340×330px以内。
+
+   共通則3・C7のため、現在地の縦線(.marker)以外のどの要素にも既定モードでは
+   transition/animationを一切書かない——ボタンのhover/activeも瞬間切り替え。
+   対照(壊れ方2)の点滅だけは例外として animation を持つ(既定側のクラスには
+   一切現れない、対照専用クラス .mz-proxy-attempt-failed-flash にのみ書く)。 */
+
+.mz-proxy-attempt-failed {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+  background: #eaeae8;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-proxy-attempt-failed-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-proxy-attempt-failed-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-proxy-attempt-failed-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+  border: 1px solid #d6d6d3;
+}
+.mz-proxy-attempt-failed-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-proxy-attempt-failed-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-proxy-attempt-failed-rail-wrap {
+  display: grid;
+  grid-template-rows: 18px 22px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り。common則: 画面に出してよい唯一の数字。クリック操作は無い。 */
+.mz-proxy-attempt-failed-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 18px;
+  z-index: 2;
+}
+.mz-proxy-attempt-failed-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-proxy-attempt-failed-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* rail-wrap内(定規ラベル)だけrow2を指定する。funds-row/history-row側は
+   grid-row未指定のまま(暗黙のrow1)にして、それぞれの担体行と揃える
+   (No.155の実装ノートが記録した「共通クラスに書くと行がズレる」不具合を回避)。 */
+.mz-proxy-attempt-failed-row-label[data-role='row-label-rail'] {
+  grid-row: 2;
+}
+
+/* 台(レール): 「ここは何かを数えている場だ」を言う下地。常設する。 */
+.mz-proxy-attempt-failed-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-proxy-attempt-failed-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 粒(定規の塗り/輪郭・原資の点・履歴の点)が共有する1個の基底クラス。
+   left/topとkind別のbackground-color・border-*以外はここにしか書かない
+   ——塗りと輪郭が「同じ物差し」であることの実体(C2)。 */
+.mz-proxy-attempt-failed-grain {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  z-index: 1;
+}
+/* 塗り: 起きたこと。原資の点・履歴の点もこの見た目を共有する。 */
+.mz-proxy-attempt-failed-grain.is-filled {
+  background: #3d3d3d;
+  border-color: #3d3d3d;
+}
+/* 輪郭: 試みて、もう列に入らない(定規行にのみ現れる)。 */
+.mz-proxy-attempt-failed-grain.is-outline {
+  background: transparent;
+  border-color: #b3b3b3;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じgrid-columnを共有するのでx座標が一致する。 */
+.mz-proxy-attempt-failed-marker-col {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* この標本で唯一transitionを持つ要素(共通則3の唯一の例外)。 */
+.mz-proxy-attempt-failed-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- `原資`行 ---------- */
+.mz-proxy-attempt-failed-funds-row {
+  display: grid;
+  align-items: center;
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-proxy-attempt-failed-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-proxy-attempt-failed-history-track {
+  grid-column: 2;
+  position: relative;
+  width: 270px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-proxy-attempt-failed-history-inner {
+  position: relative;
+  height: 10px;
+}
+.mz-proxy-attempt-failed-history-inner .mz-proxy-attempt-failed-grain {
+  top: 5px;
+}
+
+/* ---------- 始める/足す/次の週へ ---------- */
+
+.mz-proxy-attempt-failed-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.mz-proxy-attempt-failed-btn {
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-proxy-attempt-failed-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+/* hover/activeは瞬間切り替え(既定モードにtransitionを一切書かない)。
+   パレット厳守(7色のみ)なので中間色は新しく作らない。 */
+.mz-proxy-attempt-failed-btn:hover {
+  background: #8c8c8c;
+}
+.mz-proxy-attempt-failed-btn-ghost:hover {
+  background: #f5f5f3;
+}
+.mz-proxy-attempt-failed-btn:active {
+  background: #3d3d3d;
+}
+.mz-proxy-attempt-failed-btn-ghost:active {
+  background: #eaeae8;
+}
+
+/* ---------- 対照: 壊れ方2(点滅+トースト)。既定のコードにはこの概念が無い ----------
+   この対照にかぎり警告色(パレット外の赤)を使用してよい(brief-157が名指しで許可)。 */
+.mz-proxy-attempt-failed-flash {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 4px;
+  background: rgba(196, 60, 48, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(196, 60, 48, 0.55);
+  z-index: 0;
+  animation: mz-proxy-attempt-failed-blink 0.3s steps(1, end) 6;
+}
+@keyframes mz-proxy-attempt-failed-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
+.mz-proxy-attempt-failed-toast {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #c43c30;
+  color: #f5f5f3;
+  font-size: 9.5px;
+  font-weight: 700;
+}
