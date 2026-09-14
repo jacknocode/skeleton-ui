@@ -1,26 +1,269 @@
+/* No.160「同じ指示のまま、出ていく量が変わった」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。警告色(#b33a3a)は対照のトーストにのみ使用する。
+
+   共通則3・7のため、現在地の縦線(.marker)以外のどの要素にも
+   transition / animation を一切書かない——ボタンのhover/activeも含めて瞬間切り替え。
+   marker以外は宣言そのものが無いので computed transition-duration は既定の 0s になる。 */
+
 .mz-terms-changed-under-standing {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-terms-changed-under-standing.is-active {
-  animation: mz-terms-changed-under-standing-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-terms-changed-under-standing-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-terms-changed-under-standing-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-terms-changed-under-standing-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-terms-changed-under-standing-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-terms-changed-under-standing-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-terms-changed-under-standing-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-terms-changed-under-standing-rail-wrap {
+  display: grid;
+  grid-template-rows: 18px 22px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り。この標本ではクリック操作を持たない、ただの数字。 */
+.mz-terms-changed-under-standing-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 18px;
+  z-index: 2;
+}
+.mz-terms-changed-under-standing-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-terms-changed-under-standing-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* rail-wrap内(定規ラベル)だけrow2を指定する。funds-row/history-row側は
+   grid-row未指定のまま(=暗黙のrow1)にして、ラベルと担体の行を揃える
+   (No.155以来の踏襲パターン)。 */
+.mz-terms-changed-under-standing-row-label[data-role='row-label-rail'] {
+  grid-row: 2;
+}
+
+/* 台(レール): 「ここは何かを数えている場だ」を言う下地。常設する。 */
+.mz-terms-changed-under-standing-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-terms-changed-under-standing-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 粒(塗り・輪郭)・履歴の点が共有する1個の見た目(brief-common則1: 6x6)。
+   left/top以外はここにしか書かない——既定側で違うのは.is-outlineの背景・枠
+   だけ(C2)。.is-bigは対照専用(壊れ方1)。 */
+.mz-terms-changed-under-standing-dot {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  background: #3d3d3d;
+  border-radius: 50%;
+  border-style: none;
+  box-sizing: border-box;
+  z-index: 1;
+}
+/* 輪郭の粒 = 原資が尽きて起きなかった(No.157と同じ実値)。
+   width/height/border-radiusはis-filledと完全に同一——違うのはbackground-colorと
+   border-*だけ(C2・C5)。 */
+.mz-terms-changed-under-standing-dot.is-outline {
+  background: transparent;
+  border: 1px solid #b3b3b3;
+}
+/* 対照専用(壊れ方1): 規則変更後の粒を大きくする。既定のコードにはこのクラスへ
+   至る経路が無い。 */
+.mz-terms-changed-under-standing-dot.is-big {
+  width: 11px;
+  height: 11px;
+  margin-top: -5.5px;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じgrid-columnを共有するのでx座標が一致する。 */
+.mz-terms-changed-under-standing-marker-col {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* この標本で唯一transitionを持つ要素(共通則3の唯一の例外)。 */
+.mz-terms-changed-under-standing-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- `原資`行: 量は場所(帯の右端)で言う。刻みは帯の下に落とす ---------- */
+.mz-terms-changed-under-standing-funds-row {
+  display: grid;
+  align-items: center;
+}
+.mz-terms-changed-under-standing-fund-track {
+  grid-column: 2;
+  position: relative;
+  width: 220px; /* BAND_W。企画の推奨値 */
+  height: 22px;
+}
+.mz-terms-changed-under-standing-fund-rail {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 220px;
+  height: 8px;
+  background: #d6d6d3;
+  border-radius: 4px;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+/* 帯の塗り。widthだけが残量に応じて変わる。height/background-colorは
+   残量に関わらず常に同一(C3)。 */
+.mz-terms-changed-under-standing-fund-fill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 8px;
+  background: #8c8c8c;
+  border-radius: 4px 0 0 4px;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+/* 刻み: 帯の内側(塗りの上)ではなく帯の下に落とす。帯の残量がどんな値でも
+   常にページの地(#eaeae8)の上に立つので、刻みが帯の地色に溶けることがない
+   (企画が未決だった3案のうち「レールの下に小さな縦線を落とす」を採用)。
+   新しい担体ではなく帯の中の区切りなので、粒や点と同じクラスは使わない。 */
+.mz-terms-changed-under-standing-notch {
+  position: absolute;
+  top: calc(50% + 4px);
+  width: 2px;
+  height: 7px;
+  margin-left: -1px; /* 中心をnotchの値に合わせる(1pxだと部分ピクセルでぼやけて薄く見えるため2pxにした) */
+  background: #3d3d3d;
+  z-index: 2;
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-terms-changed-under-standing-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-terms-changed-under-standing-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 270px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-terms-changed-under-standing-history-inner {
+  position: relative;
+  height: 10px;
+}
+
+/* ---------- 足す/始める/次の週へ ---------- */
+
+.mz-terms-changed-under-standing-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.mz-terms-changed-under-standing-btn {
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-terms-changed-under-standing-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+
+/* ---------- 対照: 壊れ方2(規則が変わった週だけ出るトースト) ---------- */
+.mz-terms-changed-under-standing-note-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mz-terms-changed-under-standing-note-text {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b33a3a;
 }

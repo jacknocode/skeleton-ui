@@ -2664,6 +2664,135 @@ const CHOREO = {
     await click('next-btn')
     await sleep(2400) // もう増えない。動くのは縦線だけ
   },
+
+  'terms-changed-under-standing': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**粒は毎週1個・同じ大きさのまま**であること（規則が変わっても
+       定規の絵は何も変わらない）。ふたつ、**帯の下の刻みの間隔だけが変わる**こと——前半4本は
+       詰まり、後半3本は開く。みっつ、原資が尽きた週に**輪郭**が出て、そこで初めて読み手が
+       帯を見に行くこと（原因の担体が、結果の担体より後に読まれる）。
+       対照では規則の変更がトーストで1回だけ語られ、粒が大きくなり、そして跡が消える。 */
+    const add = page.getByRole('button', { name: '足す', exact: true })
+    const start = page.getByRole('button', { name: '始める', exact: true })
+    const next = page.getByRole('button', { name: '次の週へ', exact: true })
+    await sleep(900)
+    await add.click()
+    await sleep(700)
+    await start.click()
+    await sleep(800)
+    for (let i = 0; i < 4; i++) {
+      await next.click()
+      await sleep(760) // 週1〜4: 刻みの間隔は一定
+    }
+    await sleep(700)
+    for (let i = 0; i < 3; i++) {
+      await next.click()
+      await sleep(820) // 週5〜7: 読み手は何も変えていないのに、間隔が開く
+    }
+    await sleep(900)
+    await next.click()
+    await sleep(2000) // 原資が尽きる。輪郭が出て、ここで帯を見に行くことになる
+    // 対照: トーストで1回だけ知らせ、以後の粒を大きくする
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(800)
+    await add.click()
+    await sleep(500)
+    await start.click()
+    await sleep(600)
+    for (let i = 0; i < 4; i++) {
+      await next.click()
+      await sleep(620)
+    }
+    await next.click()
+    await sleep(1900) // トーストが出る。粒が大きくなる（＝量を粒で言ってしまう）
+    for (let i = 0; i < 2; i++) {
+      await next.click()
+      await sleep(700)
+    }
+    await sleep(2200) // トーストが消えると、規則が変わったことは画面のどこにも残らない
+  },
+
+  'pending-becomes-missed': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**効いた週と取り残された週で、押すボタンも絵も同じ**であること
+       （`置く` で現在地に輪郭が立ち、`次の週へ` で塗りになるか、取り残されるか）。
+       ふたつ、**取り残しの瞬間に動くのは縦線だけ**であること。みっつ、取り残された輪郭が
+       **代行の失敗の輪郭とまったく同じ絵**になること。対照では消えてトーストが出て、
+       やがて「押していない週」と同じ絵に戻ること。 */
+    const add = page.getByRole('button', { name: '足す', exact: true })
+    const place = page.getByRole('button', { name: '置く', exact: true })
+    const next = page.getByRole('button', { name: '次の週へ', exact: true })
+    await sleep(900)
+    await add.click()
+    await sleep(700)
+    await place.click()
+    await sleep(900) // 現在地に輪郭（受け付けた、まだ効いていない）
+    await next.click()
+    await sleep(1100) // 原資が足りるので塗りになる。履歴 +1
+    await place.click()
+    await sleep(1000) // ここまでの絵は、さっきとまったく同じ
+    await next.click()
+    await sleep(1600) // 原資が無い。輪郭は取り残される。動いたのは縦線だけ
+    await next.click()
+    await sleep(900) // 代行が落ちた週の輪郭が並ぶ（同じ絵）
+    await next.click()
+    await sleep(1100)
+    await add.click()
+    await sleep(900) // 原資が戻っても、過ぎた週は埋まらない
+    await place.click()
+    await sleep(600)
+    await next.click()
+    await sleep(1300) // 新しい週には立つ（失敗は停止ではない）
+    // 対照: 間に合わなかった保留を消して、赤く知らせる
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(800)
+    await add.click()
+    await sleep(500)
+    await place.click()
+    await sleep(600)
+    await next.click()
+    await sleep(800)
+    await place.click()
+    await sleep(700)
+    await next.click()
+    await sleep(2600) // トーストが消えると、押していない週と同じ絵になる
+  },
+
+  'late-arrival-in-the-past': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**返事が届いた瞬間、既存の粒は1pxも動かない**こと
+       （増えるのは週3の塗り1個だけ。縦線も履歴も動かない）。ふたつ、**輪郭が消えず、
+       その中に塗りが入る**こと——「起きていた」と「そう読めていなかった」が同居する絵。
+       みっつ、対照では**輪郭が消えて塗りに差し替わり、光って、トーストが出て、やがて消える**
+       こと。先に週を進めて、通常の塗り・輪郭・同心の3つを同じ画面に並べてから届かせる。 */
+    const start = page.getByRole('button', { name: '始める', exact: true })
+    const next = page.getByRole('button', { name: '次の週へ', exact: true })
+    const reply = page.getByRole('button', { name: '返事が届く', exact: true })
+    await sleep(900)
+    await start.click()
+    await sleep(700)
+    for (let i = 0; i < 5; i++) {
+      await next.click()
+      await sleep(620)
+    }
+    await sleep(900) // 週3の輪郭（この時点では「起きなかった」と同じ絵）
+    await reply.click()
+    await sleep(1700) // 同心。既存の粒は動かない
+    for (let i = 0; i < 2; i++) {
+      await next.click()
+      await sleep(620)
+    }
+    await sleep(1100) // 跡は時間では消えない
+    // 対照: 光らせて差し替え、トーストを出し、やがて何も残らない
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(800)
+    await start.click()
+    await sleep(600)
+    for (let i = 0; i < 5; i++) {
+      await next.click()
+      await sleep(560)
+    }
+    await sleep(700)
+    await reply.click()
+    await sleep(2600) // トーストが消える。差し替わった週は最初から確定していた週と同じ絵
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
