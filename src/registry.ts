@@ -157,6 +157,9 @@ import RepeatsWithoutMe from './specimens/repeats-without-me'
 import ThisWeekNotArrived from './specimens/this-week-not-arrived'
 import ProxyAttemptFailed from './specimens/proxy-attempt-failed'
 import StopTakesEffectNext from './specimens/stop-takes-effect-next'
+import PendingBecomesMissed from './specimens/pending-becomes-missed'
+import TermsChangedUnderStanding from './specimens/terms-changed-under-standing'
+import LateArrivalInThePast from './specimens/late-arrival-in-the-past'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -2153,6 +2156,39 @@ export const specimens: Specimen[] = [
     ecology:
       '企画の側でこの回の3つめとして起こした標本。実プロジェクト（週の終わりに走る固定費）からの逆算である。No.155 は「続きが無いことは、**担体が増えないこと**だけが言う」と決めたが、代行が週の終わりに起きるなら、**`止める` を押した週ぶんはもう走っている**——止めた直後に粒が1つ増える。155 の規則だけで読むと、これは「止まっていない」になり、読み手はもう一度押す（No.154 の二度払いと同型で、**見えないので効いていないと思ってもう一度やる**）。逃げ道は全部塞がっている: 最後の1回は**実際に起きる**ので粒を置かない手は No.154 の失敗（起きているのに画面に無い）と同型になり、未来側に担体は置けず（No.114）、「次の週から止まります」は画面が規則を名乗ることであり同時に予告でもある（No.147 / No.150）。既定の答えは、**`止める` も「留まる操作」として扱うこと**だった。第1の芯は、押した瞬間に**現在地の週へ輪郭の粒が 1 個**立つこと。押下の前後で要素総数は **+1**、それ以外の要素の差分は **0.000px（0 件）**、**履歴は 1 → 1（±0）**である。第2の芯は、その輪郭が**現在地に在る**こと——縦線 **120.000px** に対し輪郭の中心 **135.000px** で、`120 ≤ 135 < 150`（縦線が左端に立っている週の中）。No.153 が決めた左右の規則で、**現在地の輪郭は「待てば入る」＝受け付けたが、まだ効いていない**と読める。**同じ輪郭が、左右で別の意味を持つ**（No.157 の輪郭は必ず縦線より左に生まれ、「もう列に入らない」を言う）。第3の芯は**嘘をつかないこと**で、次の `次の週へ` でその週に**塗りの粒 1 個・輪郭 0 個**が置かれ、縦線は **+30.000px** 進む——**最後の1回は起きた**。輪郭と塗りは同じ場所にある: `left` 差 **0.000px**・`top` 差 **0.000px**、`width` / `height` **6px**・`border-radius` **50%** が一致し、違うのは `background-color`（`rgba(0,0,0,0)` / `rgb(61,61,61)`）と `border`（`1px solid rgb(179,179,179)` / `none`）だけ。第4に、**そのとき履歴が 1 → 2 になる**。これがこの標本が図鑑に残す決定で、**履歴は「押した時点」ではなく「効いた時点」の台帳である**（No.153 の「留まる粒は列に入った時点で履歴に載る」に揃えた。No.155 で `止める` が即 +1 だったのは、あの規則では**即座に効いていた**からであって、台帳の性格が違うわけではない）。**代償は実測に出ている**——押してから効くまでのあいだ、**読み手の操作は履歴に 1 点も現れない**。そのあいだ「受け付けた」を言っているのは**現在地の輪郭の粒だけ**である。止めたあとは増えない: 続く `次の週へ` ×3 で粒 **4 → 4（+0）**・要素総数の差 **0**・非マーカー差分 **0 件**、動いたのは縦線だけ（毎回 **30.000px**）。二度押しても何も起きない（`止める` の2回目・3回目の前後で**全要素の差分 0.000px**・要素数の差 **0**・履歴 **±0**）。共通則の点検は、禁止語 **0 件（18語）**・数字 **0 個**（目盛りを除く）・警告色 **0 箇所**・`disabled` **0 回**・未来側の担体 **0 個**・`animation-name` が縦線以外すべて **`none`**・`transition-duration` が縦線以外すべて **`0s`**。再開も効く（`始める` → `次の週へ` で週9 に塗りの粒、履歴 2 → 3）。外形は既定 **340 × 161px**、対照 **340 × 182px**（文言が出た状態）。**企画の誤りが1件出た。** 対照の壊れ方として並べた「1. 即座に止まる（最後の1回を置かない）」と「2. 最後の1回を薄い粒で置く」は、**同じ支払いの行き先について正反対のこと**を言っており両立しない。実装は 1 を採り（難所1を正面から壊すのはこちらだと判断）、3（文言＋`disabled`）と組み合わせて「**即座に止めたのに『次の引き落としで停止します』と出し、押し直せないようにする**」という複合の壊れ方にしている。**共通則どうしの衝突も1つ見つかった**——台本の最後の一手（週9 で再開して粒を置く）は、No.155 式の `disabled={curWeek >= WEEK_MAX}` を流用すると押せなくなる。実装は `disabled` を既定で一切使わず、**境界を「黙って何も起きない」内部ガード**で処理した（`止める` の二度目・三度目と同じ流儀に揃えた）。実装が報告した計測側の罠も2つある: **縦線の transition（0.28s）の途中で `getBoundingClientRect()` を読むとアニメーション中の値を拾う**（C3 の差が 15px ではなく 39px と出た）ので `marker.style.left` で読み直したこと、そして **`querySelectorAll(\'*\')` をインデックスで前後比較すると、新しい要素が手前に挿入されたときに後続が全部ずれて偽陽性になる**（ボタンが 63px 動いたように見えた）ので `role` / `kind` でキー化して比べ直したこと。**どちらも標本ではなく計測スクリプトの不具合で、「動かないこと」を測る条件はこの種の偽陽性に弱い。**',
     Component: StopTakesEffectNext,
+  },
+  {
+    id: 'pending-becomes-missed',
+    no: 159,
+    nameJa: '待っているうちに、逃したことになる',
+    nameEn: 'Pending Becomes Missed',
+    category: 'フィードバック',
+    trigger: 'TODO',
+    principles: ['TODO'],
+    ecology: 'TODO',
+    Component: PendingBecomesMissed,
+  },
+  {
+    id: 'terms-changed-under-standing',
+    no: 160,
+    nameJa: '同じ指示のまま、出ていく量が変わった',
+    nameEn: 'Terms Changed Under a Standing Order',
+    category: 'ゲーム',
+    trigger: 'TODO',
+    principles: ['TODO'],
+    ecology: 'TODO',
+    Component: TermsChangedUnderStanding,
+  },
+  {
+    id: 'late-arrival-in-the-past',
+    no: 161,
+    nameJa: 'あとから、起きていたと分かる',
+    nameEn: 'Late Arrival in the Past',
+    category: 'フィードバック',
+    trigger: 'TODO',
+    principles: ['TODO'],
+    ecology: 'TODO',
+    Component: LateArrivalInThePast,
   },
 ]
 
