@@ -1,26 +1,281 @@
+/* No.162「同じ輪郭が、三つのことを言っている」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。返事待ちの区間は新しいトークンを増やさず、#3d3d3dの
+   半透明(rgba)だけで表す(警告色#b33a3aはこの標本では使わない=既定にも対照にも
+   壊れ方としての「知らせる」演出が無いため)。
+
+   共通則3・C7のため、現在地の縦線(.marker)以外のどの要素にも
+   transition / animation を一切書かない——ボタンのhover/activeも含めて瞬間切り替え。
+   区間(.wait-span)も線種の書き換え(対照)も、遷移を挟まず瞬間に切り替わる。 */
+
 .mz-outline-means-three-things {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-outline-means-three-things.is-active {
-  animation: mz-outline-means-three-things-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-outline-means-three-things-row1 {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-outline-means-three-things-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-outline-means-three-things-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-outline-means-three-things-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-outline-means-three-things-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-outline-means-three-things-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-outline-means-three-things-rail-wrap {
+  display: grid;
+  grid-template-rows: 18px 22px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り。この標本ではクリック操作を持たない、ただの数字。 */
+.mz-outline-means-three-things-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 18px;
+  z-index: 2;
+}
+.mz-outline-means-three-things-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-outline-means-three-things-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* rail-wrap内(定規ラベル)だけrow2を指定する。funds-row/history-row側はgrid-row未指定
+   のまま(=暗黙のrow1)にして、各行のラベルと担体を同じ行に揃える。 */
+.mz-outline-means-three-things-row-label[data-role='row-label-rail'] {
+  grid-row: 2;
+}
+
+/* 台(レール): 「ここは何かを数えている場だ」を言う下地。常設する。 */
+.mz-outline-means-three-things-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-outline-means-three-things-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 塗りの粒(定規の塗り・原資の点・履歴の点、共通の見た目。brief-common則1: 6x6)。
+   leftとtop以外はここにしか書かない。 */
+.mz-outline-means-three-things-dot {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  background: #3d3d3d;
+  border-radius: 50%;
+  border-style: none;
+  box-sizing: border-box;
+  z-index: 2;
+}
+
+/* 既定の輪郭(唯一の見た目。C1: 3義すべてでborder-style/width/color/width/height/
+   border-radiusが完全一致)。No.161から継承した寸法(12px・枠1px)——同心にした
+   塗り(6px)を隠さないための、この語彙圏だけの決め。 */
+.mz-outline-means-three-things-dot-outline {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  background: transparent;
+  border: 1px solid #b3b3b3;
+  border-radius: 50%;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じgrid-columnを共有するのでx座標が一致する。 */
+.mz-outline-means-three-things-marker-col {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* この標本で唯一transitionを持つ要素(共通則3の唯一の例外)。 */
+.mz-outline-means-three-things-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- `原資`行: 定規の下、履歴の上 ---------- */
+.mz-outline-means-three-things-funds-row {
+  display: grid;
+  align-items: center;
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-outline-means-three-things-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-outline-means-three-things-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 270px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-outline-means-three-things-history-inner {
+  position: relative;
+  height: 10px;
+}
+
+/* ---------- 始める/足す/次の週へ/止める/返事が届く ---------- */
+
+.mz-outline-means-three-things-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.mz-outline-means-three-things-btn {
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-outline-means-three-things-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+
+/* ---------- 対照: 芯2を裏返し、意味を線種そのものに烙印する ----------
+   width/height/border-radiusは既定の輪郭と同一。3スタイルのあいだで違うのは
+   border-styleだけ(C8: distinct 3値。border-widthと色は3つとも同じ2px/#b3b3b3)。
+   色は既定と同じ#b3b3b3のまま——「新しい色を足さなくても壊れる」ことを見せるため、
+   警告色は使わない。
+   目視で直した点: border-width 1pxのままだと`dotted`/`dashed`が等倍でほぼ同じ
+   連続した輪に見え、3種の線種が読み分けられなかった(アンチエイリアスで潰れる)。
+   2pxに太らせて初めて点線・破線・実線の違いが等倍で判別できるようになった。 */
+.mz-outline-means-three-things-dot-outline-contrast {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  background: transparent;
+  border-width: 2px;
+  border-color: #b3b3b3;
+  border-radius: 50%;
+  box-sizing: border-box;
+  z-index: 1;
+}
+.mz-outline-means-three-things-dot-outline-contrast.is-accepted {
+  border-style: solid;
+}
+.mz-outline-means-three-things-dot-outline-contrast.is-missed {
+  border-style: dashed;
+}
+.mz-outline-means-three-things-dot-outline-contrast.is-awaiting {
+  border-style: dotted;
+}
+
+/* 対照専用: 3つの線種の凡例(壊れ方=読み手が覚える語彙が増えることをそのまま見せる)。 */
+.mz-outline-means-three-things-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 9px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+.mz-outline-means-three-things-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.mz-outline-means-three-things-legend-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #b3b3b3;
+  box-sizing: border-box;
+}
+.mz-outline-means-three-things-legend-swatch.is-accepted {
+  border-style: solid;
+}
+.mz-outline-means-three-things-legend-swatch.is-missed {
+  border-style: dashed;
+}
+.mz-outline-means-three-things-legend-swatch.is-awaiting {
+  border-style: dotted;
 }
