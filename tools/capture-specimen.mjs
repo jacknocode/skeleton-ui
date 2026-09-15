@@ -2793,6 +2793,18 @@ const CHOREO = {
     await reply.click()
     await sleep(2600) // トーストが消える。差し替わった週は最初から確定していた週と同じ絵
   },
+  'outline-means-three-things': async (page) => {
+    /* TODO(No.162): 実装者が書く。 */
+    await sleep(1000)
+  },
+  'scheduled-absence': async (page) => {
+    /* TODO(No.163): 実装者が書く。 */
+    await sleep(1000)
+  },
+  'two-standing-orders': async (page) => {
+    /* TODO(No.164): 実装者が書く。 */
+    await sleep(1000)
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
