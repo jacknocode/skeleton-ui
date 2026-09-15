@@ -2794,16 +2794,195 @@ const CHOREO = {
     await sleep(2600) // トーストが消える。差し替わった週は最初から確定していた週と同じ絵
   },
   'outline-means-three-things': async (page) => {
-    /* TODO(No.162): 実装者が書く。 */
-    await sleep(1000)
+    /* 撮るべきは4つ。ひとつ、**3つの輪郭(受け付けた/入らなかった/返事待ち)が
+       ピクセル単位で同じ絵**であること——止める・週1・週3/7、どれも同じ○。ふたつ、
+       **返事待ちの区間(帯)の有無だけが②/③を割る**こと——週1の輪郭は帯の外、
+       週3・週7の輪郭は帯の内側に生まれ、帯は縦線と一緒に伸び続ける(未来へは出ない)。
+       みっつ、**返事が届くと輪郭は消えず、その中に塗りが入る**こと(帯はそこで
+       凍結し、以後伸びなくなる——もう一方の帯は伸び続けたままにして対比する)。
+       よっつ、対照では**線種が3つに増え**、しかも**点線が時間切れで勝手に破線へ
+       書き換わる**(=期限を勝手に判定する壊れ方)こと。 */
+    const start = page.getByRole('button', { name: '始める', exact: true })
+    const add = page.getByRole('button', { name: '足す', exact: true })
+    const next = page.getByRole('button', { name: '次の週へ', exact: true })
+    const stop = page.getByRole('button', { name: '止める', exact: true })
+    const reply = page.getByRole('button', { name: '返事が届く', exact: true })
+
+    await sleep(700)
+
+    // ---- 既定 ----
+    await start.click()
+    await sleep(400)
+    await next.click() // 週1が出て行く。原資0 -> ②(入らなかった)の輪郭。まだ帯は無い
+    await sleep(900)
+    for (let i = 0; i < 5; i++) {
+      await add.click()
+      await sleep(120)
+    }
+    await next.click() // 週2 -> 塗り
+    await sleep(500)
+    await next.click() // 週3 -> ③(返事待ち)の輪郭が生まれ、帯が同時に敷かれる
+    await sleep(1300) // ①(週1の輪郭)と③(週3の輪郭)が同じ絵で、帯の内外だけ違うのを見せる
+    for (let i = 0; i < 3; i++) {
+      await next.click() // 週4/5/6 -> 塗り。帯は縦線と一緒に伸びる
+      await sleep(450)
+    }
+    await next.click() // 週7 -> 2本目の帯(③)。2本の帯が重なって濃淡になる
+    await sleep(1100)
+    await stop.click() // ①(受け付けた)の輪郭が現在地に立つ。3つの輪郭が同時に並ぶ
+    await sleep(1400) // 3つとも同じ○であることをここで見せる
+    await next.click() // ①が塗りに解決し、standingが死ぬ
+    await sleep(750)
+    await reply.click() // 週3の返事が届く。輪郭は消えず、中に塗りが入る(同心)
+    await sleep(1400)
+    await next.click() // 週7の帯だけが伸び続け、週3の帯は凍結したまま動かない
+    await sleep(600)
+    await next.click()
+    await sleep(1200) // 代償を隠さない: 週7はまだ返事が来ていないまま帯が伸びている
+
+    // ---- 対照: 芯2を裏返し、線種3つに烙印する。点線が時間切れで破線に書き換わる ----
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(650)
+    await start.click()
+    await sleep(400)
+    await next.click() // 週1 -> missed(破線)。生まれた瞬間から確定
+    await sleep(750)
+    for (let i = 0; i < 5; i++) {
+      await add.click()
+      await sleep(110)
+    }
+    await next.click() // 週2 -> 塗り
+    await sleep(400)
+    await next.click() // 週3 -> awaiting(点線)。結末はまだ決まっていない
+    await sleep(1100)
+    await next.click() // 週4 -> 塗り。ここで週3の点線が破線へ勝手に書き換わる(壊れ方)
+    await sleep(1400) // 点線 -> 破線の書き換わりをここで見せる
+    await reply.click() // 週3の返事が実際に届く。「もう来ない」と言っていた破線の中に
+    // 塗りが入るという自己矛盾が起きる
+    await sleep(1350)
+    await next.click() // 週5 -> 塗り
+    await sleep(400)
+    await next.click() // 週6 -> 塗り
+    await sleep(400)
+    await next.click() // 週7 -> awaiting(点線)。新しい点線が生まれる
+    await sleep(750)
+    await stop.click() // solid(受け付け)。3つの線種が凡例とともに並ぶ
+    await sleep(1700)
   },
   'scheduled-absence': async (page) => {
-    /* TODO(No.163): 実装者が書く。 */
-    await sleep(1000)
+    /* 撮るべきは4つ。ひとつ、**隔週で粒が立ち、谷の週(週2・4)には本当に何も無い**こと
+       ——定規にも規則の行にも1要素も生まれない。ふたつ、**刻みが在るのに粒が無い週
+       (週6。原資が尽きて来なかった)**と、刻みすら無い谷の週との違い——刻みの有無だけが
+       理由を持つ。みっつ、**規則が週6から毎週に変わり、規則行の刻みの間隔だけが半分に
+       縮む**こと(前半2本の間隔は広く、後半3本は詰まる。粒の大きさ・色は変えない)。
+       よっつ、対照では**谷の週にスキップのバッジが立ち、消えると来なかった週と見分けが
+       つかなくなる**こと、さらに**規則が変わった瞬間、過去のスキップ週(週2・4)が
+       まとめて「来なかった」に付け替わる**(過去が書き換わる)ところまで見せる。 */
+    const add = page.getByRole('button', { name: '足す', exact: true })
+    const start = page.getByRole('button', { name: '始める', exact: true })
+    const next = page.getByRole('button', { name: '次の週へ', exact: true })
+    await sleep(500) // 初期。週1、原資0
+    for (let i = 0; i < 3; i++) {
+      await add.click()
+      await sleep(280)
+    }
+    await start.click()
+    await sleep(350)
+    await next.click()
+    await sleep(500) // 週1(隔週の当たり週): 粒が立つ
+    await next.click()
+    await sleep(850) // ★ 週2(谷): 定規にも規則行にも何も無い
+    await next.click()
+    await sleep(450) // 週3(当たり週): また粒が立つ
+    await next.click()
+    await sleep(550) // ★ 週4(谷): 同じく何も無い。週2とまったく同じ絵
+    await next.click()
+    await sleep(650) // 週5(当たり週)。ここで原資を使い切る
+    await next.click()
+    await sleep(1700) // ★ 週6(規則が変わる週。原資0で来なかった): 規則行に刻みは立つが粒は無い
+    for (let i = 0; i < 2; i++) {
+      await add.click()
+      await sleep(280)
+    }
+    await next.click()
+    await sleep(450) // 週7(毎週ルール): 粒が立つ
+    await next.click()
+    await sleep(1500) // ★ 週8: 規則行を見ると、週6・7・8の間隔が週1・3・5より詰まっている
+    // 対照: 谷の週にスキップのバッジ、来なかった週に「来なかった」のバッジを立て、
+    // 消えると見分けがつかなくなる。規則が変わると過去のバッジも一斉に付け替わる。
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(450)
+    await start.click()
+    await sleep(300)
+    await next.click()
+    await sleep(1450) // ★ 週1(原資0で来なかった): 「来なかった」バッジ+トースト
+    await next.click()
+    await sleep(1450) // ★ 週2(谷): 「スキップ」バッジ+「次回は来週です」という予告
+    await sleep(1900) // ★ バッジが消える。谷の週と来なかった週が同じ絵に戻る
+    for (let i = 0; i < 3; i++) {
+      await add.click()
+      await sleep(220)
+    }
+    await next.click()
+    await sleep(450) // 週3(当たり週・成功): 粒が立つ
+    await next.click()
+    await sleep(650) // 週4(谷): スキップのバッジ(週2の記録と合わせて後で付け替わる)
+    await next.click()
+    await sleep(450) // 週5(当たり週・成功)
+    await next.click()
+    await sleep(1900) // ★ 週6(規則変更の瞬間): 過去のスキップ週(2・4)が一斉に「来なかった」へ
+    await sleep(1900) // 付け替えバッジも消える
   },
   'two-standing-orders': async (page) => {
-    /* TODO(No.164): 実装者が書く。 */
+    /* 撮るべきは4つ。ひとつ、**指示Aだけの週**——定規に粒が1個立ち、指示Aの段にだけ
+       刻みが乗る（指示Bの段は無地のまま）。ふたつ、**指示Bを始めても定規の粒は
+       1個のまま**であること——両方の指示が動いても、粒の個数は増えない（芯1・6）。
+       みっつ、**片方だけ落ちた週**——指示Bの段にだけ輪郭の刻みが立ち、定規の粒は
+       （Aが起きた分）変わらず塗りのまま1個。同心（塗りと輪郭の重なり）は作らない。
+       よっつ、対照に切り替えると**同じ週に色分けした粒が2個**並び、片方が落ちた週は
+       1個に戻って「そもそも動いていない週」と区別が付かなくなること。 */
+    const startA = page.getByRole('button', { name: '指示Aを始める', exact: true })
+    const startB = page.getByRole('button', { name: '指示Bを始める', exact: true })
+    const next = page.getByRole('button', { name: '次の週へ', exact: true })
+    await sleep(900)
+    await startA.click()
+    await sleep(700)
+    await next.click()
+    await sleep(1800) // ★ 指示Aだけの週。定規1個・指示Aの段だけに刻みが乗る
+    await startB.click()
+    await sleep(700)
+    await next.click()
+    await sleep(1900) // ★ 指示Bを始めても、定規の粒は依然として1個のまま
+    for (let i = 0; i < 3; i++) {
+      await next.click()
+      await sleep(700) // 週3〜5: 両方とも動き続ける。絵は増えない
+    }
+    await sleep(600)
+    await next.click()
+    await sleep(2200) // ★ 週6で指示Bだけ落ちる。指示Bの段に輪郭。定規は塗りのまま1個
+    for (let i = 0; i < 2; i++) {
+      await next.click()
+      await sleep(700)
+    }
     await sleep(1000)
+    // 対照: 同じ週に色分けした粒を2個並べる
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(800)
+    await startA.click()
+    await sleep(500)
+    await next.click()
+    await sleep(1400) // 粒1個(青)
+    await startB.click()
+    await sleep(500)
+    await next.click()
+    await sleep(1700) // ★ 粒2個(青+橙)に増える。個数で回数を言ってしまう
+    for (let i = 0; i < 3; i++) {
+      await next.click()
+      await sleep(650)
+    }
+    await sleep(500)
+    await next.click()
+    await sleep(2200) // ★ 週6でBが落ちる。粒が1個に戻り、Aだけの週と見分けが付かない
   },
 }
 
