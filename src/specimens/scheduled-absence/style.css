@@ -1,26 +1,292 @@
+/* No.163「来ない週が、決まっている」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。警告色(#b33a3a)は対照のバッジ・トーストにのみ使用する。
+
+   共通則3・7のため、現在地の縦線(.marker)以外のどの要素にも
+   transition / animation を一切書かない——ボタンのhover/activeも含めて瞬間切り替え。
+   marker以外は宣言そのものが無いので computed transition-duration は既定の 0s になる。 */
+
 .mz-scheduled-absence {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+  background: #eaeae8;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-scheduled-absence.is-active {
-  animation: mz-scheduled-absence-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-scheduled-absence-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-scheduled-absence-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-scheduled-absence-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-scheduled-absence-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+  border: 1px solid #d6d6d3;
+}
+.mz-scheduled-absence-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-scheduled-absence-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-scheduled-absence-rail-wrap {
+  display: grid;
+  grid-template-rows: 18px 22px;
+  row-gap: 5px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り。この標本ではクリック操作を持たない、ただの数字。全週に等しく在るので
+   担体には数えない(rail同様)。 */
+.mz-scheduled-absence-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 18px;
+  z-index: 2;
+}
+.mz-scheduled-absence-tick-label {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-scheduled-absence-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* rail-wrap内(定規ラベル)だけrow2を指定する。schedule-row/funds-row/history-row側は
+   grid-row未指定のまま(暗黙のrow1)にして、それぞれの担体行と揃える
+   (No.155以来の踏襲パターン——共通クラスに書くと別グリッドの行までズレる)。 */
+.mz-scheduled-absence-row-label[data-role='row-label-rail'] {
+  grid-row: 2;
+}
+
+/* 台(レール): 「ここは何かを数えている場だ」を言う下地。常設する。 */
+.mz-scheduled-absence-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-scheduled-absence-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 空きの「セル」。全週で同じ1クラスしか使わない——規則の空きも来なかった空きも
+   このクラスだけで描かれるので、computed styleはdistinct 1値になる(C2)。
+   完全に透明・無枠で、railと同じく担体には数えない下敷き。 */
+.mz-scheduled-absence-cell {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  z-index: 0;
+}
+
+/* 粒(定規の塗り・原資の点・履歴の点)が共有する1個の見た目(brief-common則1: 6x6)。 */
+.mz-scheduled-absence-dot {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  background: #3d3d3d;
+  border-radius: 50%;
+  border-style: none;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じgrid-columnを共有するのでx座標が一致する。 */
+.mz-scheduled-absence-marker-col {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* この標本で唯一transitionを持つ要素(共通則3の唯一の例外)。 */
+.mz-scheduled-absence-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- `規則`行: 定規の下の刻み(No.160から実値を継承) ---------- */
+.mz-scheduled-absence-schedule-row {
+  display: grid;
+  align-items: center;
+}
+.mz-scheduled-absence-schedule-track {
+  grid-column: 2;
+  position: relative;
+  height: 16px;
+}
+.mz-scheduled-absence-schedule-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+/* 刻み: No.160の修正後の実値をそのまま継承(1pxは等倍でぼやけて読めなかったため
+   2px・高さ7pxに上げた経緯がある——その値を使う)。位置は週の中央(chipX)。 */
+.mz-scheduled-absence-notch {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 7px;
+  background: #3d3d3d;
+  z-index: 1;
+}
+
+/* ---------- `原資`行 ---------- */
+.mz-scheduled-absence-funds-row {
+  display: grid;
+  align-items: center;
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-scheduled-absence-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-scheduled-absence-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 270px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-scheduled-absence-history-inner {
+  position: relative;
+  height: 10px;
+}
+
+/* ---------- 足す/始める/次の週へ ---------- */
+
+.mz-scheduled-absence-control-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.mz-scheduled-absence-btn {
+  flex: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-scheduled-absence-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+.mz-scheduled-absence-btn:hover {
+  background: #8c8c8c;
+}
+.mz-scheduled-absence-btn-ghost:hover {
+  background: #f5f5f3;
+}
+.mz-scheduled-absence-btn:active {
+  background: #3d3d3d;
+}
+.mz-scheduled-absence-btn-ghost:active {
+  background: #eaeae8;
+}
+
+/* ---------- 対照: 壊れ方1+2+4(バッジ)。既定のコードにはこの概念が無い ----------
+   この対照にかぎり警告色を使用する(brief-163が名指しで許可)。 */
+.mz-scheduled-absence-badge {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: rgba(179, 58, 58, 0.14);
+  box-shadow: inset 0 0 0 1px #b33a3a;
+  color: #b33a3a;
+  font-size: 7.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+/* ---------- 対照: 壊れ方2+3+4(予告・トースト文言) ---------- */
+.mz-scheduled-absence-note-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mz-scheduled-absence-note-text {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b33a3a;
 }
