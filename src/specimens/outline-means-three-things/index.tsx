@@ -346,6 +346,17 @@ export default function OutlineMeansThreeThings() {
   const curPendingLen = mode === 'default' ? pendingReplies.length : cPendingReplies.length
   const curHistoryLen = mode === 'default' ? history.length : cHistory.length
 
+  // 対照(壊れ方2)専用: 今画面に立っている輪郭ぶんだけ、週番号付きのラベルを並べる。
+  // 隣り合う週(30px間隔)にドット直付けでラベルを書くと文字同士が重なって読めなくなる
+  // ("踏んだ罠"参照)ため、ドットの真横ではなく専用の縦積みリストに逃がす。
+  const curReasons: { week: number; reason: Reason }[] =
+    mode === 'contrast'
+      ? [
+          ...cLedger.filter((e): e is LedgerEntry & { reason: Reason } => e.kind === 'outline' && !!e.reason),
+          ...(cStartPending ? [{ week: cWeek, reason: 'accepted' as Reason }] : []),
+        ].sort((a, b) => a.week - b.week)
+      : []
+
   const gridCols = { gridTemplateColumns: `${LABEL_COL}px ${RAIL_W}px`, columnGap: COL_GAP }
 
   return (
@@ -422,11 +433,7 @@ export default function OutlineMeansThreeThings() {
               data-kind={entry.kind}
               data-reason={entry.reason}
               style={{ left: grainLeft(entry.week, entry.kind === 'filled' ? DOT : OUTLINE_DOT) }}
-            >
-              {mode === 'contrast' && entry.reason && (
-                <span className="mz-outline-means-three-things-label">{REASON_LABEL[entry.reason]}</span>
-              )}
-            </span>
+            />
           ))}
           {/* (a) 受理して、まだ効いていない輪郭。ledgerには入れず、`startPending`が
               立っているあいだだけ現在地の座標に描く(実装の決め1。No.158の`stopPending`と
@@ -439,9 +446,7 @@ export default function OutlineMeansThreeThings() {
               data-kind="outline"
               data-reason="accepted"
               style={{ left: grainLeft(curWeek, OUTLINE_DOT) }}
-            >
-              {mode === 'contrast' && <span className="mz-outline-means-three-things-label">受理</span>}
-            </span>
+            />
           )}
         </div>
 
@@ -450,6 +455,18 @@ export default function OutlineMeansThreeThings() {
           <span className="mz-outline-means-three-things-marker" data-role="marker" style={{ left: lineX(curWeek) }} />
         </div>
       </div>
+
+      {/* 対照専用: 壊れ方2。今立っている輪郭ぶんだけ、週番号付きの理由ラベルを縦に並べる
+          (ドットへの直付けにしない理由は上記コメント参照)。 */}
+      {mode === 'contrast' && curReasons.length > 0 && (
+        <div className="mz-outline-means-three-things-reasons" data-role="reasons">
+          {curReasons.map((r) => (
+            <span key={r.week} className="mz-outline-means-three-things-label" data-role="reason-label" data-week={r.week}>
+              週{r.week}: {REASON_LABEL[r.reason]}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* `原資`行: 塗りの点を単位ごとに並べただけの1行(No.151/154/157の語彙)。
           1粒=1単位(=20)。数字は出さない。 */}
