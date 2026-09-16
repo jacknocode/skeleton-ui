@@ -1695,6 +1695,114 @@ const CHOREO = {
     await sleep(1200)
   },
 
+  'outline-means-three-things': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**3つの輪郭が同じ絵で並ぶ**こと（週3=返事待ち／
+       週4=入らなかった／週5=現在地の受理）。ふたつ、**時間だけが区別する**こと
+       （`返事が届く` で週3に塗りが同心し、`次の週へ` で週5が塗りに変わる。
+       週4は最後まで動かない）。みっつ、対照では**輪郭が3種類に割れて凡例が要る**こと。
+       `次の週へ` の後は縦線の transition（0.28s）が収まるまで待つ。 */
+    const btn = (name) => page.getByRole('button', { name, exact: true })
+    const next = () => btn('次の週へ')
+    const add = () => btn('足す')
+    const play = async () => {
+      await add().click()
+      await add().click()
+      await add().click()
+      await sleep(500)
+      await btn('始める').click()
+      await sleep(900) // 現在地に輪郭が1個（受け付けたが、まだ効いていない）
+      await next().click()
+      await sleep(800) // 受理が効いて塗りに変わる
+      await next().click()
+      await sleep(800)
+      await next().click()
+      await sleep(1400) // 週3が返事待ちの輪郭になる（対照はここでトーストが出る）
+      await next().click()
+      await sleep(1200) // 週4は原資が尽きて「入らなかった」輪郭
+      await add().click()
+      await sleep(400)
+      await btn('始める').click()
+      await sleep(2200) // 主役のフレーム: 3つの輪郭が同じ絵で並ぶ
+    }
+    await sleep(800)
+    await play()
+    await btn('返事が届く').click()
+    await sleep(1600) // 週3に塗りが同心する。週4・週5は1pxも動かない
+    await next().click()
+    await sleep(1400) // 週5の受理が塗りになる
+    await next().click()
+    await sleep(1600) // 週6も返事待ち。届かないまま終わる＝週4と見分けがつかない
+    // 対照: 輪郭を3種類に割り、凡例とラベルを出し、待てとも言う
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900) // 切り替えで台本は最初から
+    await play()
+    await sleep(800)
+  },
+
+  'two-standing-orders': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**片方だけ落ちた週**（A行に塗り・B行に輪郭）が、
+       2行の同じ絵のまま読めること。ふたつ、**両方落ちた週**との差。みっつ、
+       対照では**1行に粒が2個**並び、粒に色が付き、履歴にラベルが付いて、
+       落ちた週だけ赤いトーストが出ること（1800ms で消える）。
+       `次の週へ` の後は縦線の transition（0.28s）が収まるまで待つ。 */
+    const btn = (name) => page.getByRole('button', { name, exact: true })
+    const next = () => btn('次の週へ')
+    const add = () => btn('足す')
+    await sleep(900)
+    // 既定: 行見出しそのものが `始める` ボタン（指示名を画面に増やさないための作り）
+    await btn('固定費').click()
+    await sleep(700)
+    await next().click()
+    await sleep(700)
+    await btn('積立').click()
+    await sleep(800) // 週2: 両行に塗り
+    await add().click()
+    await add().click()
+    await sleep(400)
+    await next().click()
+    await sleep(800) // 週3
+    await add().click()
+    await add().click()
+    await sleep(400)
+    await next().click()
+    await sleep(800) // 週4
+    await add().click()
+    await sleep(400)
+    await next().click()
+    await sleep(1600) // 週5: 固定費は通り、積立だけ落ちる（A=塗り / B=輪郭）
+    await next().click()
+    await sleep(1500) // 週6: 両方落ちる
+    await add().click()
+    await add().click()
+    await sleep(400)
+    await next().click()
+    await sleep(1600) // 週7: 両方戻る。落ちた週の輪郭は残ったまま
+    // 対照: 1行に粒を2個並べ、種類を付け、履歴と文章で名乗る
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900) // 切り替えで台本は最初から
+    await btn('固定費を始める').click()
+    await sleep(600)
+    await next().click()
+    await sleep(700)
+    await btn('積立を始める').click()
+    await sleep(800) // 同じ週のセルに粒が2個並ぶ
+    await add().click()
+    await add().click()
+    await sleep(300)
+    await next().click()
+    await sleep(800)
+    await add().click()
+    await add().click()
+    await sleep(300)
+    await next().click()
+    await sleep(800)
+    await add().click()
+    await sleep(300)
+    await next().click()
+    await sleep(2400) // 赤い点滅セル＋トースト。1800ms で消える
+    await sleep(600) // 消えたあとの絵（何が落ちたのかは画面に残らない）
+  },
+
   'expired-by-doing-nothing': async (page) => {
     /* 撮るべきは3つ。ひとつ、**失効の瞬間に機会は1pxも動かない**こと
        （動くのは現在地の縦線だけ。通り過ぎたことは位置関係でしか言われない）。

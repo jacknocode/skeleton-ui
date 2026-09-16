@@ -165,7 +165,7 @@ export default function UndoneAfterTheFact() {
   // ---- 既定 ----
   const [week, setWeek] = useState(WEEK_INITIAL)
   const [standing, setStanding] = useState(false)
-  const [remaining, setRemaining] = useState(0) // 原資(帯)の残量px
+  const [remaining, setRemaining] = useState(BAND_W) // 原資(帯)の残量px。企画指定: 初期100
   const [ledger, setLedger] = useState<LedgerEntry[]>([]) // 定規(追記オンリー)
   const [notches, setNotches] = useState<number[]>([]) // 帯の刻み(append-only。伸びても縮んでも同じ配列)
   const [history, setHistory] = useState<number[]>([]) // 読み手が即座に効く指示を出した回だけ
@@ -174,7 +174,7 @@ export default function UndoneAfterTheFact() {
   // ---- 対照専用(既定はこれらを一切持たない) ----
   const [cWeek, setCWeek] = useState(WEEK_INITIAL)
   const [cStanding, setCStanding] = useState(false)
-  const [cRemaining, setCRemaining] = useState(0)
+  const [cRemaining, setCRemaining] = useState(BAND_W)
   const [cLedger, setCLedger] = useState<ContrastLedgerEntry[]>([])
   const [cHistory, setCHistory] = useState<{ seq: number; red: boolean }[]>([])
   const [cPendingUndos, setCPendingUndos] = useState<number[]>([])
@@ -190,7 +190,7 @@ export default function UndoneAfterTheFact() {
   function resetDefault() {
     setWeek(WEEK_INITIAL)
     setStanding(false)
-    setRemaining(0)
+    setRemaining(BAND_W)
     setLedger([])
     setNotches([])
     setHistory([])
@@ -199,7 +199,7 @@ export default function UndoneAfterTheFact() {
   function resetContrast() {
     setCWeek(WEEK_INITIAL)
     setCStanding(false)
-    setCRemaining(0)
+    setCRemaining(BAND_W)
     setCLedger([])
     setCHistory([])
     setCPendingUndos([])
