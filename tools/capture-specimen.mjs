@@ -1695,6 +1695,38 @@ const CHOREO = {
     await sleep(1200)
   },
 
+  'undone-after-the-fact': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**取り消しが届いた瞬間に過去の週が1pxも動かない**こと
+       （動くのは帯だけで、しかも**戻る向き**に動く）。ふたつ、取り消しの粒が
+       **普通の粒と同じ見た目で現在地に立つ**こと。みっつ、対照では**過去の塗りが
+       輪郭に書き換わり**、斜線と赤いトーストが出て、履歴に読み手が押していない点が増えること。
+       `次の週へ` の後は縦線の transition（0.28s）が収まるまで待つ。 */
+    const btn = (name) => page.getByRole('button', { name, exact: true })
+    const next = () => btn('次の週へ')
+    const play = async () => {
+      await btn('始める').click()
+      await sleep(700)
+      for (let i = 0; i < 5; i++) {
+        await next().click()
+        await sleep(750) // 週1〜5に塗りが並び、帯が 20px ずつ縮む
+      }
+      await sleep(700)
+      await btn('取り消しが届く').click()
+      await sleep(2200) // 週3は動かない。現在地に粒が1個立ち、帯だけが戻る
+    }
+    await sleep(900)
+    await play()
+    await next().click()
+    await sleep(1500) // 戻った原資が、実際に次の週送りを動かす
+    await next().click()
+    await sleep(1600) // 帯はまた尽きる。週3の塗りと取り消しの粒は両方残ったまま
+    // 対照: 過去を書き換えて、斜線を引いて、赤く知らせて、読み手の台帳に混ぜる
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await play()
+    await sleep(1800) // トーストが消える。書き換えられた週3はもう「起きなかった週」に見える
+  },
+
   'outline-means-three-things': async (page) => {
     /* 撮るべきは3つ。ひとつ、**3つの輪郭が同じ絵で並ぶ**こと（週3=返事待ち／
        週4=入らなかった／週5=現在地の受理）。ふたつ、**時間だけが区別する**こと
