@@ -1,0 +1,329 @@
+/* No.166「上の行が先に取る、とは書いていない」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。警告色(#b33a3a)は対照のトースト・輪郭・点滅にのみ使用する。
+
+   共通則3・7のため、現在地の縦線(.marker)以外のどの要素にも
+   transition / animation を一切書かない——見出しボタン・ハンドルの
+   hover/activeも含めて瞬間切り替え。入れ替え(.row の並び替え)にも
+   transitionを付けない(芯2: 規則の変更は出来事ではない)。marker以外は宣言そのものが
+   無いので computed transition-duration は既定の 0s になる。 */
+
+.mz-order-decides-who-fails {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 340px;
+  padding: 9px 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-order-decides-who-fails-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-order-decides-who-fails-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-order-decides-who-fails-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-order-decides-who-fails-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-order-decides-who-fails-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 対照専用: 凡例(壊れ方1前半) ---------- */
+.mz-order-decides-who-fails-legend {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.mz-order-decides-who-fails-legend-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+.mz-order-decides-who-fails-legend-arrow {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  line-height: 1;
+}
+
+/* ---------- 定規まわり ---------- */
+.mz-order-decides-who-fails-rail-wrap {
+  position: relative;
+}
+
+/* 週の目盛り。両行が共有する1組だけ。トラック列(x=56px)に左端を合わせる。 */
+.mz-order-decides-who-fails-ticks {
+  position: relative;
+  height: 14px;
+  margin-left: 56px; /* TRACK_OFFSET = LABEL_COL(34) + GAP(4) + HANDLE_COL(14) + GAP(4) */
+  width: 240px; /* RAIL_W */
+  z-index: 2;
+}
+.mz-order-decides-who-fails-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 行を縦に積む列。ハンドルと現在地の縦線はここへの絶対配置で乗る
+   (行の高さ・grid段を1つも増やさない=実装の決め3)。 */
+.mz-order-decides-who-fails-rows-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 3px;
+}
+
+/* 行コンテナ。行A・行Bで完全に同一のクラス(C2)。label/handle-gutter/track の
+   3列gridだが、実際に子を置くのはcol1とcol3だけ——col2(14px)は空けておき、
+   共有のハンドル1個をrows-colから絶対配置で重ねる。 */
+.mz-order-decides-who-fails-row {
+  display: grid;
+  grid-template-columns: 34px 14px 240px; /* LABEL_COL HANDLE_COL RAIL_W */
+  column-gap: 4px;
+  align-items: center;
+}
+.mz-order-decides-who-fails-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.mz-order-decides-who-fails-row-label-static {
+  cursor: default;
+}
+/* 対照専用(壊れ方1後半): 行見出しの先頭に立つ順位番号。既定のコードにはこの
+   クラスへ至る経路が無い。 */
+.mz-order-decides-who-fails-rank {
+  font-size: 8.5px;
+  color: #8c8c8c;
+}
+
+.mz-order-decides-who-fails-track {
+  grid-column: 3;
+  position: relative;
+  height: 20px;
+}
+.mz-order-decides-who-fails-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 粒(塗り・輪郭)・履歴の点が共有する1個の見た目(共通則1: 6x6)。行A・行Bで
+   違うのはdata-row属性だけ(CSSはそれを選択しない)。 */
+.mz-order-decides-who-fails-dot {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  background: #3d3d3d;
+  border-radius: 50%;
+  border-style: none;
+  box-sizing: border-box;
+  z-index: 1;
+}
+.mz-order-decides-who-fails-dot.is-outline {
+  background: transparent;
+  border: 1px solid #b3b3b3;
+}
+/* 対照専用(壊れ方2): 落ちた行の輪郭を赤くして理由を名乗る。既定には無い。 */
+.mz-order-decides-who-fails-dot.is-outline-red {
+  border-color: #b33a3a;
+}
+
+/* 対照専用(壊れ方2後半): 落ちた瞬間だけ出る赤い点滅の帯。 */
+.mz-order-decides-who-fails-flash {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(179, 58, 58, 0.16);
+  z-index: 0;
+}
+
+/* ハンドル: 行見出し列とトラック列の隙間(14px)にrows-col基準で絶対配置。
+   矢印・数字を持たない記号(2本の横線)のみ。押しても即座に切り替わるだけ
+   (共通則3・見出しボタン同様にtransitionを持たない)。 */
+.mz-order-decides-who-fails-handle {
+  position: absolute;
+  left: 38px; /* LABEL_COL(34) + GAP(4) */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  z-index: 4;
+}
+.mz-order-decides-who-fails-handle-bar {
+  display: block;
+  width: 10px;
+  height: 1.5px;
+  background: #8c8c8c;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じx=56pxに左端を合わせ、rows-colの
+   全高(行2つ+行間)を`order`に一切依存せず覆う(C3)。 */
+.mz-order-decides-who-fails-marker-col {
+  position: absolute;
+  left: 56px;
+  top: 0;
+  bottom: 0;
+  width: 240px;
+  pointer-events: none;
+  z-index: 3;
+}
+/* この標本で唯一transitionを持つ要素(共通則3の唯一の例外)。 */
+.mz-order-decides-who-fails-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- `原資`行: 量は場所(帯の右端)で言う ---------- */
+.mz-order-decides-who-fails-funds-row {
+  display: grid;
+  grid-template-columns: 56px auto; /* TRACK_OFFSET */
+  align-items: center;
+}
+.mz-order-decides-who-fails-fund-track {
+  position: relative;
+  width: 100px; /* BAND_W */
+  height: 20px;
+}
+.mz-order-decides-who-fails-fund-rail {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100px;
+  height: 8px;
+  background: #d6d6d3;
+  border-radius: 4px;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+.mz-order-decides-who-fails-fund-fill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 8px;
+  background: #8c8c8c;
+  border-radius: 4px 0 0 4px;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-order-decides-who-fails-history-row {
+  display: grid;
+  grid-template-columns: 56px auto; /* TRACK_OFFSET */
+  align-items: center;
+}
+.mz-order-decides-who-fails-history-track {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 200px;
+  height: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-order-decides-who-fails-history-inner {
+  position: relative;
+  height: 10px;
+}
+
+/* ---------- 足す/次の週へ ---------- */
+.mz-order-decides-who-fails-control-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mz-order-decides-who-fails-btn {
+  flex: none;
+  padding: 6px 9px;
+  border-radius: 9px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 9.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-order-decides-who-fails-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+
+/* ---------- 対照: 壊れ方2前半(赤いトースト) ---------- */
+.mz-order-decides-who-fails-toast {
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #b33a3a;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+}
