@@ -1771,6 +1771,145 @@ const CHOREO = {
     await sleep(800)
   },
 
+  'press-means-two-things': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**同じ `始める` を押しているのに結果が違う**こと
+       （週1〜3 は塗り、週4 は輪郭）。ふたつ、**押す前の画面が同じ**であること
+       ——ボタンは1pxも変わらず、手がかりは帯の残りと刻みの間隔だけ。みっつ、
+       **受理の輪郭が、次の週送りを待って初めて意味が決まる**こと（週4 の輪郭の
+       隣に週5 の輪郭が並び、`足す` を挟んだ週6 で塗りになる）。
+       対照では予告が常時出て、ボタンが2つに割れ、足りない週は disabled になる。 */
+    const role = (r) => page.locator(`[data-role="${r}"]`).first()
+    await sleep(900)
+    for (let i = 0; i < 3; i++) {
+      await role('start-btn').click()
+      await sleep(650) // 現在地に塗り（押した瞬間に効いた）
+      if (i === 0) {
+        await role('start-btn').click()
+        await sleep(700) // 同じ週の2回目: 何も起きない（絵は完全に同一）
+      }
+      await role('next-btn').click()
+      await sleep(700)
+    }
+    await role('start-btn').click()
+    await sleep(1600) // 週4: 同じボタンなのに輪郭（受理。履歴は動かない）
+    await role('next-btn').click()
+    await sleep(1600) // 週5: 持ち越しがまだ足りず、同じ絵の輪郭が2つ並ぶ
+    await role('add-btn').click()
+    await sleep(500)
+    await role('next-btn').click()
+    await sleep(1800) // 週6: 塗りになる=「あの輪郭は受理だった」と初めて読める
+    // 対照: 押す前に予告し、ボタンを2つに割り、受理を名乗る
+    await role('mode-contrast').click()
+    await sleep(900)
+    for (let i = 0; i < 3; i++) {
+      await role('start-now-btn').click()
+      await sleep(600)
+      await role('next-btn').click()
+      await sleep(600)
+    }
+    await sleep(1200) // 週4: `今週に入れる` が disabled になる（予告と食い違う）
+    await role('accept-only-btn').click()
+    await sleep(2400) // 青い輪郭＋トースト。1800ms で消える
+    await sleep(600)
+  },
+  'order-decides-who-fails': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**落ちるのがいつも下の行**であること（週3・週4 の
+       2回で規則になる）。ふたつ、**入れ替えても定規が1pxも動かない**こと
+       ——動くのは行そのものの位置だけ。みっつ、**入れ替え後の最初の足りない週で
+       落ちる行が変わる**こと（効くのは未来の週で、入れ替えたその週には何も起きない）。
+       対照では ①② と赤とトーストが出て、過去の落ち方が遡って書き換わる。 */
+    const role = (r) => page.locator(`[data-role="${r}"]`).first()
+    await sleep(900)
+    await role('row-label-a').click()
+    await sleep(500)
+    await role('row-label-b').click()
+    await sleep(700)
+    await role('next-btn').click()
+    await sleep(700)
+    await role('add-btn').click()
+    await sleep(300)
+    await role('add-btn').click()
+    await sleep(400)
+    await role('next-btn').click()
+    await sleep(1500) // 週3: 下の行（積立）が落ちる 1回目
+    await role('next-btn').click()
+    await sleep(1800) // 週4: また下の行が落ちる=ここで規則になる
+    await role('handle-btn').click()
+    await sleep(2000) // 入れ替え。定規は 0.000px 動かない（静止して見せる）
+    await role('add-btn').click()
+    await sleep(300)
+    await role('add-btn').click()
+    await sleep(400)
+    await role('next-btn').click()
+    await sleep(2000) // 週5: 落ちる行が入れ替わっている
+    await role('next-btn').click()
+    await sleep(1500) // 週6: 両方落ちる（順番は、両方落ちる週には出ない）
+    // 対照: 順位を書き、理由を赤で名乗り、入れ替えを遡って効かせる
+    await role('mode-contrast').click()
+    await sleep(900)
+    await role('row-label-a').click()
+    await sleep(400)
+    await role('row-label-b').click()
+    await sleep(600)
+    await role('next-btn').click()
+    await sleep(600)
+    await role('add-btn').click()
+    await sleep(250)
+    await role('add-btn').click()
+    await sleep(350)
+    await role('next-btn').click()
+    await sleep(2400) // 赤い点滅＋トースト（1800ms で消える）
+    await role('handle-btn').click()
+    await sleep(2000) // 過去の週の落ち方が書き換わる
+  },
+  'rule-skips-this-week': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**1粒目では2行が同じ絵**であること（毎週の指示と
+       隔週の指示が区別できない）。ふたつ、**2粒目で間隔が分かれる**こと
+       （30px と 60px）。みっつ、**休みの週の「無」が、指示の前の「無」と同じ絵**
+       であること——そして定規の端では、それが最後まで区別できない。
+       対照では周期を名乗り、休みに印を置き、次に来る週を予告する。 */
+    const role = (r) => page.locator(`[data-role="${r}"]`).first()
+    await sleep(900)
+    await role('row-label-a').click()
+    await sleep(500)
+    await role('next-btn').click()
+    await sleep(1500) // 行A の1粒目。行B は無（指示がまだ無い）
+    await role('next-btn').click()
+    await sleep(900)
+    await role('row-label-b').click()
+    await sleep(700)
+    await role('next-btn').click()
+    await sleep(1500) // 行B の1粒目。ここでは2行が同じ絵
+    await role('next-btn').click()
+    await sleep(1500) // 行B は休み（無）。行A だけが立つ
+    await role('next-btn').click()
+    await sleep(1800) // 行B の2粒目=間隔 60px が読める
+    await role('next-btn').click()
+    await sleep(900)
+    await role('next-btn').click()
+    await sleep(1800) // 週8 = 定規の端。両行とも無
+    await role('next-btn').click()
+    await sleep(1500) // 押しても何も起きない（休みか終わりか、最後まで読めない）
+    // 対照: 周期を名乗り、休みに印を置き、次に来る週を予告する
+    await role('mode-contrast').click()
+    await sleep(900)
+    await role('row-label-a').click()
+    await sleep(400)
+    await role('next-btn').click()
+    await sleep(600)
+    await role('next-btn').click()
+    await sleep(500)
+    await role('row-label-b').click()
+    await sleep(600)
+    await role('next-btn').click()
+    await sleep(1600) // 予告の薄い粒と「次は週N」の注記
+    await role('next-btn').click()
+    await sleep(1600) // 休みの週に印が残る
+    await role('next-btn').click()
+    await sleep(900)
+    await role('next-btn').click()
+    await sleep(1200)
+  },
   'two-standing-orders': async (page) => {
     /* 撮るべきは3つ。ひとつ、**片方だけ落ちた週**（A行に塗り・B行に輪郭）が、
        2行の同じ絵のまま読めること。ふたつ、**両方落ちた週**との差。みっつ、
