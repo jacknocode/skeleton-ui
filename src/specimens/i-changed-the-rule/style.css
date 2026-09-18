@@ -1,26 +1,266 @@
+/* No.169「規則を変えたのは、わたしだ」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。識別用の青(#3a7ab3)は対照の凡例・区切り印にのみ使用する。
+
+   ---- 差し戻し対応(企画側の訂正) ----
+   共通則1の原文は「6x6pxの正方形」だったが、これは企画(common.md)側の誤りで、
+   家風(No.163〜168・170すべて)は**円**(border-radius:50%)。初版はcommon.mdの
+   文言どおり正方形(border-radius:0)で実装していたが、参考実装が正としてこの版で
+   円に修正した。寸法6x6pxは変えていない。
+
+   共通則3・7のため、現在地の縦線(.marker)以外のどの要素にもtransition/animation
+   を一切書かない――見出しボタン・操作ボタンのhover/activeも含めて瞬間切り替え。
+   marker以外は宣言そのものが無いのでcomputed transition-durationは既定の0sに
+   なる。 */
+
 .mz-i-changed-the-rule {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-i-changed-the-rule.is-active {
-  animation: mz-i-changed-the-rule-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-i-changed-the-rule-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-i-changed-the-rule-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-i-changed-the-rule-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-i-changed-the-rule-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-i-changed-the-rule-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-i-changed-the-rule-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 対照専用: 規則を名乗る注記+凡例(壊れ方1) ---------- */
+.mz-i-changed-the-rule-legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mz-i-changed-the-rule-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #8c8c8c;
+  font-variant-numeric: tabular-nums;
+}
+.mz-i-changed-the-rule-legend-swatch {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: #3a7ab3;
+  box-sizing: border-box;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-i-changed-the-rule-rail-wrap {
+  display: grid;
+  grid-template-rows: 16px 34px;
+  row-gap: 4px;
+  align-items: end;
+  position: relative;
+}
+
+/* 週の目盛り。 */
+.mz-i-changed-the-rule-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 16px;
+  z-index: 2;
+}
+.mz-i-changed-the-rule-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 行見出し。既定ではそのまま`始める`ボタン(先行標本群と同じ形)。装飾を持たせず
+   静的ラベルと区別が付かないようにする(共通則5: 既定は名乗らない)。
+   grid-row/align-selfはここでは指定しない――rail-wrap(2行)とhistory-row(1行)で
+   グリッドの行数が違うため、共通クラスに固定のgrid-rowを書くと後者で見出しと
+   トラックの行がずれる(差し戻しの原因1)。行ごとの位置は下の属性セレクタで
+   個別に与える。 */
+.mz-i-changed-the-rule-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+/* rail-wrap内(定規ラベル)だけrow2・下揃え。history-row側はgrid-row未指定のまま
+   (=暗黙のrow1)にして、history-trackと同じ行に載せる(No.168と同じ揃え方)。 */
+.mz-i-changed-the-rule-row-label[data-role='row-label'] {
+  grid-row: 2;
+  align-self: end;
+  padding-bottom: 4px;
+}
+/* 静的ラベル(履歴)はボタンではないが同じ見た目。 */
+.mz-i-changed-the-rule-row-label-static {
+  cursor: default;
+}
+
+/* 台(レール): 週トラック。粒はこの中に下から積む。 */
+.mz-i-changed-the-rule-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 34px;
+}
+.mz-i-changed-the-rule-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #d6d6d3;
+  z-index: 0;
+}
+
+/* 粒(定規)・履歴の点が共有する1個の見た目(共通則1: 6x6・塗りのみ。形は家風どおり
+   円=border-radius:50%。この標本に輪郭は存在しない(担体は塗り・無の2値しか
+   使わない)。 */
+.mz-i-changed-the-rule-grain {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #3d3d3d;
+  border-radius: 50%;
+  border-style: none;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/* 対照専用(壊れ方2): rateが変わった週に立てる縦の区切り印。既定のコードには
+   このクラスへ至る経路が無い。 */
+.mz-i-changed-the-rule-change-mark {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 1.5px;
+  background: #3a7ab3;
+  z-index: 1;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じgrid-columnを共有するのでx座標が
+   一致する。 */
+.mz-i-changed-the-rule-marker-col {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* この標本で唯一transitionを持つ要素(共通則7の唯一の例外)。 */
+.mz-i-changed-the-rule-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-i-changed-the-rule-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-i-changed-the-rule-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 240px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-i-changed-the-rule-history-inner {
+  position: relative;
+  height: 6px;
+}
+
+/* ---------- 操作ボタン ---------- */
+
+.mz-i-changed-the-rule-control-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mz-i-changed-the-rule-btn {
+  flex: none;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 9.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-i-changed-the-rule-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+
+/* ---------- 対照: 壊れ方2後半(外界の変更にだけ出るトースト) ----------
+   169の初版はposition:absoluteでボタン列に重ねていたが、目視で「多くする」
+   ボタンの文字に被って読めなくなる事故が起きたため、167/166のnote-row/toastと
+   同じくflexの通常フローに置く行に変更した(ボタン列の下に押し出されるだけで、
+   重なりが起きない)。 */
+.mz-i-changed-the-rule-toast {
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #3a7ab3;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
 }

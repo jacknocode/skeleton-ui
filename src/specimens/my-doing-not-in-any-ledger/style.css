@@ -1,26 +1,249 @@
+/* No.168「わたしが起こしたのに、どこにも無い」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。識別用の青(#3a7ab3)は対照の壊れ方(2・3)にのみ使用する。
+
+   共通則7のため、現在地の縦線(.marker)以外のどの要素にも transition / animation を
+   一切書かない——ボタンのhover/activeも含めて瞬間切り替え。marker以外は宣言そのものが
+   無いので computed transition-duration は既定の 0s になる。 */
+
 .mz-my-doing-not-in-any-ledger {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-my-doing-not-in-any-ledger.is-active {
-  animation: mz-my-doing-not-in-any-ledger-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-my-doing-not-in-any-ledger-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-my-doing-not-in-any-ledger-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-my-doing-not-in-any-ledger-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-my-doing-not-in-any-ledger-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-my-doing-not-in-any-ledger-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-my-doing-not-in-any-ledger-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- `原資`行: 量は帯の残り幅(右端)で言う。数値・単位・刻みは置かない
+   (この標本の主題は操作の多義ではなく台帳の不一致なので、原資は入力の背景に留める)。 ---------- */
+.mz-my-doing-not-in-any-ledger-funds-row {
+  display: grid;
+  align-items: center;
+}
+.mz-my-doing-not-in-any-ledger-fund-track {
+  grid-column: 2;
+  position: relative;
+  width: 100px; /* FUNDS_MAX */
+  height: 20px;
+}
+.mz-my-doing-not-in-any-ledger-fund-rail {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100px;
+  height: 8px;
+  background: #d6d6d3;
+  border-radius: 4px;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+.mz-my-doing-not-in-any-ledger-fund-fill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 8px;
+  background: #8c8c8c;
+  border-radius: 4px 0 0 4px;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-my-doing-not-in-any-ledger-rail-wrap {
+  display: grid;
+  grid-template-rows: 16px 20px;
+  row-gap: 4px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り。クリック操作は無い。 */
+.mz-my-doing-not-in-any-ledger-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 16px;
+  z-index: 2;
+}
+.mz-my-doing-not-in-any-ledger-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-my-doing-not-in-any-ledger-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* rail-wrap内(定規ラベル)だけrow2を指定する。funds-row/history-row側はgrid-row
+   未指定のまま(=暗黙のrow1)にして、各行のラベルと担体を同じ行に揃える。 */
+.mz-my-doing-not-in-any-ledger-row-label[data-role='row-label-rail'] {
+  grid-row: 2;
+}
+
+/* 台(レール): 「ここは何かを数えている場だ」を言う下地。 */
+.mz-my-doing-not-in-any-ledger-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 20px;
+}
+.mz-my-doing-not-in-any-ledger-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 粒(塗り・輪郭)・履歴の点が共有する1個の見た目(共通則1: 6x6)。left/top以外は
+   ここにしか書かない。塗りの「理由」(即座/持ち越し解決)を示す差はCSSに一切無い(C5)。 */
+.mz-my-doing-not-in-any-ledger-dot {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  background: #3d3d3d;
+  border-radius: 50%;
+  border-style: none;
+  box-sizing: border-box;
+  z-index: 1;
+}
+/* 輪郭の粒 = 受理して持ち越し中。塗りに解決した後も消えない(共通則6)。 */
+.mz-my-doing-not-in-any-ledger-dot.is-outline {
+  background: transparent;
+  border: 1.5px solid #3d3d3d;
+}
+/* 対照専用(壊れ方2): 「遅れて効いた」履歴の点だけ背景を青にする。既定のコードには
+   このクラスへ至る経路が無い。 */
+.mz-my-doing-not-in-any-ledger-dot.is-delayed {
+  background: #3a7ab3;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じgrid-columnを共有するのでx座標が一致する。 */
+.mz-my-doing-not-in-any-ledger-marker-col {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* この標本で唯一transitionを持つ要素(共通則7の唯一の例外)。 */
+.mz-my-doing-not-in-any-ledger-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-my-doing-not-in-any-ledger-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-my-doing-not-in-any-ledger-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 240px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-my-doing-not-in-any-ledger-history-inner {
+  position: relative;
+  height: 10px;
+}
+
+/* ---------- 置く / 次の週へ / リセット ---------- */
+
+.mz-my-doing-not-in-any-ledger-control-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.mz-my-doing-not-in-any-ledger-btn {
+  flex: none;
+  padding: 7px 9px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mz-my-doing-not-in-any-ledger-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+
+/* ---------- 対照: 壊れ方3後半(受理の瞬間だけ出るトースト) ---------- */
+.mz-my-doing-not-in-any-ledger-toast {
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #3a7ab3;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
 }
