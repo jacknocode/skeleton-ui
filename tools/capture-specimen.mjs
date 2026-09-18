@@ -3072,6 +3072,152 @@ const CHOREO = {
     await reply.click()
     await sleep(2600) // トーストが消える。差し替わった週は最初から確定していた週と同じ絵
   },
+  'my-doing-not-in-any-ledger': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**押した回数（3回）と履歴の点（1個）が合わない**こと
+       ——`置く` を押す瞬間を3回とも見せ、履歴が1回しか増えないことを見せる。
+       ふたつ、**受理の輪郭が、押していない週の塗りへ引き継がれる**こと
+       （週2の輪郭 → 週3の塗り、週4・5の輪郭 → 週6の塗り）。みっつ、
+       輪郭は効いたあとも消えないこと。対照は履歴に点を後から足し（青）、
+       受理をトーストで名乗る（1800ms で消えて跡が残らない）。 */
+    const role = (r) => page.locator(`[data-role="${r}"]`).first()
+    const place = () => role('place-btn').click()
+    const next = () => role('next-btn').click()
+    await sleep(900)
+    await place() // 週1: 原資が足りる → 履歴 +1
+    await sleep(900)
+    await next()
+    await sleep(1300) // 週1に塗り
+    await place() // 週2: 足りない → 受理（履歴は動かない）
+    await sleep(1100)
+    await next()
+    await sleep(1300) // 週2に輪郭
+    await next()
+    await sleep(1600) // 週3に塗り＝押していない週に立つ。履歴は増えない
+    await place() // 週4: また受理
+    await sleep(1100)
+    await next()
+    await sleep(1200) // 週4に輪郭
+    await next()
+    await sleep(1200) // 週5も輪郭（まだ足りない）
+    await next()
+    await sleep(1800) // 週6に塗り。輪郭2つの右で効いた
+    await next()
+    await sleep(1400)
+    // 対照: 効いた週に点を足し、遅れた点を青くし、受理をトーストで名乗る
+    await role('mode-contrast').click()
+    await sleep(900)
+    await place()
+    await sleep(700)
+    await next()
+    await sleep(900)
+    await place()
+    await sleep(1600) // トースト「受け付けました」
+    await next()
+    await sleep(1000)
+    await next()
+    await sleep(1600) // 効いた週に青い点が増える＝押していない週に押したことになる
+    await next()
+    await sleep(2200) // トーストが消えて跡が残らない
+  },
+  'i-changed-the-rule': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**読み手が変えた週は履歴が増える**のに、
+       **外界が変えた週（週5）は何も増えない**こと。ふたつ、**過去の週が
+       1px も動かない**こと。みっつ、**戻すと定規から変えた事実が消える**こと
+       （週7の絵が週2と同じになる。履歴にだけ点が残る）。
+       対照は規則を名乗り、変更を定規に印で載せ、遡って過去を作り直す。 */
+    const role = (r) => page.locator(`[data-role="${r}"]`).first()
+    const next = () => role('next-btn').click()
+    await sleep(900)
+    await role('row-label').click() // 積立 = 始める
+    await sleep(800)
+    await next()
+    await sleep(1200) // 週1に2粒
+    await next()
+    await sleep(1200) // 週2に2粒
+    await role('more-btn').click() // 読み手が増やす（履歴 +1）
+    await sleep(1100)
+    await next()
+    await sleep(1400) // 週3から3粒
+    await next()
+    await sleep(1600) // 週4も3粒。ここで週5に入り、外界が黙って減らす
+    await next()
+    await sleep(1600) // 週5は2粒。履歴は動かない
+    await role('less-btn').click()
+    await sleep(1000)
+    await next()
+    await sleep(1400) // 週6は1粒
+    await role('more-btn').click() // 戻す
+    await sleep(1000)
+    await next()
+    await sleep(1800) // 週7が週2と同じ絵に戻る＝定規から変えた事実が消える
+    // 対照: 規則を名乗り、変更を定規に載せ、遡って作り直す
+    await role('mode-contrast').click()
+    await sleep(900)
+    await role('row-label').click()
+    await sleep(600)
+    await next()
+    await sleep(800)
+    await next()
+    await sleep(900)
+    await role('more-btn').click()
+    await sleep(1800) // 過去の週の粒が遡って増える
+    await next()
+    await sleep(900)
+    await next()
+    await sleep(2400) // 外界の変更にトーストが出て、やがて消える
+  },
+  'whose-grain-is-this': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**3つの主語の粒が同じ絵で1行に並ぶ**こと
+       （繰り返し＝週1,3,5,7／読み手＝週2,5／外界＝週6）。ふたつ、
+       **重なった週（週5）でも粒は1個**であること。みっつ、**単発どうし
+       （週2と週6）が区別できない**こと。対照は行を3つに割り、粒に色を付け、
+       外界の粒をトーストで名乗る。 */
+    const role = (r) => page.locator(`[data-role="${r}"]`).first()
+    const next = () => role('next-btn').click()
+    const place = () => role('place-btn').click()
+    await sleep(900)
+    await role('row-label').click() // 点検 = 始める
+    await sleep(800)
+    await next()
+    await sleep(1300) // 週1に繰り返しの粒
+    await place()
+    await sleep(900)
+    await next()
+    await sleep(1300) // 週2に読み手の粒。同じ絵
+    await next()
+    await sleep(1300) // 週3に繰り返しの粒
+    await next()
+    await sleep(1400) // 週4は空き
+    await place()
+    await sleep(900)
+    await next()
+    await sleep(1600) // 週5は重なり。それでも粒は1個
+    await next()
+    await sleep(1600) // 週6に外界の粒。押していないのに立つ
+    await next()
+    await sleep(1600) // 週7に繰り返しの粒
+    // 対照: 主語で行を割り、粒に色を付け、外界をトーストで名乗る
+    await role('mode-contrast').click()
+    await sleep(900)
+    await role('c-row-label-repeat').click()
+    await sleep(700)
+    await next()
+    await sleep(900)
+    await place()
+    await sleep(700)
+    await next()
+    await sleep(1100)
+    await next()
+    await sleep(900)
+    await next()
+    await sleep(900)
+    await place()
+    await sleep(700)
+    await next()
+    await sleep(1600) // 重なりの週が2個に割れる
+    await next()
+    await sleep(2400) // 外界のトーストが出て、やがて消える
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
