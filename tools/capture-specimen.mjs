@@ -3218,6 +3218,109 @@ const CHOREO = {
     await next()
     await sleep(2400) // 外界のトーストが出て、やがて消える
   },
+  'two-in-the-same-week': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**同じ週に二度押しても粒は1個しか増えない**こと
+       （履歴の点は2つ増える——2行を同時に見ていないと食い違いが読めない）。
+       ふたつ、**種類の違う2つ（積む・点検）が重なった週6でも粒は1個**であること。
+       みっつ、対照では週セルの中に2個並び、**週の中に無いはずの前後が生まれる**こと。
+       既定は「増えないこと」を撮る回なので、二度目の押下のあとに間を置く
+       ——何も起きない時間が写っていないと、増えなかったことは読めない。 */
+    const btn = (role) => page.locator(`[data-role="${role}"]`)
+    const stow = () => btn('stow-btn').click()
+    const check = () => btn('check-btn').click()
+    const next = () => btn('next-btn').click()
+    await sleep(800)
+    await stow(); await sleep(650)   // 週1: 粒 +1 / 点 +1
+    await next(); await sleep(520)
+    await stow(); await sleep(520)   // 週2: 一度目
+    await stow(); await sleep(1000)  // 週2: 二度目——点だけが増える
+    await next(); await sleep(520)
+    await next(); await sleep(520)   // 週3: 空き
+    await check(); await sleep(650)  // 週4
+    await next(); await sleep(520)
+    await check(); await sleep(480)  // 週5: 一度目
+    await check(); await sleep(1000) // 週5: 二度目——意味は増えていないのに点は増える
+    await next(); await sleep(520)
+    await stow(); await sleep(460)   // 週6: 積む
+    await check(); await sleep(1050) // 週6: 点検が重なる——粒は1個のまま
+    await next(); await sleep(1300)
+    // 対照: 同じ台本を「週セルの中に並べる」実装で
+    await btn('mode-contrast').click()
+    await sleep(800)
+    await stow(); await sleep(430)
+    await next(); await sleep(430)
+    await stow(); await sleep(400)
+    await stow(); await sleep(1150)  // 週2に2個並ぶ。8px の隣と 30px の隣が同居する
+    await next(); await sleep(430)
+    await next(); await sleep(430)
+    await check(); await sleep(430)
+    await next(); await sleep(430)
+    await check(); await sleep(400)
+    await check(); await sleep(1000)
+    await next(); await sleep(430)
+    await stow(); await sleep(400)
+    await check(); await sleep(1300)
+    await next(); await sleep(1600)
+  },
+  'proxy-success-in-my-ledger': async (page) => {
+    /* 撮るべきは4つ。ひとつ、`任せる` を押した**その週には何も立たない**こと
+       （履歴の点だけが1個増える）。ふたつ、以後は **`次の週へ` を押すだけで粒が立つ**こと
+       ——押していないのに定規が埋まっていく。みっつ、読み手が置いた粒と
+       代わりに立った粒が**同じ絵**であること。よっつ、`取り消す` で
+       **過去が1pxも動かず**、現在地に輪郭が1個立って、履歴の点が1個増えること。
+       「押していないのに増える」は間でしか写らないので、週送りのあとを長めに置く。 */
+    const btn = (role) => page.locator(`[data-role="${role}"]`)
+    const next = () => btn('next-btn').click()
+    await sleep(900)
+    await btn('commit-btn').click(); await sleep(1100) // 週1: 履歴だけが +1。定規は動かない
+    await next(); await sleep(1250)                    // 週2: 押していないのに粒が立つ
+    await btn('place-btn').click(); await sleep(800)   // 週3: 読み手が置く
+    await next(); await sleep(1250)                    // 週4: 読み手の粒と代わりの粒が同じ絵で並ぶ
+    await next(); await sleep(1000)                    // 週5: 空き
+    await next(); await sleep(1300)                    // 週6: また立つ
+    await btn('undo-btn').click(); await sleep(1500)   // 週7: 過去は動かない。現在地に輪郭
+    await next(); await sleep(1400)
+    // 対照: 代わりの成功を履歴に載せ、粒に印を付け、トーストで名乗る
+    await btn('mode-contrast').click(); await sleep(900)
+    await btn('commit-btn').click(); await sleep(800)
+    await next(); await sleep(1500)                    // トースト。履歴に押していない点が増える
+    await btn('place-btn').click(); await sleep(700)
+    await next(); await sleep(1400)
+    await next(); await sleep(900)
+    await next(); await sleep(1500)
+    await btn('undo-btn').click(); await sleep(1200)
+    await next(); await sleep(2400)                    // トーストが消えても、履歴の点は残る
+  },
+  'which-press-made-this': async (page) => {
+    /* 動くものが無い標本なので、撮るのは**指す順番**そのもの。
+       既定で粒を左から順に指し、そのたびに**履歴の側が1か所も沈まない**ことを見せる。
+       次に履歴の点を指して、**定規の側も沈まない**ことを見せる。
+       最後に対照へ移り、同じ順で指すと**両側が沈み、赤が2個名乗る**ことを見せる。
+       沈みは地の色の差（#d6d6d3 → #b3b3b3）なので、1か所につき十分に止める。 */
+    const cell = (w) => page.locator(`[data-role="rail-cell"][data-week="${w}"]`)
+    const seat = (i) => page.locator(`[data-role="history-seat"][data-index="${i}"]`)
+    const away = async () => { await page.mouse.move(280, 330); await sleep(500) }
+    await sleep(900)
+    for (const w of [2, 4, 6]) {
+      await cell(w).hover(); await sleep(1100) // 粒を指す。履歴は無反応
+    }
+    await away()
+    for (const i of [0, 1, 3]) {
+      await seat(i).hover(); await sleep(1000) // 点を指す。定規は無反応
+    }
+    await away()
+    await sleep(700)
+    // 対照: 点に週を持たせ、結べなかったものを赤で名乗る
+    await page.locator('[data-role="mode-contrast"]').click()
+    await sleep(1100) // 赤が2個（週6の粒・4つめの点）。指す前から名乗っている
+    for (const w of [2, 4, 6]) {
+      await cell(w).hover(); await sleep(1250) // 週2は点が2個沈む。週6は0個
+    }
+    await away()
+    await seat(3).hover(); await sleep(1400)   // 結ぶ粒の無い点
+    await away()
+    await sleep(900)
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))

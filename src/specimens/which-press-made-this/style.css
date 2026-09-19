@@ -80,10 +80,13 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* 行見出し。静的ラベル(この標本に操作ボタンは無い=実装の決め4)。 */
+/* 行見出し。静的ラベル(この標本に操作ボタンは無い=実装の決め4)。
+   `grid-row` はここで決めない——定規の行は2行グリッド(目盛り+台)、履歴の行は
+   1行グリッドなので、同じクラスに `grid-row: 2` を直書きすると履歴側の見出しが
+   存在しない2行目へ落ちて担体と縦中央がずれる(No.169・170 で2回踏んだ罠の3回目。
+   実測で履歴の見出し 229.00 に対しトラック 214.50＝14.50px のズレだった)。 */
 .mz-which-press-made-this-row-label {
   grid-column: 1;
-  grid-row: 2;
   font-size: 9.5px;
   font-weight: 700;
   color: #8c8c8c;
@@ -91,6 +94,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: left;
+}
+
+.mz-which-press-made-this-rail-wrap > .mz-which-press-made-this-row-label {
+  grid-row: 2;
 }
 
 /* 台(定規)。 */
@@ -116,7 +123,10 @@
   background: #b3b3b3;
 }
 
-/* 粒(定規)・履歴の点が共有する1個の見た目(共通則1: 6x6・角丸0)。 */
+/* 粒(定規)・履歴の点が共有する1個の見た目(共通則1: 6x6・角丸0)。担体は
+   pointerイベントを一切持たない(実装の決め1: 当たり判定は地/座席の側にだけ
+   付ける)ので、地の真上に乗っていてもpointer-events: noneで下のセルへ
+   イベントを通す。 */
 .mz-which-press-made-this-dot {
   position: absolute;
   top: 50%;
@@ -127,6 +137,7 @@
   border-radius: 0;
   box-sizing: border-box;
   z-index: 1;
+  pointer-events: none;
 }
 /* 対照(壊れ方2): 結べなかった担体だけ赤で名乗る。hoverとは無関係の常時表示。 */
 .mz-which-press-made-this-dot.is-unmatched {

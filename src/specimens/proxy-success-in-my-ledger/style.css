@@ -1,26 +1,221 @@
+/* No.172「代わりにやったことが、できてしまった」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 レール / #eaeae8 地 /
+   #f5f5f3 反転文字 / #fff)。識別用の青(#3a7ab3)は対照の色分け・トーストにのみ使用する
+   (共通則2)。
+
+   共通則3のため、現在地の縦線(.marker)以外のどの要素にも transition / animation を
+   一切書かない――ボタンのhover/activeも含めて瞬間切り替え。marker以外は宣言そのものが
+   無いので computed transition-duration は既定の 0s になる。
+
+   共通則1のため、粒・履歴の点は6x6pxの正方形(角丸0)。輪郭は1.5px dashed #8c8c8cの箱。
+   担体はこの2種類しか作らない。 */
+
 .mz-proxy-success-in-my-ledger {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-proxy-success-in-my-ledger.is-active {
-  animation: mz-proxy-success-in-my-ledger-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-proxy-success-in-my-ledger-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-proxy-success-in-my-ledger-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-proxy-success-in-my-ledger-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-proxy-success-in-my-ledger-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-proxy-success-in-my-ledger-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-proxy-success-in-my-ledger-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-proxy-success-in-my-ledger-rail-wrap {
+  display: grid;
+  grid-template-rows: 16px 22px;
+  row-gap: 4px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り。 */
+.mz-proxy-success-in-my-ledger-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 16px;
+  z-index: 2;
+}
+.mz-proxy-success-in-my-ledger-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 行見出し。定規行(rail-wrap: 目盛り1行+本体1行)ではrow2、履歴行(history-row:
+   1行のみのgrid)では暗黙のrow1に、それぞれのgridコンテナ側で揃える(差し戻し対応:
+   ここにgrid-rowを直書きすると、行数の違う2つのgridで縦位置がずれる)。 */
+.mz-proxy-success-in-my-ledger-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.mz-proxy-success-in-my-ledger-rail-wrap .mz-proxy-success-in-my-ledger-row-label[data-role='row-label-rail'] {
+  grid-row: 2;
+}
+
+/* 台(レール): 「ここは何かを数えている場だ」を言う下地。地(#eaeae8)と混ざらない
+   はっきりした灰(#d6d6d3)で必ず描く(共通則2で担体が読めなくなる罠を避ける)。 */
+.mz-proxy-success-in-my-ledger-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-proxy-success-in-my-ledger-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 粒(定規)・履歴の点が共有する1個の見た目(共通則1: 6x6正方形・角丸0)。 */
+.mz-proxy-success-in-my-ledger-dot {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  background: #3d3d3d;
+  border-radius: 0;
+  border-style: none;
+  box-sizing: border-box;
+  z-index: 1;
+}
+/* 輪郭(共通則1が言う唯一の代替担体): `取り消す`が置く跡。塗りではなく箱。 */
+.mz-proxy-success-in-my-ledger-dot.is-outline {
+  background: transparent;
+  border: 1.5px dashed #8c8c8c;
+}
+/* 対照専用(壊れ方2): 代行由来の塗りだけ青にする。既定のコードにはこのクラスへ
+   至る経路が無い。 */
+.mz-proxy-success-in-my-ledger-dot.is-c-proxy {
+  background: #3a7ab3;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じgrid-columnを共有するのでx座標が一致する。 */
+.mz-proxy-success-in-my-ledger-marker-col {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* この標本で唯一transitionを持つ要素(共通則3の唯一の例外)。 */
+.mz-proxy-success-in-my-ledger-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-proxy-success-in-my-ledger-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-proxy-success-in-my-ledger-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 240px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-proxy-success-in-my-ledger-history-inner {
+  position: relative;
+  height: 10px;
+}
+
+/* ---------- 任せる / 置く / 取り消す / 次の週へ / リセット ---------- */
+
+.mz-proxy-success-in-my-ledger-control-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.mz-proxy-success-in-my-ledger-btn {
+  flex: none;
+  padding: 7px 9px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mz-proxy-success-in-my-ledger-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+
+/* ---------- 対照: 壊れ方3(代行の成功が立つ瞬間だけ出るトースト) ---------- */
+.mz-proxy-success-in-my-ledger-toast {
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #3a7ab3;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
 }

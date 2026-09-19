@@ -348,7 +348,7 @@ export default function ProxySuccessInMyLedger() {
     >
       <div className="mz-proxy-success-in-my-ledger-row1">
         <span className="mz-proxy-success-in-my-ledger-caption">
-          「任せる」は1回だけ。「置く」は現在週に、「取り消す」は現在地に
+          「任せる」は一度だけ。「置く」は現在週に、「取り消す」は現在地に
         </span>
         <div className="mz-proxy-success-in-my-ledger-mode" role="group" aria-label="既定・対照">
           <button
