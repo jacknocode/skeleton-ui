@@ -1,26 +1,226 @@
+/* No.171「同じ週に、二度起きた」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。識別用の青(#3a7ab3)・警告色(rgb(179,58,58))は
+   対照の色分け・トーストにのみ使用する(共通則2)。
+
+   担体は6x6pxの正方形(角丸0)。円ではない――この回の共通仕様(00-common.md)は
+   No.170までの円形から角丸0の正方形に変わっている(共通則1)。
+
+   共通則3・9のため、現在地の縦線(.marker)以外のどの要素にも
+   transition / animation を一切書かない(hover/activeも含め瞬間切り替え)。
+   marker以外は宣言そのものが無いので computed transition-duration は
+   既定の0sになる。 */
+
 .mz-two-in-the-same-week {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 340px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-two-in-the-same-week.is-active {
-  animation: mz-two-in-the-same-week-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-two-in-the-same-week-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-two-in-the-same-week-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-two-in-the-same-week-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-two-in-the-same-week-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-two-in-the-same-week-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-two-in-the-same-week-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規(既定・対照で共有するレイアウト。中身の粒だけが違う) ---------- */
+.mz-two-in-the-same-week-rail-wrap {
+  display: grid;
+  grid-template-rows: 16px 22px;
+  row-gap: 4px;
+  align-items: center;
+  position: relative;
+}
+
+.mz-two-in-the-same-week-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 16px;
+  z-index: 2;
+}
+.mz-two-in-the-same-week-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 行見出し。「定規」「履歴」はどちらも場を指す名詞で、周期・主語・回数を
+   名乗らない(実装の決め1)。この標本では行見出し自体はクリック操作を持たない
+   ――装飾もボタンらしさも持たせず、静的ラベルと同じ見え方に統一する
+   (共通則5: 既定は名乗らない)。grid-rowはここでは指定しない――このクラスは
+   定規(rail-wrap: 2行)・履歴行(history-row: 1行)の2種類のgridで共有される
+   ため、grid-rowの正しい値は置かれるgrid側の行数によって変わる
+   (No.170の差し戻し教訓をそのまま踏襲: 各gridコンテナ側のセレクタで
+   data-role単位にgrid-rowを指定する)。 */
+.mz-two-in-the-same-week-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+/* 定規(rail-wrap: 目盛り1行+本体1行)でだけ、見出しをrow2に置く。 */
+.mz-two-in-the-same-week-rail-wrap .mz-two-in-the-same-week-row-label[data-role='row-label'] {
+  grid-row: 2;
+}
+
+/* 台(レール): 「ここは何かを数えている場だ」を言う下地。地(#eaeae8)と
+   区別できる濃さ(#d6d6d3)で必ず描く(共通則2: 担体は場が読めないと読めない)。 */
+.mz-two-in-the-same-week-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 22px;
+}
+.mz-two-in-the-same-week-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 粒(定規)・履歴の点が共有する1個の見た目(共通則1: 6x6・角丸0)。この標本に
+   輪郭は存在しない(受け付けたのに効いていない、という状態を持たないため)。 */
+.mz-two-in-the-same-week-dot {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  background: #3d3d3d;
+  border-radius: 0;
+  border-style: none;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じgrid-columnを共有するのでx座標が
+   一致する。 */
+.mz-two-in-the-same-week-marker-col {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* この標本で唯一transitionを持つ要素(共通則3の唯一の例外)。 */
+.mz-two-in-the-same-week-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- 対照専用(壊れ方2): 種類で色を分ける ---------- */
+.mz-two-in-the-same-week-dot.is-c-stow {
+  background: #3a7ab3;
+}
+.mz-two-in-the-same-week-dot.is-c-check {
+  background: #b3b3b3;
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-two-in-the-same-week-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-two-in-the-same-week-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 240px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-two-in-the-same-week-history-inner {
+  position: relative;
+  height: 10px;
+}
+
+/* ---------- 積む/点検/次の週へ/リセット ---------- */
+
+.mz-two-in-the-same-week-control-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mz-two-in-the-same-week-btn {
+  flex: none;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 9.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-two-in-the-same-week-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+
+/* ---------- 対照: 壊れ方3(重なった週への書き込みが起きた瞬間だけ出る赤いトースト) ---------- */
+.mz-two-in-the-same-week-toast {
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgb(179, 58, 58);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
 }
