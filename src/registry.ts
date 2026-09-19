@@ -169,6 +169,9 @@ import RuleSkipsThisWeek from './specimens/rule-skips-this-week'
 import MyDoingNotInAnyLedger from './specimens/my-doing-not-in-any-ledger'
 import IChangedTheRule from './specimens/i-changed-the-rule'
 import WhoseGrainIsThis from './specimens/whose-grain-is-this'
+import TwoInTheSameWeek from './specimens/two-in-the-same-week'
+import ProxySuccessInMyLedger from './specimens/proxy-success-in-my-ledger'
+import WhichPressMadeThis from './specimens/which-press-made-this'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -2309,6 +2312,39 @@ export const specimens: Specimen[] = [
     ecology:
       '定規は、3つの主語の出来事を**1つの列**で受けている——読み手が押して起きたこと、指示が繰り返して起こしたこと（No.155）、外界が起こしたこと（No.161 / 164）。そして粒は1種類しか無い（No.162 が担体を増やせないと測った）。**では、ある週の粒を置いたのが誰かを、画面はどう言うのか。** 既定の答えは「**言わない**」である。台本の粒は **6個**（週1・2・3・5・6・7、週4は空き）で、`width/height/background-color/border-width/border-radius/opacity` の6項目が **distinct 1 値**。**主語を運ぶ DOM 属性も持たない**（`data-by` のような属性を作っていないので、隠しているのではなく**その値を持つ変数が存在しない**）。読めるのは**列としてのふるまい**だけで、繰り返しの粒（週1・3・5・7）は `left` の隣接差が**すべて 60.000px**——等間隔だけが「続いている」を言う（No.167 の距離）。そして**単発どうしは区別できない**: 読み手が置いた週2の粒と、誰も押していないのに立った週6（外界）の粒は、6項目に `top` を加えて**完全に一致**（差 **0.000px**）。第2の芯は**重なりが消える**ことで、週5は繰り返しと読み手が同じ週に当たるが、粒は **1個**にしかならない（1つの週に担体を2個並べない＝No.163）。その週送りの前後で `data-press-count` は **+1** なのに定規に増えた粒は **1個**——**押した回数と粒の個数が、ここで決定的に合わなくなる**。第3は台帳どうしの対応で、履歴は **3点**・粒は **6個**、点は **distinct 1 値**で週を名乗らず（`data-week` は全点 **null**）、左詰めの等間隔（隣接差 **10.000px**）に並ぶだけ。**点1つが粒3個に対応することも（`点検` の1点＝繰り返しの粒4個ぶん）、粒0個に対応することも（重なりの週の押下）ある。**既定は禁止語（`あなた` `自動` `外部` `誰` `繰り返し` `隔週` `周期` `代行`）**0 回**、凡例 **0 個**、赤 **0 箇所**、未来側の担体 **0 個**、外形 **340×152px**。**対照は「主語で行を割る」ことで数を合わせにいき、台帳を3つにしてしまう**: 行が **1 → 3** に増え、粒は **6 → 7**（重なりの週5が2個に割れる）——**押した回数とは合うようになるが、定規が3つの台帳になり、「軸は増やさない」（No.163）が壊れる**。あわせて粒に主語の色が付き（**distinct 3 値**: `rgb(61,61,61)` / `rgb(58,122,179)` / `rgb(179,179,179)`）、外界の粒は赤いトーストが名乗って **1800ms** で消える（跡 **0 個**）。**配線側の目視が1件拾った**: 数値条件 C1〜C8 を全項目通したまま、**履歴の点が自分の行見出しより 15.5px 上にずれていた**（見出しの縦中央 205.5 に対しトラックは 191.5–205.5）。原因は定規の行と履歴の行で**同じ見出しクラスを使い回し、そこに `grid-row: 2` が直書きされていた**こと。**この標本は「点がどの台帳のものかは、見出しとの対応でしか言えない」構造なので、行のズレは主張に直接効く。**修正後は見出しとトラックの縦中央の差が **0.000px**（定規側と同じ揃い方）になり、余分な行が消えて外形も **165px → 152px** に縮んだ。**そして同じ原因のズレが、同じ回の No.169 でも、別の実装者の手で起きていた。**',
     Component: WhoseGrainIsThis,
+  },
+  {
+    id: 'two-in-the-same-week',
+    no: 171,
+    nameJa: '同じ週に、二度起きた',
+    nameEn: 'Twice in the Same Week',
+    category: 'フィードバック',
+    trigger: '`積む` と `点検` を同じ週に二度ずつ押しながら週を送る。押した回数と定規の粒の個数がずれていく（右上で「週セルの中に並べ、種類で色を分ける」対照に切り替え）',
+    principles: ['1週1粒。二度目は定規に載らない', '順序でしか区別できない出来事は、定規に載らない', '粒は「何がいくつ起きたか」を1つも言わない'],
+    ecology: 'TODO: 実装後に実測で書き直す',
+    Component: TwoInTheSameWeek,
+  },
+  {
+    id: 'proxy-success-in-my-ledger',
+    no: 172,
+    nameJa: '代わりにやったことが、できてしまった',
+    nameEn: 'Proxy Success in My Ledger',
+    category: 'フィードバック',
+    trigger: '`任せる` を1回押したあと、週を送るだけで粒が立ち続ける。最後に `取り消す` を押す（右上で「代わりの成功を履歴に載せ、粒に印を付ける」対照に切り替え）',
+    principles: ['代わりの成功は定規にだけ載る。履歴には載らない', '許可は1回、成功は何回でも', '自分がやっていないことを取り消した跡だけが、自分の側に残る'],
+    ecology: 'TODO: 実装後に実測で書き直す',
+    Component: ProxySuccessInMyLedger,
+  },
+  {
+    id: 'which-press-made-this',
+    no: 173,
+    nameJa: 'この粒は、どの押下か',
+    nameEn: 'Which Press Made This',
+    category: 'フィードバック',
+    trigger: '定規の粒と履歴の点を順に指す。指した場所の地だけが沈み、反対側の台帳は1か所も沈まない（右上で「点に週を持たせ、結べなかったものを赤で名乗る」対照に切り替え）',
+    principles: ['指すと沈むのは場所で、担体は1pxも変わらない', '対応は、どちらの側からも作れない', '突き合わせは出来事ではないので、台帳に何も書かない'],
+    ecology: 'TODO: 実装後に実測で書き直す',
+    Component: WhichPressMadeThis,
   },
 ]
 /* 各標本のソースコードを ?raw で丸ごと取り込む（詳細ビューのコード表示用） */
