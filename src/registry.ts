@@ -172,6 +172,9 @@ import WhoseGrainIsThis from './specimens/whose-grain-is-this'
 import TwoInTheSameWeek from './specimens/two-in-the-same-week'
 import ProxySuccessInMyLedger from './specimens/proxy-success-in-my-ledger'
 import WhichPressMadeThis from './specimens/which-press-made-this'
+import FinerRulerAddsNothing from './specimens/finer-ruler-adds-nothing'
+import ILetItChangeTheRule from './specimens/i-let-it-change-the-rule'
+import PastReadByTodaysRule from './specimens/past-read-by-todays-rule'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -2348,6 +2351,39 @@ export const specimens: Specimen[] = [
     ecology:
       '171 と 172 で 2 つの台帳の数は決定的に合わなくなった。残っているのは読み手が必ずやること——**突き合わせ**である。この標本は「どの押下がどの粒か」を指させようとして、**指せないことを見せる**。理由は 1 行で言える: **履歴の点は週を持たず（No.170）、定規の粒は順序を持たない。** 台本は 4 通りの対応を同じ静止画に同居させる——**2 対 1**（同じ週に二度＝171）・**1 対 1**・**0 対 1**（代わりに動くものか外界＝172 / 170）・**1 対 0**（押したがまだ効いていない＝159 / 168）。履歴の点 **4 個**に対し定規の粒 **3 個**で、**1 対 1 で結べるのは 4 つのうち 1 つだけ**である。既定の答えは 3 つ。ひとつ、**指すと沈むのは「場所」で、担体は 1px も変わらない**——粒を指した前後で担体の `width / height / background-color / border-radius / opacity` は完全一致し `left` / `top` の差も **0.000px**、変わるのは週セルの地の `background-color` **1 項目だけ**（`rgb(214,214,211)` → `rgb(179,179,179)`）。担体側の CSS に hover 系のセレクタが **1 つも無い**ので、担体を変える経路が最初から存在しない。ふたつ、**反対側の台帳は 1 か所も沈まない**——粒を指しているあいだ履歴側で背景色が変わった要素 **0 個**、点を指しているあいだ定規側で **0 個**。既定は `hoverRailWeek` と `hoverHistoryIdx` という**互いを読まない 2 本の state** で出来ており、片方の値でもう片方の JSX を分岐する行が 1 行も無い。**対応は、どちらの側からも作れない。** みっつ、**突き合わせは台帳に何も書かない**——指す前と離した後で要素数 **41 → 41**、全要素の class / `data-*` / 矩形の JSON が**完全一致**（跡 0 件）。既定の履歴は `HISTORY_COUNT_DEFAULT = 4` という**定数 1 個**から点を並べるだけで、どの週の押下だったかを持つフィールドを**書いていない**（`data-week` は全点 **null**）。そして週 2（2 押下）・週 4（1 押下）・週 6（0 押下）の粒は 6 項目＋`top` で**完全一致**する——**対応の数は、粒の見た目に 1 つも出ない**。**対照は、持たせれば結べることを見せる。そして持たせた瞬間に何が起きるかも見せる**: 点に `data-week` を持たせると **`2, 2, 4, 7`**（distinct **3 値**）になり、週 2 の粒を指すと点が **2 個**、週 4 で **1 個**、週 6 で **0 個**沈む。だがこのとき履歴は、**同じ時刻の 2 点を順序を持ったまま並べている**——定規には存在しない前後が、履歴の上にだけ在る。さらに結べなかった担体を赤で名乗ると印は **2 個**になり（週 6 の粒・4 つめの点）、**押したのにまだ載っていない**（159 / 168 が「正しい」と決めた状態）と**押していないのに載った**（172）が、**同じ 1 色**に潰れる。**履歴は、定規の劣った複製になる。** 既定の赤・青は **0 箇所**、禁止語 **0 件**、transition を持つ要素は現在地の縦線 **1 個のみ**。**配線側の目視が 1 件拾った**——そしてそれは、**同じ原因の 3 回目**だった: 履歴の行見出しが担体より **14.50px** 下にずれていた（見出しの縦中央 **229.00** に対しトラック **214.50**）。原因は No.170 とまったく同じで、**行見出しのクラスに `grid-row: 2` が直書きされ、それを定規の行（目盛り＋台の 2 行グリッド）と履歴の行（1 行グリッド）で使い回していた**こと。修正後は縦中央の差 **0.000px**、外形は **340×131px → 340×118px** に縮んだ（No.170 の **165 → 152px** と同じ縮み方）。**2 回踏んだ罠は、3 人目の実装者がもう一度踏む。**実装が踏んだ罠がもう 1 つあり、それは主張を強くして終わった: 担体を地の上に重ねていたため `hover()` が担体に遮られて**タイムアウトした**。`pointer-events: none` を担体に付けて地へ素通りさせた結果、**担体はイベントを 1 つも持たない**という芯 1 が、実測でも裏付けられる形になった。',
     Component: WhichPressMadeThis,
+  },
+  {
+    id: 'finer-ruler-adds-nothing',
+    no: 174,
+    nameJa: '細かくしても、増えない',
+    nameEn: 'Finer Ruler Adds Nothing',
+    category: 'アナリティクス',
+    trigger: '(収録後に差し替える)',
+    principles: ['(仮)'],
+    ecology: '(収録後に差し替える)',
+    Component: FinerRulerAddsNothing,
+  },
+  {
+    id: 'i-let-it-change-the-rule',
+    no: 175,
+    nameJa: '任せた相手が、規則を変えた',
+    nameEn: 'I Let It Change the Rule',
+    category: 'フィードバック',
+    trigger: '(収録後に差し替える)',
+    principles: ['(仮)'],
+    ecology: '(収録後に差し替える)',
+    Component: ILetItChangeTheRule,
+  },
+  {
+    id: 'past-read-by-todays-rule',
+    no: 176,
+    nameJa: 'あの週を、今の目盛りで読んでいる',
+    nameEn: "Past Read by Today's Rule",
+    category: 'アナリティクス',
+    trigger: '(収録後に差し替える)',
+    principles: ['(仮)'],
+    ecology: '(収録後に差し替える)',
+    Component: PastReadByTodaysRule,
   },
 ]
 /* 各標本のソースコードを ?raw で丸ごと取り込む（詳細ビューのコード表示用） */
