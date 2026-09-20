@@ -3350,6 +3350,32 @@ const CHOREO = {
     await next.click(); await sleep(1400)
     await sleep(1200)
   },
+  'past-read-by-todays-rule': async (page) => {
+    /* 撮るのは「粒が動かないこと」なので、動かない絵を長く写しても中身は伝わらない。
+       伝わるのは**目盛りだけが動く**ところなので、目盛りの切り替えの前後で十分に止める。
+       まず週を最後まで送り（旧規則の小さい粒3つ・新規則の大きい粒5つが同居する絵を作る）、
+       次に週2の目盛りへ移す——粒は1pxも動かず、今週のほうが目盛りを突き抜ける。
+       最後に対照へ移り、同じ操作で**過去の粒が動く**ことを見せる。 */
+    const next = page.locator('[data-role="next-btn"]')
+    const pick = (w) => page.locator(`[data-role="scale-pick"][data-week="${w}"]`)
+    await sleep(900)
+    for (let i = 0; i < 3; i++) { await next.click(); await sleep(700) }
+    await sleep(900)                      // 週4: ここで規則が変わる。UIは何も言わない
+    for (let i = 0; i < 4; i++) { await next.click(); await sleep(700) }
+    await sleep(1500)                     // 今の目盛り: 過去3週が1目盛りにも届かない
+    await pick(2).click()
+    await sleep(2200)                     // 当時の目盛り: 粒は動かず、今週が突き抜ける
+    await page.locator('[data-role="reset-scale-btn"]').click()
+    await sleep(1600)
+    // 対照: 過去の粒を今の規則へ変換して見せる（＝過去が動く）
+    await page.locator('[data-role="mode-contrast"]').click()
+    await sleep(1000)
+    for (let i = 0; i < 7; i++) { await next.click(); await sleep(600) }
+    await sleep(1400)
+    await pick(2).click()
+    await sleep(2000)
+    await sleep(800)
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))

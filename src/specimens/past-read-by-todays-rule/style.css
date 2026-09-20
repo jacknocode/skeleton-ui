@@ -133,17 +133,20 @@
   right: 0;
   bottom: 0;
   height: 1px;
-  background: #b3b3b3;
+  background: #8c8c8c;
   z-index: 0;
 }
 /* 目盛り線(縦の量を測るための水平の基準線)。間隔は既定/対照どちらも
-   今見ている規則(effectiveRule)だけで決まる。数値ラベルは付けない(実装の決め1)。 */
+   今見ている規則(effectiveRule)だけで決まる。数値ラベルは付けない(実装の決め1)。
+   実物で確認したところ#d6d6d3(レール淡色)はステージの地色(#eaeae8)とほぼ
+   同化して見えなかった(過去の標本が踏んだのと同じ罠)。破線+#b3b3b3に変更し、
+   地色との差を確保した。 */
 .mz-past-read-by-todays-rule-scale-line {
   position: absolute;
   left: 0;
   right: 0;
-  height: 1px;
-  background: #d6d6d3;
+  height: 0;
+  border-top: 1px dashed #b3b3b3;
   z-index: 0;
 }
 
