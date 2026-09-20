@@ -108,6 +108,13 @@
   color: #b3b3b3;
   font-variant-numeric: tabular-nums;
 }
+/* 日表示: 週の頭の日の境目に左寄せで乗せる(中央寄せをやめる)。数字の個数は
+   週表示より少ない(4個)ままだが、境目の縦線(.day-line)と対で読ませることで
+   「目盛りが減った」ではなく「週の目盛りが割れた」と読めるようにする。 */
+.mz-finer-ruler-adds-nothing-tick.is-day {
+  transform: none;
+  padding-left: 2px;
+}
 
 .mz-finer-ruler-adds-nothing-track {
   position: relative;
@@ -115,7 +122,8 @@
   margin-top: 4px;
 }
 
-/* 週表示: 1本のレール線だけ(週の中の空白という概念をそもそも持たない=芯2)。 */
+/* レール線: 週表示・日表示のどちらでも同じ1本(「レールがそこに在る」ことは
+   scaleに関わらず変わらない事実なので、常に描く)。 */
 .mz-finer-ruler-adds-nothing-rail {
   position: absolute;
   left: 0;
@@ -127,23 +135,51 @@
   z-index: 0;
 }
 
-/* 日表示: 1日ぶんの地。既定は起きた週かどうかに関わらず同じ色(C4: distinct 1値)。 */
+/* 日表示: 1日ぶんの地。既定はtransparent(=レールの地のまま、塗らない)にして、
+   隣接セルが1本の帯に癒着して見えるのを避ける(芯2・配線側の指摘への対処)。
+   セルの存在自体は.day-line(縦線)が示す。 */
 .mz-finer-ruler-adds-nothing-cell {
   position: absolute;
   top: 50%;
   height: 14px;
   margin-top: -7px;
-  background: #d6d6d3;
+  background: transparent;
   z-index: 0;
   box-sizing: border-box;
 }
-/* 対照だけが使う2値目(壊れ方3): 「起きたが、いつかは分からない」日。 */
+/* 対照だけが使う2値(壊れ方3): 「起きなかった」日は淡く、「起きたが、いつかは
+   分からない」日はもう1段濃く塗る。既定はどちらのクラスも一度も付けない。 */
+.mz-finer-ruler-adds-nothing-cell.is-c-empty {
+  background: #d6d6d3;
+}
 .mz-finer-ruler-adds-nothing-cell.is-c-unknown {
   background: #b3b3b3;
 }
 
+/* 日表示だけに立つ「日の境目」の縦線。週の境目(.is-week)だけ太く濃くして、
+   「週の目盛りが7本の日の目盛りに割れた」ことを本数と濃淡そのもので見せる
+   (実装の決め3)。既定・対照の両方で共通(レールの物理特性はモードに依らない)。 */
+.mz-finer-ruler-adds-nothing-day-line {
+  position: absolute;
+  top: 50%;
+  width: 1px;
+  height: 10px;
+  margin-top: -5px;
+  background: #b3b3b3;
+  z-index: 1;
+}
+.mz-finer-ruler-adds-nothing-day-line.is-week {
+  width: 1.5px;
+  height: 22px;
+  margin-top: -11px;
+  background: #6e6e6e;
+}
+
 /* 既定の粒: 常に「1週ぶんの幅」を持つ矩形。週表示でも日表示でも同じleft/widthの式で置く(芯1)。
-   transition/animationは1行も書かない(共通則3・C6: computed transition-durationは0s)。 */
+   transition/animationは1行も書かない(共通則3・C6: computed transition-durationは0s)。
+   日の境目の縦線(.day-line)より上に重ね、7本ぶんの境目をまるごと覆うことで
+   「粒の左右端が日の境目に一致している」ことを、覆われていない外側の縦線との
+   位置一致で読ませる。 */
 .mz-finer-ruler-adds-nothing-grain {
   position: absolute;
   top: 50%;
@@ -152,7 +188,7 @@
   background: #3d3d3d;
   border-radius: 0;
   box-sizing: border-box;
-  z-index: 1;
+  z-index: 2;
 }
 
 /* 対照の点: 6x6の正方形。週表示は週の中央、日表示は「中央の日」または「隣り合わせの日」に
@@ -166,7 +202,7 @@
   background: #3d3d3d;
   border-radius: 0;
   box-sizing: border-box;
-  z-index: 1;
+  z-index: 2;
   transition:
     left 0.3s ease,
     width 0.3s ease;

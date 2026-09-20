@@ -18,16 +18,18 @@ import './style.css'
    `PITCH_WEEK`が「7日ぶんの目盛り幅」と一致するのも、`PITCH_DAY`がその逆算
    だからで、両者を別々に定数化していたら丸め誤差で一致しなくなる(踏んだ罠1参照)。
 
-   ---- 芯2の実装: 空白セルは日表示のときにしか生まれない、そして常に1色 ----
+   ---- 芯2の実装: 空白セルは日表示のときにしか生まれない、そして常に1色(=塗らない) ----
    週表示は目盛り(ticks)と1本のレール線(`.rail`)だけで、週ごとのセルを1つも
    描画しない――週の粒度では「その週の中の空白」という概念自体が存在しない
    (7日のうち何日が起きて何日が起きていないかを週表示は最初から聞かれていない)。
    日表示になって初めて28個の日セル(`.cell`)を描画するが、既定はその
-   background-colorを**起きた週かどうかに関わらず**同じ`#d6d6d3`にする――
+   background-colorを**起きた週かどうかに関わらず**同じ`transparent`にする――
    `weekHasEvent(week)`という判定関数はコード中に存在するが、既定側のJSXは
-   それを一度も参照しない(セルの色を決める式に条件式が無い)。「起きた日も
+   それを一度も参照しない(セルにクラスを足す式に条件式が無い)。「起きた日も
    分かっていない」(芯2)は、色を決める式が持っている情報を捨てているのではなく、
-   **最初からその情報を読みに行っていない**ことの帰結。
+   **最初からその情報を読みに行っていない**ことの帰結。塗らない(=レールの地の
+   ままにする)ことで、隣接セルが1本の帯に見えて「情報が増えたように」誤読される
+   ことも避けている(実装の決め3参照)。
 
    ---- 芯3の実装: 状態は`mode`と`scale`の2つのenumだけ。粒の配列は定数 ----
    `LEDGER_WEEKS`(既定)・`CONTRAST_ENTRIES`(対照)はどちらもモジュール直下の
@@ -87,6 +89,21 @@ import './style.css'
    定数の掛け算で確認する形になり、値をどちらか変えるたびに一致が崩れる
    構造だった。`PITCH_DAY = PITCH_WEEK / 7`という**導出**に変えたことで、
    一致は式の性質になり、定数を変えても壊れなくなった。
+
+   ---- 実装の決め3(配線側の目視で判明した不足の修正): 日表示に「日の目盛り線」を足した ----
+   最初の実装は、日表示になっても目盛りの数字が(週の頭にしか出さない設計のため)
+   4個のまま、かつ日セルを全部同じ色で塗っていたため、隣接セルが1本の明るい帯に
+   癒着して見え、**数値条件(C2の差0.00px)が通っていても「定規が細かくなった」が
+   絵から読めない**状態だった――「目盛りの数字の個数」だけを解像度の手がかりに
+   していたのが原因。直した点は2つ。ひとつ、日表示のときだけ**29本の縦線**
+   (`day-line`、0〜28日ぶんの境目)をトラックに引いた。週の境目(7の倍数)だけを
+   太く濃く(`.is-week`)し、それ以外の24本は細く淡くする――「週の目盛りが7本の
+   日の目盛りに割れた」ことが目盛りの**本数**そのもので見えるようにした
+   (数字は増やしていない。要求どおり週の頭にだけ残した)。ふたつ、日セルの
+   background-colorを既定では`transparent`にした(芯2参照)――セルの存在は
+   縦線という**別の担体**が示すので、セル自身は塗って「情報の帯」を作らない。
+   対照は`weekHasEvent`を読んでセルを2色に塗り分ける(壊れ方3)ので、この変更は
+   対照の見え方には影響しない。
 
    ---- 踏んだ罠3(スクリーンショットで気づいた): 週4の対照の点2個が隙間なく密着し、
    1個の塗りに見えていた ----
@@ -183,6 +200,9 @@ export default function FinerRulerAddsNothing() {
   const grainCount = mode === 'default' ? GRAIN_COUNT_DEFAULT : GRAIN_COUNT_CONTRAST
   const railW = scale === 'week' ? RAIL_W_WEEK : RAIL_W_DAY
   const visibleWeeks = scale === 'week' ? ALL_WEEKS : ALL_WEEKS.filter(inWindow)
+  // 日表示だけが持つ「日の境目」の縦線。0〜28日ぶんの境目=29本。7の倍数が週の境目。
+  const dayBoundaries =
+    scale === 'day' ? Array.from({ length: DAY_WINDOW_WEEKS * DAYS_PER_WEEK + 1 }, (_, idx) => idx) : []
 
   return (
     <div
@@ -245,10 +265,10 @@ export default function FinerRulerAddsNothing() {
           {visibleWeeks.map((w) => (
             <span
               key={w}
-              className="mz-finer-ruler-adds-nothing-tick"
+              className={`mz-finer-ruler-adds-nothing-tick${scale === 'day' ? ' is-day' : ''}`}
               data-role="tick"
               data-week={w}
-              style={{ left: weekBlockLeft(w) + PITCH_WEEK / 2 }}
+              style={{ left: scale === 'day' ? weekBlockLeft(w) : weekBlockLeft(w) + PITCH_WEEK / 2 }}
             >
               {w}
             </span>
@@ -256,16 +276,17 @@ export default function FinerRulerAddsNothing() {
         </div>
 
         <div className="mz-finer-ruler-adds-nothing-track" data-role="track">
-          {scale === 'week' && <span className="mz-finer-ruler-adds-nothing-rail" data-role="rail" />}
+          <span className="mz-finer-ruler-adds-nothing-rail" data-role="rail" />
 
           {scale === 'day' &&
             visibleWeeks.flatMap((w) =>
               Array.from({ length: DAYS_PER_WEEK }, (_, d) => {
-                const isUnknown = mode === 'contrast' && weekHasEvent(w)
+                const cellVariant =
+                  mode === 'contrast' ? (weekHasEvent(w) ? ' is-c-unknown' : ' is-c-empty') : ''
                 return (
                   <span
                     key={`${w}-${d}`}
-                    className={`mz-finer-ruler-adds-nothing-cell${isUnknown ? ' is-c-unknown' : ''}`}
+                    className={`mz-finer-ruler-adds-nothing-cell${cellVariant}`}
                     data-role="cell"
                     data-week={w}
                     style={{ left: weekBlockLeft(w) + d * PITCH_DAY, width: PITCH_DAY }}
@@ -273,6 +294,20 @@ export default function FinerRulerAddsNothing() {
                 )
               }),
             )}
+
+          {scale === 'day' &&
+            dayBoundaries.map((idx) => {
+              const isWeekBoundary = idx % DAYS_PER_WEEK === 0
+              return (
+                <span
+                  key={idx}
+                  className={`mz-finer-ruler-adds-nothing-day-line${isWeekBoundary ? ' is-week' : ''}`}
+                  data-role="day-line"
+                  data-week-boundary={isWeekBoundary}
+                  style={{ left: idx * PITCH_DAY }}
+                />
+              )
+            })}
 
           {mode === 'default'
             ? LEDGER_WEEKS.filter((w) => scale === 'week' || inWindow(w)).map((w) => (
