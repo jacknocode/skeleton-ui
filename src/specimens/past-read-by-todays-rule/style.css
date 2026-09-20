@@ -1,5 +1,216 @@
+/* No.176「あの週を、今の目盛りで読んでいる」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #6e6e6e / #8c8c8c 中 / #b3b3b3 淡中 / #d3d3d0 / #d6d6d3 淡・レール /
+   #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。警告色 #b33a3a はこの標本では対照の
+   区切り線にのみ使用する(共通則5)。
+
+   共通則3・7のため、現在地の縦線(.marker)以外のどの要素にもtransition/animation
+   を一切書かない――粒の高さ・目盛り線の位置の切り替えも含め瞬間切り替え。
+   marker以外は宣言そのものが無いのでcomputed transition-durationは既定の0sになる。
+   粒(.grain)のCSSにも高さをtransitionさせる宣言は存在しない(C1/C2で0.00pxを
+   出すための構造そのもの)。 */
+
 .mz-past-read-by-todays-rule {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   width: 340px;
-  font-size: 12px;
+  padding: 8px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-past-read-by-todays-rule-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-past-read-by-todays-rule-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-past-read-by-todays-rule-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-past-read-by-todays-rule-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
   color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-past-read-by-todays-rule-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 対照専用: 変換済みの凡例(壊れ方4への露出) ---------- */
+.mz-past-read-by-todays-rule-legend {
+  font-size: 9px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-past-read-by-todays-rule-rail-wrap {
+  display: grid;
+  grid-template-rows: 14px 64px;
+  row-gap: 4px;
+  align-items: end;
+  position: relative;
+}
+
+/* 週の目盛り(週番号)。到達済みの週はボタン(この週の目盛りで見る=実装の決め2)、
+   未到達の週は静的な数字。 */
+.mz-past-read-by-todays-rule-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 14px;
+  z-index: 2;
+}
+.mz-past-read-by-todays-rule-tick-btn,
+.mz-past-read-by-todays-rule-tick-static {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 0 2px;
+}
+.mz-past-read-by-todays-rule-tick-static {
+  color: #d3d3d0;
+}
+.mz-past-read-by-todays-rule-tick-btn {
+  color: #8c8c8c;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.mz-past-read-by-todays-rule-tick-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* 行見出し「定規」。装飾を持たせず静的ラベル(操作はticks/control-rowに分離)。 */
+.mz-past-read-by-todays-rule-row-label {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: end;
+  padding-bottom: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+/* 台(定規): 週トラック。粒はここに下から積む。overflow: visible厳守
+   (共通則: はみ出した粒を切り落とさない)。 */
+.mz-past-read-by-todays-rule-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 64px;
+  overflow: visible;
+}
+.mz-past-read-by-todays-rule-baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #b3b3b3;
+  z-index: 0;
+}
+/* 目盛り線(縦の量を測るための水平の基準線)。間隔は既定/対照どちらも
+   今見ている規則(effectiveRule)だけで決まる。数値ラベルは付けない(実装の決め1)。 */
+.mz-past-read-by-todays-rule-scale-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #d6d6d3;
+  z-index: 0;
+}
+
+/* 粒(バー)。幅は固定・高さだけが週ごとの量を表す(共通則1の唯一の例外。
+   企画の具体仕様「粒の大きさ=量」による)。底辺(bottom:0)から積む。
+   このクラスにtransition宣言は無い(C1/C2の0.00pxはここから出る)。 */
+.mz-past-read-by-todays-rule-grain {
+  position: absolute;
+  bottom: 0;
+  width: 14px;
+  background: #3d3d3d;
+  border-radius: 1px;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/* 対照専用(壊れ方3): 規則が変わった週の左端に立てる赤い区切り線。
+   既定のコードにはこのクラスへ至る経路が無い。この標本で警告色を使う唯一の要素。 */
+.mz-past-read-by-todays-rule-change-line {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 1.5px;
+  background: #b33a3a;
+  z-index: 1;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じgrid-columnを共有するのでx座標が一致する。 */
+.mz-past-read-by-todays-rule-marker-col {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* この標本で唯一transitionを持つ要素(共通則7の唯一の例外)。 */
+.mz-past-read-by-todays-rule-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- 操作ボタン ---------- */
+.mz-past-read-by-todays-rule-control-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mz-past-read-by-todays-rule-btn {
+  flex: none;
+  padding: 6px 9px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 9.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-past-read-by-todays-rule-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
 }
