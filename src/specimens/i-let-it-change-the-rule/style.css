@@ -1,5 +1,234 @@
+/* No.175「任せた相手が、規則を変えた」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 レール / #eaeae8 地 /
+   #f5f5f3 反転文字 / #fff)。識別用の青(#3a7ab3)は対照の色分け・トーストにのみ、
+   警告色(#b33a3a)は対照の印にのみ使用する(共通則2)。
+
+   共通則3のため、現在地の縦線(.marker)以外のどの要素にも transition / animation
+   を一切書かない。粒(.dot)の width/height はJS側で毎回インラインstyleとして
+   直接セットするので、ここに transition を書かないことで「大きさが変わっても
+   瞬間切り替え」になる(cf. 芯3: 変化そのものをアニメーションで見せびらかさない)。
+
+   共通則1のため、粒・履歴の点は正方形(角丸0)・単色・枠なし。この標本の芯は
+   「粒の大きさだけが違う」ことなので、大きさ以外のプロパティ(背景色・枠・
+   不透明度)はここで1系統に固定し、要素ごとに分岐するクラスを作らない。 */
+
 .mz-i-let-it-change-the-rule {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
   width: 340px;
-  font-size: 12px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-i-let-it-change-the-rule-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-i-let-it-change-the-rule-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-i-let-it-change-the-rule-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-i-let-it-change-the-rule-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
   color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-i-let-it-change-the-rule-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-i-let-it-change-the-rule-rail-wrap {
+  display: grid;
+  grid-template-rows: 16px 26px;
+  row-gap: 4px;
+  align-items: center;
+  position: relative;
+}
+
+/* 週の目盛り。 */
+.mz-i-let-it-change-the-rule-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 16px;
+  z-index: 2;
+}
+.mz-i-let-it-change-the-rule-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 行見出し。定規行(rail-wrap: 目盛り1行+本体1行)ではrow2、履歴行(history-row:
+   1行のみのgrid)では暗黙のrow1に、それぞれのgridコンテナ側で揃える。 */
+.mz-i-let-it-change-the-rule-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.mz-i-let-it-change-the-rule-rail-wrap .mz-i-let-it-change-the-rule-row-label[data-role='row-label-rail'] {
+  grid-row: 2;
+}
+
+/* 台(レール): 「ここは何かを積んでいる場だ」を言う下地。地(#eaeae8)と混ざらない
+   はっきりした灰(#d6d6d3)で必ず描く(共通則2で担体が読めなくなる罠を避ける)。 */
+.mz-i-let-it-change-the-rule-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 26px;
+}
+.mz-i-let-it-change-the-rule-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 粒(定規)・履歴の点が共有する1個の見た目。角丸0・単色・枠なし。
+   width/heightはJSがインラインstyleでセットする(=大きさが唯一の変数)。 */
+.mz-i-let-it-change-the-rule-dot {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #3d3d3d;
+  border-radius: 0;
+  border-style: none;
+  opacity: 1;
+  box-sizing: border-box;
+  z-index: 1;
+}
+/* 履歴の点だけは大きさを固定する(履歴は「回数」の担体であって「量」の担体では
+   ない=共通の語彙どおり)。 */
+.mz-i-let-it-change-the-rule-hist-dot {
+  width: 6px;
+  height: 6px;
+}
+
+/* 対照専用(壊れ方2+4): 規則変更後に書かれた粒だけ、塗りの色を変え(壊れ方4)、
+   右肩に小さな印を足す(壊れ方2)。既定のコードにはこのクラスへ至る経路が無い。 */
+.mz-i-let-it-change-the-rule-dot.is-changed {
+  background: #3a7ab3;
+}
+.mz-i-let-it-change-the-rule-dot.is-changed::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #b33a3a;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じgrid-columnを共有するのでx座標が一致する。 */
+.mz-i-let-it-change-the-rule-marker-col {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* この標本で唯一transitionを持つ要素(共通則3の唯一の例外)。 */
+.mz-i-let-it-change-the-rule-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-i-let-it-change-the-rule-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-i-let-it-change-the-rule-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 240px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-i-let-it-change-the-rule-history-inner {
+  position: relative;
+  height: 10px;
+}
+
+/* ---------- 任せる / 次の週へ / 元に戻す / リセット ---------- */
+
+.mz-i-let-it-change-the-rule-control-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.mz-i-let-it-change-the-rule-btn {
+  flex: none;
+  padding: 7px 9px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mz-i-let-it-change-the-rule-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+
+/* ---------- 対照: 壊れ方3(規則が変わった瞬間だけ出るトースト) ---------- */
+.mz-i-let-it-change-the-rule-toast {
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #3a7ab3;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
 }

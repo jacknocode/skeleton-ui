@@ -3321,6 +3321,35 @@ const CHOREO = {
     await away()
     await sleep(900)
   },
+  /* ---- No.174〜176「確かめに行った先に、答えが無い」 ---- */
+  'i-let-it-change-the-rule': async (page) => {
+    /* 撮るのは「気づくのに2週かかる」ことそのもの。任せてから週を送り、
+       粒が大きくなった瞬間に**何も起きない**（トーストも印も出ない）ところで
+       十分に止める。読み手が気づける唯一の経路は隣の週との大きさの差なので、
+       変わった週で止めるより、**変わる前と後を続けて見せる**ほうが中身に近い。
+       最後に対照へ移り、同じ台本で4つの壊れ方が一度に出るところを写す。 */
+    const next = page.locator('[data-role="next-btn"]')
+    await sleep(900)
+    await page.locator('[data-role="commit-btn"]').click()
+    await sleep(1000)                       // 履歴に1点だけ載る
+    await next.click(); await sleep(1100)   // 週2: 基準の粒
+    await next.click(); await sleep(1700)   // 週3: ここで規則が変わる。UIは何も言わない
+    await next.click(); await sleep(1300)
+    await next.click(); await sleep(1300)
+    await next.click(); await sleep(1300)
+    await page.locator('[data-role="undo-btn"]').click()
+    await sleep(1800)                       // 元に戻す＝読み手の操作なので履歴に載る
+    await sleep(600)
+    // 対照: 通知・印・色・履歴の点が一度に出る
+    await page.locator('[data-role="mode-contrast"]').click()
+    await sleep(900)
+    await page.locator('[data-role="commit-btn"]').click()
+    await sleep(900)
+    await next.click(); await sleep(1000)
+    await next.click(); await sleep(2200)   // トーストが出る瞬間
+    await next.click(); await sleep(1400)
+    await sleep(1200)
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
