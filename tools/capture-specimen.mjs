@@ -3322,6 +3322,26 @@ const CHOREO = {
     await sleep(900)
   },
   /* ---- No.174〜176「確かめに行った先に、答えが無い」 ---- */
+  'finer-ruler-adds-nothing': async (page) => {
+    /* 動くものが無い標本なので、撮るのは**拡大と縮小の往復**そのもの。
+       週表示で粒が5個あることを見せてから日表示へ——粒は7倍になるが割れず、
+       増えるのは空白と目盛りだけ。二度起きた週（週4）が1個のままであることが主題なので、
+       拡大したあとに長めに止める。最後に対照へ移り、同じ往復で
+       「二度目が戻ってくる」「空白が2色に塗り分けられる」「拡大で粒が滑る」を見せる。 */
+    const week = page.locator('[data-role="scale-week"]')
+    const day = page.locator('[data-role="scale-day"]')
+    await sleep(1100)                 // 週表示: 12週に粒5個
+    await day.click(); await sleep(2400)   // 拡大: 週4が1個の塊のまま7倍になる
+    await week.click(); await sleep(1600)  // 縮小: 元と完全に一致する
+    await day.click(); await sleep(1800)
+    await week.click(); await sleep(1400)
+    // 対照: 拡大すると二度目が割れて出てくる／空白が2色になる／粒が滑る
+    await page.locator('[data-role="mode-contrast"]').click()
+    await sleep(1300)
+    await day.click(); await sleep(2600)
+    await week.click(); await sleep(1800)
+    await sleep(700)
+  },
   'i-let-it-change-the-rule': async (page) => {
     /* 撮るのは「気づくのに2週かかる」ことそのもの。任せてから週を送り、
        粒が大きくなった瞬間に**何も起きない**（トーストも印も出ない）ところで
