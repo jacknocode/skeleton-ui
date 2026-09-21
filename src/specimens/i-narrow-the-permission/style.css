@@ -1,5 +1,274 @@
+/* No.178「任せる範囲を、狭めたい」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #6e6e6e / #8c8c8c 中 / #b3b3b3 淡中 / #d3d3d0 / #d6d6d3 淡・レール /
+   #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。識別用の青は使わない。警告色(#b33a3a)は
+   対照の印・塗り分けにのみ使用する(共通則2)。
+
+   共通則3(この標本は読み方の標本なので担体にtransition/animationを書かない)のため、
+   既定側の粒(.grain)・履歴の点(.hist-dot)・週セル(.cell)はどれもtransitionを
+   持たない。現在地の縦線(.marker)だけが唯一の例外。対照だけは`[data-mode='contrast']`
+   スコープで0.3sの遷移を持たせる(共通則6「対照だけが0.3sで滑る」)。 */
+
 .mz-i-narrow-the-permission {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
   width: 340px;
-  font-size: 12px;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-i-narrow-the-permission-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-i-narrow-the-permission-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-i-narrow-the-permission-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-i-narrow-the-permission-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
   color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-i-narrow-the-permission-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 対照(壊れ方1・前半): 段を常時表示するバッジ ---------- */
+.mz-i-narrow-the-permission-badge-row {
+  display: flex;
+}
+.mz-i-narrow-the-permission-badge {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #b33a3a;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-i-narrow-the-permission-rail-wrap {
+  display: grid;
+  grid-template-rows: 16px 26px;
+  row-gap: 4px;
+  align-items: center;
+  position: relative;
+}
+
+.mz-i-narrow-the-permission-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 16px;
+  z-index: 2;
+}
+.mz-i-narrow-the-permission-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.mz-i-narrow-the-permission-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.mz-i-narrow-the-permission-rail-wrap .mz-i-narrow-the-permission-row-label[data-role='row-label-rail'] {
+  grid-row: 2;
+}
+
+/* 台(レール): 「ここは何かを積んでいる場だ」を言う下地。地(#eaeae8)と混ざらない
+   はっきりした灰(#d6d6d3)で必ず描く(共通則2で担体が読めなくなる罠を避ける=踏んだ罠2)。 */
+.mz-i-narrow-the-permission-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 26px;
+}
+.mz-i-narrow-the-permission-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d6d6d3;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* 週セル: 定規の1週ぶんの器。グレイン(積んだ粒)が有れば内部にちょうど1個だけ入る。
+   段2で積めなかった週も、まだ来ていない週も、このクラス1つだけで描かれ
+   子要素数0・背景色1値になる(芯4)。 */
+.mz-i-narrow-the-permission-cell {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  box-sizing: border-box;
+}
+
+.mz-i-narrow-the-permission-grain {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #3d3d3d;
+  border-radius: 0;
+  border-style: none;
+  opacity: 1;
+  box-sizing: border-box;
+  z-index: 1;
+}
+.mz-i-narrow-the-permission-hist-dot {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  background: #3d3d3d;
+  border-radius: 0;
+  border-style: none;
+  opacity: 1;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/* 現在地の縦線を乗せる列。トラック列と同じgrid-columnを共有するのでx座標が一致する。 */
+.mz-i-narrow-the-permission-marker-col {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: stretch;
+  position: relative;
+  pointer-events: none;
+  z-index: 3;
+}
+/* この標本で唯一transitionを持つ要素(共通則3の唯一の例外)。 */
+.mz-i-narrow-the-permission-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #3d3d3d;
+  box-shadow: 0 0 0 1px #fff;
+  transition: left 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-i-narrow-the-permission-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-i-narrow-the-permission-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 240px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-i-narrow-the-permission-history-inner {
+  position: relative;
+  height: 10px;
+}
+
+/* ---------- 任せる / 次の週へ / 狭める / ゆるめる / リセット ---------- */
+
+.mz-i-narrow-the-permission-control-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.mz-i-narrow-the-permission-btn {
+  flex: none;
+  padding: 7px 9px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mz-i-narrow-the-permission-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+
+/* ---------- 対照: 壊れ方1(トースト) ---------- */
+.mz-i-narrow-the-permission-toast {
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #b33a3a;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+/* ---------- 対照専用: 壊れ方2(止められた粒に赤い印)・
+   壊れ方4(止められた空きセルの塗り分け)・0.3sの遷移 ---------- */
+.mz-i-narrow-the-permission[data-mode='contrast'] .mz-i-narrow-the-permission-grain,
+.mz-i-narrow-the-permission[data-mode='contrast'] .mz-i-narrow-the-permission-hist-dot,
+.mz-i-narrow-the-permission[data-mode='contrast'] .mz-i-narrow-the-permission-cell {
+  transition:
+    left 0.3s ease,
+    width 0.3s ease,
+    height 0.3s ease,
+    background-color 0.3s ease;
+}
+.mz-i-narrow-the-permission-grain.is-blocked::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #b33a3a;
+}
+.mz-i-narrow-the-permission-cell.is-blocked-empty {
+  background: rgba(179, 58, 58, 0.12);
+}
+/* 壊れ方3: 履歴の点に段の値を持たせ、背景色を3値に分ける。 */
+.mz-i-narrow-the-permission-hist-dot[data-scope='0'] {
+  background: #3d3d3d;
+}
+.mz-i-narrow-the-permission-hist-dot[data-scope='1'] {
+  background: #8c8c8c;
+}
+.mz-i-narrow-the-permission-hist-dot[data-scope='2'] {
+  background: #b3b3b3;
 }

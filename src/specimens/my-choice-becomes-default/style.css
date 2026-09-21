@@ -1,5 +1,229 @@
+/* No.179「選んだ読み方が、既定になる」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #6e6e6e / #8c8c8c 中 / #b3b3b3 淡中 / #d3d3d0 / #d6d6d3 淡・レール /
+   #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。警告色 #b33a3a はこの標本では使わない
+   (対照の壊れ方も濃淡の2値だけで表現できたため)。
+
+   C7「担体は動かない(全担体のtransition-duration 0s / animation-name none)」に
+   例外を残さないため、この標本には現在地の縦線(marker)を置いていない
+   (index.tsxの実装の決め1を参照)。よってどの要素にもtransition/animationの
+   宣言が無く、computed transition-durationは既定の0sそのまま。 */
+
 .mz-my-choice-becomes-default {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   width: 340px;
-  font-size: 12px;
+  padding: 8px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-my-choice-becomes-default-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-my-choice-becomes-default-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-my-choice-becomes-default-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-my-choice-becomes-default-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
   color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-my-choice-becomes-default-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-my-choice-becomes-default-rail-wrap {
+  display: grid;
+  grid-template-rows: 14px 64px;
+  row-gap: 4px;
+  align-items: end;
+  position: relative;
+}
+
+/* 週の目盛り(週番号)。8個とも常にボタン(全週が最初から在る=舞台の前提)。
+   既定側はどのボタンも同じクラスしか付かない(C2: distinct 1値)。 */
+.mz-my-choice-becomes-default-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 14px;
+  z-index: 2;
+}
+.mz-my-choice-becomes-default-tick-btn {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 0 2px;
+  color: #8c8c8c;
+  cursor: pointer;
+  border-radius: 4px;
+}
+/* 対照専用(壊れ方2): 直近に押した週番号だけを塗りつぶす。既定のCSSにはこの
+   セレクタへ至る経路が無い(is-markedは対照描画でしか付かない)。 */
+.mz-my-choice-becomes-default-tick-btn.is-marked {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* 行見出し。 */
+.mz-my-choice-becomes-default-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.mz-my-choice-becomes-default-rail-wrap .mz-my-choice-becomes-default-row-label[data-role='row-label-rail'] {
+  grid-row: 2;
+  align-self: end;
+  padding-bottom: 4px;
+}
+
+/* 台(定規): 週トラック。overflow: visible厳守(共通則: 粒を切り落とさない)。 */
+.mz-my-choice-becomes-default-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 64px;
+  overflow: visible;
+}
+.mz-my-choice-becomes-default-baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #8c8c8c;
+  z-index: 0;
+}
+/* 目盛り線(1本だけ。企画指定)。位置(bottom)がtickPxそのもの=間隔の担体。
+   実物で確認したところ#d6d6d3(レール淡色)を実線でステージの地色#eaeae8に
+   置くとほぼ同化して見えなかった(共通則6・過去の標本が繰り返し踏んだ罠)。
+   破線+#b3b3b3に変更し、地との差を確保した。既定側は常にこの1値。 */
+.mz-my-choice-becomes-default-scale-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed #b3b3b3;
+  z-index: 0;
+}
+/* 対照専用(壊れ方4): 目盛りの出どころを色の濃淡2値で描く。既定のCSSには
+   is-picked/is-nativeへ至る経路が無い。 */
+.mz-my-choice-becomes-default-scale-line.is-picked {
+  border-top-color: #3d3d3d;
+}
+.mz-my-choice-becomes-default-scale-line.is-native {
+  border-top-color: #b3b3b3;
+}
+
+/* 粒(バー)。幅固定・高さだけが週の値(共通則1の唯一の例外)。底辺から積む。
+   transition宣言は無い(C4/C7の0.00px・0sの根拠)。 */
+.mz-my-choice-becomes-default-grain {
+  position: absolute;
+  bottom: 0;
+  width: 14px;
+  background: #3d3d3d;
+  border-radius: 1px;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-my-choice-becomes-default-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-my-choice-becomes-default-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 240px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-my-choice-becomes-default-history-inner {
+  position: relative;
+  height: 10px;
+}
+.mz-my-choice-becomes-default-dot {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #3d3d3d;
+  border-radius: 0;
+  border-style: none;
+  box-sizing: border-box;
+  z-index: 1;
+}
+.mz-my-choice-becomes-default-hist-dot {
+  width: 6px;
+  height: 6px;
+}
+
+/* ---------- 操作ボタン ---------- */
+.mz-my-choice-becomes-default-control-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mz-my-choice-becomes-default-btn {
+  flex: none;
+  padding: 6px 9px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mz-my-choice-becomes-default-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+
+/* ---------- 対照: 壊れ方1(再訪の瞬間だけ出るトースト) ---------- */
+.mz-my-choice-becomes-default-toast {
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 9.5px;
+  font-weight: 700;
 }
