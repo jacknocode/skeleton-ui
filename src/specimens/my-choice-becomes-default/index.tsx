@@ -86,10 +86,17 @@ import './style.css'
    週1-3(12/13/15 < 20)が読めず、5pxでは週4-8(52-60 > 15)が読めず、
    ちょうどC6の「3」「5」と一致する(ハードコードではなく計算の結果)。
 
-   ---- 実装の決め4(企画が決めていない): 目盛り線を1本だけ引く ----
-   企画文言「目盛りは1本」を、目盛り線を`bottom: tickPx`の位置に1本だけ
-   描く実装として読んだ。176は3本(FULL_TICKS)引いていたが、179はそれとは
-   違う仕様として明記されているのでここは176を継がず企画の文言どおりにした。
+   ---- 実装の決め4(企画が決めていない)と、配線側の修正 ----
+   実装は企画文言「目盛りは1本」を「目盛り線を1本だけ描く」と読み、
+   `bottom: tickPx`に1本だけ引いた(176は3本引いている)。**配線側の目視で
+   これを差し戻した。** 企画の「1本」は「定規の行が1本」の意味であって
+   目盛り線の本数ではなく、線が1本だと`20px ⇄ 5px`の切り替えが
+   「線が1本下がった」ようにしか見えず、キャプションが言う「目盛りの間隔」が
+   画面に存在しなくなる(間隔は線が2本以上ないと見えない)。
+   176・177と同じく`FULL_TICKS_FOR_READABILITY`本(=3本)を
+   `tickPx`・`2*tickPx`・`3*tickPx`に引く形へ直した。読める/読めないの判定式は
+   一切変えていない(C6の3・5はそのまま)。
+   **企画の言葉が、実装の側では別の名詞として読めることがある。**
 
    ---- 実装の決め5(企画が決めていない): `data-chosen-attrs`
    `data-restore-affordances`自身の属性名の扱い ----
@@ -341,13 +348,16 @@ export default function MyChoiceBecomesDefault() {
 
         <div className="mz-my-choice-becomes-default-track" data-role="rail-track">
           <span className="mz-my-choice-becomes-default-baseline" />
-          <span
-            className={`mz-my-choice-becomes-default-scale-line${
-              !isDefault ? (curFocusWeek !== null ? ' is-picked' : ' is-native') : ''
-            }`}
-            data-role="scale-line"
-            style={{ bottom: curTickPx }}
-          />
+          {Array.from({ length: FULL_TICKS_FOR_READABILITY }, (_, i) => (
+            <span
+              key={i}
+              className={`mz-my-choice-becomes-default-scale-line${
+                !isDefault ? (curFocusWeek !== null ? ' is-picked' : ' is-native') : ''
+              }`}
+              data-role="scale-line"
+              style={{ bottom: curTickPx * (i + 1) }}
+            />
+          ))}
           {ALL_WEEKS.map((w) => (
             <span
               key={w}

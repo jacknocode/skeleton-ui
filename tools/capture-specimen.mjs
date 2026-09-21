@@ -3396,6 +3396,85 @@ const CHOREO = {
     await sleep(2000)
     await sleep(800)
   },
+  'two-rulers-side-by-side': async (page) => {
+    /* 撮るのは「並べても、どの週も片方の行でしか読めない」こと。
+       まず今の目盛り1行（週1〜3が1目盛りに届かない）を見せ、週2を押して当時の目盛りへ
+       （今度は週4〜8が突き抜ける）。そこで `下に置く` で下段に固定し、上段を週6で今へ戻すと、
+       **同じ粒が、二つの目盛りに挟まれて並ぶ**。3行目を置いても読める週が増えないところまで写し、
+       最後に対照へ移って「行ごとに粒を変換すると、読めない週が消える」を見せる。 */
+    const pick = (w) => page.locator(`[data-role="week-pick"][data-week="${w}"]`)
+    const add = page.locator('[data-role="add-row-btn"]')
+    const remove = page.locator('[data-role="remove-row-btn"]')
+    await sleep(1100)                       // 1行・今の目盛り: 週1〜3が読めない
+    await pick(2).click(); await sleep(1700) // 当時の目盛り: 今度は週4〜8が突き抜ける
+    await add.click(); await sleep(900)      // 下に固定する
+    await pick(6).click(); await sleep(2600) // 上段だけ今へ戻す＝二つの目盛りが並ぶ
+    await add.click(); await sleep(2000)     // 3行目。読める週は増えない
+    await remove.click(); await sleep(1400)
+    // 対照: 行ごとに粒を変換する／行が規則を名乗る／行が滑る
+    await page.locator('[data-role="mode-contrast"]').click()
+    await sleep(1200)
+    await pick(2).click(); await sleep(1400)
+    await add.click(); await sleep(1600)
+    await pick(6).click(); await sleep(2400)
+    await sleep(700)
+  },
+  'i-narrow-the-permission': async (page) => {
+    /* 撮るのは「狭めたのに、何も言われない」こと。任せて2週送ると粒が倍になり、
+       そこで `狭める` を押す——押した瞬間は何も起きない。次の週の粒が基準に戻ったとき、
+       それが「狭めたから」なのか「もともと基準だから」なのかは画面に無い。
+       もう一度狭めると週そのものが空く。最後に `ゆるめる` で戻し、対照へ移ると
+       同じ台本が「制限: N段」「トースト」「赤い印」「3値の履歴」で全部名乗られる。 */
+    const next = page.locator('[data-role="next-btn"]')
+    const narrow = page.locator('[data-role="narrow-btn"]')
+    const loosen = page.locator('[data-role="loosen-btn"]')
+    await sleep(900)
+    await page.locator('[data-role="commit-btn"]').click()
+    await sleep(1000)                       // 履歴に1点
+    await next.click(); await sleep(900)     // 週1: 基準
+    await next.click(); await sleep(1600)    // 週2: 倍になる
+    await narrow.click(); await sleep(1500)  // 押しても何も起きない
+    await next.click(); await sleep(1300)    // 週3: 基準に戻る。合図は無い
+    await next.click(); await sleep(1400)
+    await narrow.click(); await sleep(1200)
+    await next.click(); await sleep(1300)    // 週5: 空く
+    await next.click(); await sleep(1600)    // 週6: 空く
+    await loosen.click(); await sleep(1000)
+    await next.click(); await sleep(1600)    // 週7: また積みはじめる
+    // 対照: トースト・段のバッジ・赤い印・3値の履歴
+    await page.locator('[data-role="mode-contrast"]').click()
+    await sleep(1100)
+    await page.locator('[data-role="commit-btn"]').click(); await sleep(800)
+    await next.click(); await sleep(700)
+    await next.click(); await sleep(1100)
+    await narrow.click(); await sleep(1600)
+    await next.click(); await sleep(1000)
+    await next.click(); await sleep(1200)
+    await narrow.click(); await sleep(1500)
+    await next.click(); await sleep(1400)
+    await sleep(700)
+  },
+  'my-choice-becomes-default': async (page) => {
+    /* 撮るのは「点だけが消える」こと。週2を押すと目盛りが詰まり、履歴に点が1個載る。
+       `閉じて開く` を押すと**点だけ**が消え、詰まった目盛りはそのまま残る。
+       次に週6で目盛りを元の値へ戻し、もう一度閉じて開くと——**一度も触っていない画面に戻る**。
+       最後に対照へ移り、「復元しました」のトースト・選択中の塗り・`既定に戻す`・
+       出どころで濃さを変える目盛りが、同じ操作で一斉に名乗るところを写す。 */
+    const pick = (w) => page.locator(`[data-role="week-pick"][data-week="${w}"]`)
+    const reopen = page.locator('[data-role="reopen"]')
+    await sleep(1200)                        // 初期: 目盛り20px
+    await pick(2).click(); await sleep(1900) // 目盛りが5pxへ。履歴に点1個
+    await reopen.click(); await sleep(2400)  // 点だけ消える。目盛りは残る
+    await pick(6).click(); await sleep(1700) // 目盛りを元の値へ戻す。点がまた1個
+    await reopen.click(); await sleep(2600)  // 一度も触っていない画面と同じ絵
+    // 対照: トースト・選択中の塗り・既定に戻す・出どころの濃淡
+    await page.locator('[data-role="mode-contrast"]').click()
+    await sleep(1200)
+    await pick(2).click(); await sleep(2000)
+    await reopen.click(); await sleep(2200)
+    await page.locator('[data-role="restore-default"]').click(); await sleep(1800)
+    await sleep(700)
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))
