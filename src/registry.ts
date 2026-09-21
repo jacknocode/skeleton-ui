@@ -175,6 +175,9 @@ import WhichPressMadeThis from './specimens/which-press-made-this'
 import FinerRulerAddsNothing from './specimens/finer-ruler-adds-nothing'
 import ILetItChangeTheRule from './specimens/i-let-it-change-the-rule'
 import PastReadByTodaysRule from './specimens/past-read-by-todays-rule'
+import TwoRulersSideBySide from './specimens/two-rulers-side-by-side'
+import INarrowThePermission from './specimens/i-narrow-the-permission'
+import MyChoiceBecomesDefault from './specimens/my-choice-becomes-default'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -2387,6 +2390,39 @@ export const specimens: Specimen[] = [
     ecology:
       'No.175 の直接の帰結である。175 が「規則が変わっても、変わったとは言わない。粒の並びにだけ残る」と決めた瞬間、**その後で過去を読む読み手**が置き去りになった。読み手は必ず**今の目盛りで過去を読む**——旧規則の週（1〜3）は当時は満杯だったのに、今の目盛りでは **1 目盛りにも届かない**。**粒は一度も変わっていないのに、意味だけが変わっている。** 第 1 の芯は **過去は書き換わっていない、書き換わったのは読み方のほうである**（No.159 の最終形）。実測で、規則が変わる週 3→4 の前後で既定の過去の粒は left/top/width/height の差分が**すべて 0.00px**。目盛りを当時（週 2）へ戻した前後でも**すべて 0.00px** で、同じ窓で変わったのは**目盛り線の間隔だけ**（**20px → 5px**）。対照は同じ遷移で過去の粒が動く——週 3 の高さが **15px → 60px**、週 2 が **13 → 52**、週 1 が **12 → 48**（`top` と `height` の差 **45px**）。**毎レンダー、今見ている規則に合わせて再計算されるので、過去のほうが現在に合わせて動く**（No.164「起きたことが、起きていなかったことになる」）。第 2 は、**粒が当時の規則を名乗らない**こと（No.160 / 166 が「規則は名乗れない」と決め、No.170 が「主語を運ぶ属性を作らない」と決めた道の続き）。`data-rule-attrs` は全状態で **0**、DOM 走査でも粒の属性は `class` / `data-role` / `data-week` / `style` だけで、`rule|scale|regime|unit` にマッチする属性名は **0 件**（対照だけが `title` で当時の規則を名乗る）。第 3 がこの標本の答えであり、**払った代償**である。当時の目盛りは取り戻せる——**ただし、今週が読めなくなる**。今の目盛りでは `data-overflow-grains` が **3**（過去 3 週が 1 目盛りにも届かない）、当時の目盛りでは **5**（週 4〜8 が満杯 15px を突き抜ける）。**どちらの目盛りでも 0 にならない＝全部の週が読めるフレームは 1 枚も無い。** はみ出した粒は**切り落とさない**——切り落とすと「その粒は目盛りの範囲内だった」という持っていない情報を作るので、目盛りの外へ出たまま描く。**はみ出していることが、「その目盛りでは読めない」の全情報である。** No.113「もう一度見せて」は**事実**の再生だったが、こちらは**読み方**の再生であり、読み方を過去に戻すと現在が読めなくなる。**対照のいちばん質が悪い壊れ方は、変換そのものではない。** 変換後は `data-overflow-grains` が**どの目盛りで見ても 0** になる——全週が同じ目盛りで読めてしまい、**「読めない週がある」という事実そのものが画面から消える**。既定の DOM 全文に「規則が変わりました」「変換しました」は **0 件**（「規則」という語自体が **0 件**）。**実物を見て直した点が、この回も同じ罠だった**: 目盛り線を `background: #d6d6d3` の実線で置いたところ、ステージの地色 `#eaeae8` とほぼ同化して**目視でまったく見えなかった**。`border-top: 1px dashed #b3b3b3` に変えて解いている（No.116・118・119 と同じ失敗の 4 回目。**淡色の担体は、毎回それが載る地の上で確かめないと消える**）。計測側の罠も 1 つ拾った——transition を持つ現在地マーカーがある標本では、クリック直後に `getBoundingClientRect()` を読むと**アニメーション中の値**を拾い、実装のバグに見える。外形 **340×163px**。',
     Component: PastReadByTodaysRule,
+  },
+  {
+    id: 'two-rulers-side-by-side',
+    no: 177,
+    nameJa: '二つの目盛りを、並べて置く',
+    nameEn: 'Two Rulers Side by Side',
+    category: 'アナリティクス',
+    trigger: '(収録後に差し替える)',
+    principles: ['(仮)'],
+    ecology: '(収録後に差し替える)',
+    Component: TwoRulersSideBySide,
+  },
+  {
+    id: 'i-narrow-the-permission',
+    no: 178,
+    nameJa: '任せる範囲を、狭めたい',
+    nameEn: 'I Narrow the Permission',
+    category: 'フィードバック',
+    trigger: '(収録後に差し替える)',
+    principles: ['(仮)'],
+    ecology: '(収録後に差し替える)',
+    Component: INarrowThePermission,
+  },
+  {
+    id: 'my-choice-becomes-default',
+    no: 179,
+    nameJa: '選んだ読み方が、既定になる',
+    nameEn: 'My Choice Becomes Default',
+    category: 'アナリティクス',
+    trigger: '(収録後に差し替える)',
+    principles: ['(仮)'],
+    ecology: '(収録後に差し替える)',
+    Component: MyChoiceBecomesDefault,
   },
 ]
 /* 各標本のソースコードを ?raw で丸ごと取り込む（詳細ビューのコード表示用） */
