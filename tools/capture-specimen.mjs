@@ -3498,6 +3498,25 @@ const CHOREO = {
     await proxy.click(); await sleep(2400)    // バッジとトーストが一斉に名乗る
     await sleep(800)
   },
+  'i-hand-over-the-reading': async (page) => {
+    /* 撮るのは「読み方は渡らない」こと。上段（自分）の目盛りは詰まっていて、読める週は ①②③。
+       下段（受け手）の目盛りは広く、読める週は ④⑤⑥⑦⑧——**両方で読める週は 0 週**である。
+       `送る` を押すと粒だけが下段に現れ、**下段の目盛りは 0.00px 動かない**。
+       粒の高さは両段で同じなのに、読める週の集合は違ったままになる。
+       次に週6で自分の目盛りを受け手と同じ値にすると丸印が揃う——**揃ったのはたまたまで、
+       読み方が渡ったのではない**。`閉じて開く` で送り手の点だけが消える。
+       対照では、同じ `送る` が受け手の目盛りを上書きし、渡された粒を色分けし、
+       受け手の履歴にまで点を足し、粒が上から降ってくる。 */
+    const pick = (w) => page.locator(`[data-role="week-pick"][data-week="${w}"]`)
+    await sleep(1300)                          // 上段①②③ / 下段④⑤⑥⑦⑧＝両方で読める週 0
+    await page.locator('[data-role="hand-over"]').click(); await sleep(2400)
+    await pick(6).click(); await sleep(2100)   // 丸印が揃う（たまたま）
+    await page.locator('[data-role="reopen"]').click(); await sleep(2300)
+    await page.locator('[data-role="mode-contrast"]').click()
+    await sleep(1400)
+    await page.locator('[data-role="hand-over"]').click(); await sleep(2600)
+    await sleep(800)
+  },
   'cannot-drop-the-rule': async (page) => {
     /* 撮るのは「やめる操作が、どこにも無い」こと。週2で目盛りが詰まり、週6で初期値と同じ値へ戻る
        ——**戻したのに、戻したという跡は点が1個増えただけ**。`閉じて開く` で点も消え、

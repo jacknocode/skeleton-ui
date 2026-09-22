@@ -1,9 +1,242 @@
+/* No.181「この読み方のまま、渡したい」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #6e6e6e / #8c8c8c 中 / #b3b3b3 淡中 / #d3d3d0 / #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。
+   警告色 #b33a3a は対照(壊れ方2・4の色分け)にのみ使用する。
+
+   段の高さを詰めて340×330pxに収める(2段の定規+2段の履歴を縦に積む標本)。
+   既定側の担体(.track/.grain/.scale-line/.row-label/.tick-btn等)にtransitionは
+   一切書かない(共通則6・C6)。`.is-contrast`が付いたツリーにだけ、渡された粒の
+   出現アニメーションを許す(踏んだ罠1と同じ二重rAFの仕組み)。 */
+
 .mz-i-hand-over-the-reading {
-  width: 320px;
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 340px;
+  padding: 8px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-i-hand-over-the-reading-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-i-hand-over-the-reading-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-i-hand-over-the-reading-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
   background: #eaeae8;
-  border-radius: 10px;
-  font-size: 13px;
+}
+.mz-i-hand-over-the-reading-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
   color: #8c8c8c;
-  text-align: center;
+  cursor: pointer;
+}
+.mz-i-hand-over-the-reading-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-i-hand-over-the-reading-rail-wrap {
+  display: grid;
+  grid-template-rows: 14px 64px 14px 64px;
+  align-items: end;
+  row-gap: 6px;
+  position: relative;
+}
+
+/* 週の目盛り(週番号)の丸印。上段は自分の目盛りを選ぶ操作(クリック可)を兼ねる。
+   下段(.ticks-read配下)は読み手が触れない受け手の規則の「読める週」だけを映す読み取り専用の
+   複製で、担体の種類(このクラス自体)は増やしていない(177/共通則4の手=行を増やすだけ)。
+   is-activeは両方とも同じisReadable()(=読める週の印)で判定し、規則の名前は参照しない。 */
+.mz-i-hand-over-the-reading-ticks {
+  grid-column: 2;
+  position: relative;
+  height: 14px;
+  z-index: 2;
+}
+.mz-i-hand-over-the-reading-tick-btn {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 0 2px;
+  color: #8c8c8c;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.mz-i-hand-over-the-reading-tick-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+/* 下段の丸印は<span>(非操作)。クリック可能に見えないようポインタだけ戻す。 */
+.mz-i-hand-over-the-reading-tick-btn.is-static {
+  cursor: default;
+}
+
+/* 行見出し。「自分」「受け手」の2値固定(規則の値には一切依存しない=規則を名乗らない)。 */
+.mz-i-hand-over-the-reading-row-label {
+  grid-column: 1;
+  align-self: end;
+  padding-bottom: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #8c8c8c;
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* 台(定規)本体。overflow: visible厳守(はみ出た粒を切り落とさない)。 */
+.mz-i-hand-over-the-reading-track {
+  grid-column: 2;
+  position: relative;
+  height: 64px;
+  overflow: visible;
+}
+.mz-i-hand-over-the-reading-baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #8c8c8c;
+  z-index: 0;
+}
+/* 目盛り線。淡色の担体が地に沈む罠(共通則6)を避けて破線+#b3b3b3を使う(house style)。 */
+.mz-i-hand-over-the-reading-scale-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed #b3b3b3;
+  z-index: 0;
+}
+
+/* 粒(バー)。幅固定・高さだけが週の量。既定側のこのクラスにtransitionは無い(C6)。 */
+.mz-i-hand-over-the-reading-grain {
+  position: absolute;
+  bottom: 0;
+  width: 14px;
+  background: #3d3d3d;
+  border-radius: 1px;
+  box-sizing: border-box;
+  z-index: 1;
+}
+/* 対照専用(実装の決め4): 受け手が元から持っていた週と、送るで渡された週を色で分ける。 */
+.mz-i-hand-over-the-reading-grain.is-copied {
+  background: #b33a3a;
+}
+/* 対照専用(壊れ方4): 渡された粒だけ、二重rAFの直後まで「まだ来ていない位置」に置く。 */
+.is-contrast .mz-i-hand-over-the-reading-grain {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.mz-i-hand-over-the-reading-grain.is-entering {
+  opacity: 0;
+  transform: translateY(-14px);
+}
+
+/* 対照専用(壊れ方2): 「共有されました」バッジ。既定のツリーにこの要素は一切現れない。 */
+.mz-i-hand-over-the-reading-badge {
+  position: absolute;
+  top: -4px;
+  right: 0;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #b33a3a;
+  color: #f5f5f3;
+  z-index: 3;
+}
+
+/* ---------- 履歴の列(自分/受け手の2段)。定規の週とは独立(共通則3)。
+   `.history-block`はルーラー段との視覚的な区切りだけを足す容器(担体の種類は増やさない・
+   見出し文言はルーラー段と重複する「自分」「受け手」をそのまま使う)。 ---------- */
+.mz-i-hand-over-the-reading-history-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 5px;
+  border-top: 1px solid #d3d3d0;
+}
+.mz-i-hand-over-the-reading-history-heading {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #b3b3b3;
+}
+.mz-i-hand-over-the-reading-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-i-hand-over-the-reading-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 240px;
+  height: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-i-hand-over-the-reading-history-inner {
+  position: relative;
+  height: 6px;
+}
+.mz-i-hand-over-the-reading-history-dot {
+  position: absolute;
+  top: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #3d3d3d;
+}
+
+/* ---------- 操作ボタン ---------- */
+.mz-i-hand-over-the-reading-control-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mz-i-hand-over-the-reading-btn {
+  flex: none;
+  padding: 6px 9px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 9.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-i-hand-over-the-reading-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+.mz-i-hand-over-the-reading-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  box-shadow: none;
 }
