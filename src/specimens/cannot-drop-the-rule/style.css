@@ -1,9 +1,228 @@
+/* No.182「この読み方を、やめたい」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #6e6e6e / #8c8c8c 中 / #b3b3b3 淡中 / #d3d3d0 / #d6d6d3 淡・レール /
+   #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。警告色 #b33a3a は対照(リセットボタン・
+   バッジ・リセットの点・トースト)にのみ使う――既定側のCSSにはこの色を使う
+   セレクタが一度も現れない。
+
+   全担体にtransition/animationの宣言を置いていない(共通則3: 外界が起こした
+   変化は動かずに現れる)。computed transition-durationは既定の0sのまま。 */
+
 .mz-cannot-drop-the-rule {
-  width: 320px;
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 340px;
+  padding: 8px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-cannot-drop-the-rule-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-cannot-drop-the-rule-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-cannot-drop-the-rule-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
   background: #eaeae8;
-  border-radius: 10px;
-  font-size: 13px;
+}
+.mz-cannot-drop-the-rule-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
   color: #8c8c8c;
-  text-align: center;
+  cursor: pointer;
+}
+.mz-cannot-drop-the-rule-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-cannot-drop-the-rule-rail-wrap {
+  display: grid;
+  grid-template-rows: 14px 64px;
+  row-gap: 4px;
+  align-items: end;
+  position: relative;
+}
+
+/* 週の目盛り(週番号)。8個とも常にボタン。どのボタンも同じクラスしか付かない
+   (C4: distinct 1値。どれが初期値かは画面から読めない――対照でも同じ)。 */
+.mz-cannot-drop-the-rule-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 14px;
+  z-index: 2;
+}
+.mz-cannot-drop-the-rule-tick-btn {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 0 2px;
+  color: #8c8c8c;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+/* 行見出し。 */
+.mz-cannot-drop-the-rule-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.mz-cannot-drop-the-rule-rail-wrap .mz-cannot-drop-the-rule-row-label[data-role='row-label-rail'] {
+  grid-row: 2;
+  align-self: end;
+  padding-bottom: 4px;
+}
+
+/* 台(定規): 週トラック。overflow: visible厳守(粒を切り落とさない)。 */
+.mz-cannot-drop-the-rule-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 64px;
+  overflow: visible;
+}
+.mz-cannot-drop-the-rule-baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #8c8c8c;
+  z-index: 0;
+}
+/* 目盛り線(1目盛り分ずつ3本)。位置(bottom)がtickPxそのもの=間隔の担体。
+   実線+淡色(#d6d6d3等)はステージの地色#eaeae8に沈むので破線+#b3b3b3にする
+   (共通則6・過去の標本が繰り返し踏んだ罠)。既定側は常にこの1値のみ。 */
+.mz-cannot-drop-the-rule-scale-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed #b3b3b3;
+  z-index: 0;
+}
+
+/* 粒(バー)。幅固定・高さだけが週の値。底辺から積む。transition宣言は無い
+   (C6の0.00pxの根拠)。 */
+.mz-cannot-drop-the-rule-grain {
+  position: absolute;
+  bottom: 0;
+  width: 14px;
+  background: #3d3d3d;
+  border-radius: 1px;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-cannot-drop-the-rule-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-cannot-drop-the-rule-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 240px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-cannot-drop-the-rule-history-inner {
+  position: relative;
+  height: 10px;
+}
+.mz-cannot-drop-the-rule-dot {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #3d3d3d;
+  border-radius: 0;
+  border-style: none;
+  box-sizing: border-box;
+  z-index: 1;
+}
+.mz-cannot-drop-the-rule-hist-dot {
+  width: 6px;
+  height: 6px;
+}
+/* 対照(壊れ方3): リセット由来の点だけ色を変える。既定のCSSにはis-resetへ
+   至る経路が無い(既定は常にkind='week'相当の見た目しか持たない)。 */
+.mz-cannot-drop-the-rule-hist-dot.is-reset {
+  background: #b33a3a;
+}
+
+/* ---------- 操作ボタン + バッジ ---------- */
+.mz-cannot-drop-the-rule-control-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mz-cannot-drop-the-rule-btn {
+  flex: none;
+  padding: 6px 9px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+/* 対照専用(壊れ方1): 「読み方をリセット」。既定のJSXにはこのクラスへ至る
+   経路が無い(ボタン自体が対照でしか描画されない)。 */
+.mz-cannot-drop-the-rule-btn-warn {
+  background: #b33a3a;
+}
+/* 対照専用(壊れ方2): 規則を名乗るバッジ。 */
+.mz-cannot-drop-the-rule-badge {
+  flex: none;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #b33a3a;
+  color: #f5f5f3;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+/* ---------- 対照: 壊れ方1(リセット直後だけ出るトースト) ---------- */
+.mz-cannot-drop-the-rule-toast {
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #b33a3a;
+  color: #f5f5f3;
+  font-size: 9.5px;
+  font-weight: 700;
 }
