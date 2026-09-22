@@ -1364,6 +1364,21 @@ export const ideas: Idea[] = [
     specimenId: 'no-place-yet',
   },
 
+  /* ---------- No.182: この回の3種めとして企画した種 ----------
+     苗床から取ったのではなく、2つの sprout（No.180 / No.181）が同じ主題
+     「規則は誰のものか」を向いていたので、バッチを1つの主題にまとめるために起こした。
+     180 が出どころ（過去へ）、181 が受け渡し（横へ）を撃つので、残っているのは**出口**である。
+     No.179 が `既定に戻す` を封じた時点で、読み手には「やめる」操作が無くなっている。 */
+  {
+    id: 'cannot-drop-the-rule',
+    title: 'この読み方を、やめたい',
+    motion:
+      '選んだ読み方をやめたい。だが「やめる」に当たる操作はどこにも無い——選び直せるだけで、規則を持たない状態へは戻れない',
+    tags: ['汎用', '規則', '出口', '不可逆'],
+    status: 'captured',
+    specimenId: 'cannot-drop-the-rule',
+  },
+
   /* ---------- 次に育てる種（この回の続き） ---------- */
   {
     id: 'place-plays-itself',
@@ -3263,7 +3278,8 @@ export const ideas: Idea[] = [
        よっつ、いちばん苦いのは**間違った主語を当てても画面は訂正しない**こと。代わりに動くものが
        変えた目盛りを「自分が選んだもの」と思い込んだまま、読み手は読み続けられる。 */
     tags: ['汎用', '台帳', '規則', '主語'],
-    status: 'sprout',
+    status: 'captured',
+    specimenId: 'whose-rule-is-this',
   },
   {
     id: 'i-hand-over-the-reading',
@@ -3280,6 +3296,7 @@ export const ideas: Idea[] = [
        よっつ、No.98「他人は主役にならない」・No.72「よその手が入る」は**他人の操作**を扱ったが、
        これは**他人の読み方**である。操作は台帳に載せられるが、読み方は載せる先が無い。 */
     tags: ['ゲーム', '他人', '共有', '規則'],
-    status: 'sprout',
+    status: 'captured',
+    specimenId: 'i-hand-over-the-reading',
   },
 ]

@@ -178,6 +178,9 @@ import PastReadByTodaysRule from './specimens/past-read-by-todays-rule'
 import TwoRulersSideBySide from './specimens/two-rulers-side-by-side'
 import INarrowThePermission from './specimens/i-narrow-the-permission'
 import MyChoiceBecomesDefault from './specimens/my-choice-becomes-default'
+import WhoseRuleIsThis from './specimens/whose-rule-is-this'
+import IHandOverTheReading from './specimens/i-hand-over-the-reading'
+import CannotDropTheRule from './specimens/cannot-drop-the-rule'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -2426,6 +2429,39 @@ export const specimens: Specimen[] = [
     ecology:
       'この回で唯一、苗床に無かった種（企画がこの回で起こした）。177 が「その場で並べる」を、178 が「その場で狭める」を扱ったので、残っているのは**手を入れたものが残ったあと**である。読み手は画面を離れ、また戻ってくる。第 1 の芯は **残るのは規則、消えるのは操作**。週番号を 2 回押してから `閉じて開く` を押すと、`data-history-dots` は **2 → 0**、`data-tick-px` は **5 → 5（不変）**。実装は `handleReopen` が `history` と現在地しか初期化せず、**`tickPx` に触れる行がコードのどこにも無い**——「持ち越す」のではなく「触れる経路が最初から無い」。第 2 の芯は、**既定になった読み方は選ばれた跡を持たない**こと。再訪後の `data-chosen-attrs` は **0**、週番号ボタン 8 個の `background-color` / `border-color` / `color` / `font-weight` はそれぞれ **distinct 1 値**——「同じに見えるよう揃えた」のではなく、`focusWeek` を `className` にも `data-*` にも一度も書いていないので**分岐そのものがコードに無い**。禁止語も **0 件**。第 3 がこの標本が払う代償である。**元に戻したのか、最初からそうだったのかは区別できない**——台本 A（週 2 → 閉じて開く → 週 6 → 閉じて開く）と台本 B（閉じて開く → 閉じて開く）の後、**全要素の `class` / `data-*` / 矩形の JSON が完全一致**（どちらも `data-tick-px` **20**）。No.164「起きたことが、起きていなかったことになる」の**読み方版**。第 4 に、**「元」を持っているのは画面ではなく読み手の記憶だけ**である: 週 4〜8 のどれを押しても同じ 20px を返すので、**「戻る」にあたる操作は他の週番号と見分けがつかない**（`data-restore-affordances` **0**、対照は **1**）。粒は 1px も動かない——台本 A の全 5 工程で 8 粒の `left` / `top` / `width` / `height` の最大差は**すべて 0.00px**、動くのは目盛り線の間隔だけ（**20.00px ⇄ 5.00px**）。読めない週も消えない（`data-unreadable-grains` は 20px で **3**、5px で **5**、再訪の前後で同値＝No.176 の代償はそのまま残る）。既定の transition / animation は **0 件**。**対照は「親切」を 4 つ並べる**: 再訪時のトースト（`前回の表示を復元しました`）・選択中の塗り・`既定に戻す`・目盛りの出どころによる濃淡 2 値。**いちばん質が悪いのは 3 つめ**で、再訪後も履歴の点を残すと（`data-history-dots` が再訪後も **2**）、履歴は「このセッションで押した列」から**設定の変更ログ**になり、**過去の自分が現在の自分と同じ点として台帳に並ぶ**——No.169 / 170 が封じた 3 人目の主語が、ここで入り込む。**配線側の目視が 1 件拾った**: 実装は企画の「目盛りは 1 本」を**目盛り線を 1 本だけ引く**と読んでおり、`20px ⇄ 5px` の切り替えが「線が 1 本下がった」ようにしか見えなかった——**間隔は、線が 2 本以上ないと画面に存在しない**。176・177 と同じ 3 本（`tickPx` / `2×` / `3×`）に直した。**企画の言葉が、実装の側では別の名詞として読めることがある。** 実装が見つけた自己言及も 1 件: 検証用の `data-chosen-attrs` は**その名前自体が C2 の禁止パターン（`chosen`）に当たる**ため、DOM 全体を文字どおり走査するとどんな実装でも 0 にならない（No.176 の `data-rule-attrs` と同型）——走査対象を読み手が触れる担体に限定して解いた。外形 **340×183px**。',
     Component: MyChoiceBecomesDefault,
+  },
+  {
+    id: 'whose-rule-is-this',
+    no: 180,
+    nameJa: 'この目盛りは、誰が決めたのか',
+    nameEn: 'Whose Rule Is This',
+    category: 'ナビゲーション',
+    trigger: '週番号で目盛りを選び、`閉じて開く` で再訪する。`代わりに動くもの` にも目盛りを変えさせて、二つを見比べる（右上で「出どころのバッジを出す」対照に切り替え）',
+    principles: ['出どころは規則に書かない。書けるのは操作の跡だけで、跡は再訪で消える', '主語が3つあっても、画面が分けられるのは2つしかない', '間違った主語を当てても、画面は訂正しない'],
+    ecology: '（実装後に書く）',
+    Component: WhoseRuleIsThis,
+  },
+  {
+    id: 'i-hand-over-the-reading',
+    no: 181,
+    nameJa: 'この読み方のまま、渡したい',
+    nameEn: 'I Hand Over the Reading',
+    category: 'ナビゲーション',
+    trigger: '自分の目盛りを選んでから `渡す` を押す。下段（受け手）の目盛りと、両方で読める週の数を見る（右上で「読み方も一緒に渡す」対照に切り替え）',
+    principles: ['渡せるのは粒だけ。読み方は担体を持たないので渡らない', '渡した跡は送り手の履歴にだけ載る。受け手には「最初からそうだった」に見える', '渡されたものに印を付けない'],
+    ecology: '（実装後に書く）',
+    Component: IHandOverTheReading,
+  },
+  {
+    id: 'cannot-drop-the-rule',
+    no: 182,
+    nameJa: 'この読み方を、やめたい',
+    nameEn: 'Cannot Drop the Rule',
+    category: 'ナビゲーション',
+    trigger: '目盛りを選び直して初期値と同じ値に戻し、一度も触っていない画面と見比べる。「やめる」に当たるボタンを探す（右上で「読み方をリセット」対照に切り替え）',
+    principles: ['規則のゼロは存在しない。だから「やめる」は操作として置けない', '初期値と、選び直して同じ値にした画面は、1要素も違わない', '出口が無いのは、入口も無かったからである'],
+    ecology: '（実装後に書く）',
+    Component: CannotDropTheRule,
   },
 ]
 /* 各標本のソースコードを ?raw で丸ごと取り込む（詳細ビューのコード表示用） */
