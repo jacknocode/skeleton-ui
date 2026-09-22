@@ -3475,6 +3475,47 @@ const CHOREO = {
     await page.locator('[data-role="restore-default"]').click(); await sleep(1800)
     await sleep(700)
   },
+  'whose-rule-is-this': async (page) => {
+    /* 撮るのは「出どころが、時間とともに失われる」こと。読み手が週2を押すと目盛りが詰まり、
+       履歴に点が1個載る——**この点が在るあいだだけ、直前の変更が自分のものだと画面から読める**。
+       `閉じて開く` で点だけが消え、規則は残る。次に `代わりに動く` を押すと目盛りが変わるが
+       **点は増えない**。最後に読み手が自分で同じ値へ戻して再訪すると、
+       **代行が変えた画面と1要素も違わない絵**になる。
+       対照では、同じ操作で出どころのバッジ（初期状態にも名乗る）・トースト・
+       出どころで濃さの変わる目盛り・色分けされた点が一斉に名乗る。 */
+    const pick = (w) => page.locator(`[data-role="week-pick"][data-week="${w}"]`)
+    const reopen = page.locator('[data-role="reopen"]')
+    const proxy = page.locator('[data-role="proxy-step"]')
+    await sleep(1100)
+    await pick(2).click(); await sleep(1900)  // 読み手の変更。点が1個
+    await reopen.click(); await sleep(2300)   // 点だけ消える。規則は残る
+    await proxy.click(); await sleep(2300)    // 代行の変更。点は増えない
+    await pick(6).click(); await sleep(1600)  // 読み手が同じ値へ
+    await reopen.click(); await sleep(2500)   // 代行が変えた画面と完全一致
+    await page.locator('[data-role="mode-contrast"]').click()
+    await sleep(1400)                         // 初期状態なのに「前回のまま」と名乗る
+    await pick(2).click(); await sleep(1900)
+    await proxy.click(); await sleep(2400)    // バッジとトーストが一斉に名乗る
+    await sleep(800)
+  },
+  'cannot-drop-the-rule': async (page) => {
+    /* 撮るのは「やめる操作が、どこにも無い」こと。週2で目盛りが詰まり、週6で初期値と同じ値へ戻る
+       ——**戻したのに、戻したという跡は点が1個増えただけ**。`閉じて開く` で点も消え、
+       **一度も触っていない画面と区別が付かなくなる**。既定にはこの2つの操作しか無い。
+       対照へ移ると `読み方をリセット` が現れ、`カスタム` バッジ・赤い点・
+       「既定の読み方に戻しました」のトーストが出る——**リセット後の状態が「規則が無い」ように読める**。 */
+    const pick = (w) => page.locator(`[data-role="week-pick"][data-week="${w}"]`)
+    const reopen = page.locator('[data-role="reopen"]')
+    await sleep(1100)
+    await pick(2).click(); await sleep(1900)  // 規則が入る。点1個
+    await pick(6).click(); await sleep(1900)  // 初期値と同じ値へ。点2個
+    await reopen.click(); await sleep(2500)   // 点も消え、触っていない画面と同じ
+    await page.locator('[data-role="mode-contrast"]').click()
+    await sleep(1300)
+    await pick(2).click(); await sleep(2000)  // 「カスタム」バッジが名乗る
+    await page.locator('[data-role="reset-rule"]').click(); await sleep(2400)
+    await sleep(900)
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))

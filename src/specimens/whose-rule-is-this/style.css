@@ -1,9 +1,249 @@
+/* No.180「この目盛りは、誰が決めたのか」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #6e6e6e / #8c8c8c 中 / #b3b3b3 淡中 / #d3d3d0 / #eaeae8 背景 /
+   #f5f5f3 反転文字 / #fff)。警告色 #b33a3a は対照(出どころ=代行)でのみ使う。
+   舞台の実値(粒幅14px・週pitch30px・履歴の点6px+4px間隔・目盛り線の
+   破線#b3b3b3)は179 (my-choice-becomes-default) から揃えた。
+
+   既定側にはtransition/animation宣言が1つも無い。C5(代行の変更前後で
+   transition-duration 0s・animation-name none)は「短くしてごまかした」の
+   ではなく、そもそも遷移のCSSが存在しないことの帰結。 */
+
 .mz-whose-rule-is-this {
-  width: 320px;
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 340px;
+  padding: 8px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-whose-rule-is-this-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-whose-rule-is-this-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-whose-rule-is-this-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
   background: #eaeae8;
-  border-radius: 10px;
-  font-size: 13px;
+}
+.mz-whose-rule-is-this-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
   color: #8c8c8c;
-  text-align: center;
+  cursor: pointer;
+}
+.mz-whose-rule-is-this-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 対照専用: 出どころバッジ行(既定にはこのブロックへ至る経路が無い) ---------- */
+.mz-whose-rule-is-this-origin-row {
+  display: flex;
+}
+.mz-whose-rule-is-this-origin-badge {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #d3d3d0;
+  border: 1px solid #b3b3b3;
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #3d3d3d;
+}
+
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有(179と同型) ---------- */
+.mz-whose-rule-is-this-rail-wrap {
+  display: grid;
+  grid-template-rows: 14px 64px;
+  row-gap: 4px;
+  align-items: end;
+  position: relative;
+}
+
+.mz-whose-rule-is-this-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 14px;
+  z-index: 2;
+}
+.mz-whose-rule-is-this-tick-btn {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 0 2px;
+  color: #8c8c8c;
+  cursor: pointer;
+  border-radius: 4px;
+}
+/* 対照専用: 直近に押した週番号だけを塗りつぶす。既定のCSSにはこのセレクタへ
+   至る経路が無い(is-markedは対照描画でしか付かない)。 */
+.mz-whose-rule-is-this-tick-btn.is-marked {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+.mz-whose-rule-is-this-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.mz-whose-rule-is-this-rail-wrap .mz-whose-rule-is-this-row-label[data-role='row-label-rail'] {
+  grid-row: 2;
+  align-self: end;
+  padding-bottom: 4px;
+}
+
+/* 台(定規): 週トラック。overflow: visible厳守(粒を切り落とさない)。 */
+.mz-whose-rule-is-this-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 64px;
+  overflow: visible;
+}
+.mz-whose-rule-is-this-baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #8c8c8c;
+  z-index: 0;
+}
+/* 目盛り線(3本、tickPx間隔=規則そのもの)。既定側は常にこの1色(#b3b3b3破線)。 */
+.mz-whose-rule-is-this-scale-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed #b3b3b3;
+  z-index: 0;
+}
+/* 対照専用(壊れ方3): 出どころ別に目盛り線の色を変える。色自体はJSのinline
+   styleで出どころごとに直接指定し、ここではdashedの見た目だけ揃える。
+   既定のCSSにはis-self/is-proxy/is-staleへ至る経路が無い。 */
+.mz-whose-rule-is-this-scale-line.is-self,
+.mz-whose-rule-is-this-scale-line.is-proxy,
+.mz-whose-rule-is-this-scale-line.is-stale {
+  border-top-style: solid;
+}
+
+/* 粒(バー)。幅固定・高さだけが週の値。底辺から積む。transition宣言は無い
+   (C4/C5の0.00px・0sの根拠)。 */
+.mz-whose-rule-is-this-grain {
+  position: absolute;
+  bottom: 0;
+  width: 14px;
+  background: #3d3d3d;
+  border-radius: 1px;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-whose-rule-is-this-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-whose-rule-is-this-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 240px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-whose-rule-is-this-history-inner {
+  position: relative;
+  height: 10px;
+}
+.mz-whose-rule-is-this-dot {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #3d3d3d;
+  border-radius: 0;
+  border-style: none;
+  box-sizing: border-box;
+  z-index: 1;
+}
+.mz-whose-rule-is-this-hist-dot {
+  width: 6px;
+  height: 6px;
+}
+/* 対照専用(壊れ方4): 履歴の点に出どころの色を持たせる。既定の点はこの
+   クラスを一度も受け取らない(既定はis-self/is-proxy/is-staleを付けない)。 */
+.mz-whose-rule-is-this-hist-dot.is-self {
+  background: #3d3d3d;
+}
+.mz-whose-rule-is-this-hist-dot.is-proxy {
+  background: #b33a3a;
+}
+.mz-whose-rule-is-this-hist-dot.is-stale {
+  background: #8c8c8c;
+}
+
+/* ---------- 操作ボタン ---------- */
+.mz-whose-rule-is-this-control-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mz-whose-rule-is-this-btn {
+  flex: none;
+  padding: 6px 9px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mz-whose-rule-is-this-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  border: 1px solid #d3d3d0;
+}
+
+/* ---------- 対照: 壊れ方2(代行が動いた瞬間だけ出るトースト) ---------- */
+.mz-whose-rule-is-this-toast {
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 9.5px;
+  font-weight: 700;
 }
