@@ -1,26 +1,271 @@
+/* No.183「効いている読み方が、いくつあるか言えない」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #6e6e6e / #8c8c8c 中 / #b3b3b3 淡中 / #d3d3d0 / #d6d6d3 淡・レール /
+   #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。警告色 #b33a3a は使わない(この標本に
+   「禁止」の演出は無い。対照の壊れ方はグレーの塗り分け・バッジ・チップ・
+   0.3sの消え方の4つで、赤は使わない)。
+
+   共通則3(規則の変更は出来事ではない): 既定側の.grain/.cellにtransition宣言を
+   一切書かない。computed transition-durationは初期値の0sのまま。対照だけ
+   [data-mode='contrast']スコープで0.3sの消え方(is-collapsed)を持つ。 */
+
 .mz-rules-pile-up {
-  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 340px;
+  padding: 8px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-rules-pile-up-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mz-rules-pile-up-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-rules-pile-up-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
   border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
+  background: #eaeae8;
+}
+.mz-rules-pile-up-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-rules-pile-up-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 対照専用(壊れ方1・2): 個数バッジ + 個別に外せるチップ ---------- */
+.mz-rules-pile-up-badge-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.mz-rules-pile-up-badge {
+  flex: none;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #6e6e6e;
+  color: #f5f5f3;
+  font-size: 9px;
   font-weight: 800;
-  color: #5c5c5c;
+  white-space: nowrap;
+}
+.mz-rules-pile-up-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.mz-rules-pile-up-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px 3px 8px;
+  border-radius: 999px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  font-size: 8.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.mz-rules-pile-up-chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: #6e6e6e;
+  color: #f5f5f3;
+  font-size: 9px;
+  line-height: 1;
   cursor: pointer;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-rules-pile-up.is-active {
-  animation: mz-rules-pile-up-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 定規まわり: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-rules-pile-up-rail-wrap {
+  display: grid;
+  grid-template-rows: 14px 64px;
+  row-gap: 4px;
+  align-items: end;
+  position: relative;
 }
-@keyframes mz-rules-pile-up-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+
+.mz-rules-pile-up-ticks {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 14px;
+  z-index: 2;
+}
+.mz-rules-pile-up-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #8c8c8c;
+}
+
+.mz-rules-pile-up-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.mz-rules-pile-up-rail-wrap .mz-rules-pile-up-row-label[data-role='row-label-rail'] {
+  grid-row: 2;
+  align-self: end;
+  padding-bottom: 4px;
+}
+
+/* 台(定規): 週トラック。overflow: visible厳守(粒を切り落とさない)。 */
+.mz-rules-pile-up-track {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+  height: 64px;
+  overflow: visible;
+}
+.mz-rules-pile-up-baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #8c8c8c;
+  z-index: 0;
+}
+
+/* B(まとめて見る)の枠。破線+#b3b3b3(共通則6: 淡色#d6d6d3等は地#eaeae8に沈む
+   罠を避け、既存標本と同じ配色を使う)。生き残る粒を動かさないので、この枠は
+   純粋に装飾(data-role="grain"を持たずC4/C7の測定対象に入らない)。 */
+.mz-rules-pile-up-pair-frame {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  border: 1px dashed #b3b3b3;
+  border-radius: 3px;
+  box-sizing: border-box;
+  z-index: 0;
+}
+
+/* 週セル: 定規1週ぶんの器。空き(自然な空き・規則で落ちた空きのどちらも)は
+   既定側では常にこのクラス1つだけで描かれ、子要素0個になる(C3: distinct1値)。 */
+.mz-rules-pile-up-cell {
+  position: absolute;
+  top: 0;
+  box-sizing: border-box;
+}
+
+.mz-rules-pile-up-grain {
+  position: absolute;
+  bottom: 0;
+  background: #3d3d3d;
+  border-radius: 1px;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/* ---------- 対照専用(壊れ方3): 規則で落ちた空きだけ薄いグレーに塗る ---------- */
+.mz-rules-pile-up-cell.is-filtered {
+  background: #d3d3d0;
+  border-radius: 2px;
+}
+.mz-rules-pile-up-note {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+
+/* ---------- 対照専用(壊れ方4): 消える粒を0.3sで縮めてから消す ---------- */
+.mz-rules-pile-up[data-mode='contrast'] .mz-rules-pile-up-grain {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: scale(1);
+  transform-origin: center bottom;
+}
+.mz-rules-pile-up-grain.is-collapsed {
+  opacity: 0;
+  transform: scale(0);
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-rules-pile-up-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-rules-pile-up-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 240px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-rules-pile-up-history-inner {
+  position: relative;
+  height: 6px;
+}
+.mz-rules-pile-up-hist-dot {
+  position: absolute;
+  top: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #3d3d3d;
+}
+
+/* ---------- 操作ボタン ---------- */
+.mz-rules-pile-up-control-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.mz-rules-pile-up-btn {
+  flex: none;
+  padding: 6px 9px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mz-rules-pile-up-btn.is-active {
+  background: #6e6e6e;
+}
+.mz-rules-pile-up-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
 }

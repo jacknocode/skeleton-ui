@@ -3535,6 +3535,97 @@ const CHOREO = {
     await page.locator('[data-role="reset-rule"]').click(); await sleep(2400)
     await sleep(900)
   },
+
+  'rules-pile-up': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**規則を足すたびに読める週が減っていく**こと
+       （7 → 5 → 3 → 1。粒は1pxも動かず、消えるだけ）。ふたつ、**外す操作がどこにも無い**こと。
+       みっつ、`閉じて開く` で**履歴の点だけが消え、定規の絵は変わらない**こと
+       ——何枚掛かっていたかは、再訪した読み手には復元できない。
+       対照ではカウンタとチップが並び、× で個別に外せてしまう。
+       週4はもともと粒が無い。既定ではそこが規則で落ちた週と同じ空きになる。 */
+    const btn = (n) => page.getByRole('button', { name: n, exact: true })
+    await sleep(1000) // 初期。8週のうち7週に粒がある（週4は最初から空き）
+    await btn('小さいものを落とす').click()
+    await sleep(1200) // 週6・7が中割りなしで消える。粒は1pxも動かない
+    await btn('まとめて見る').click()
+    await sleep(1300) // ペアの破線枠が出て、後ろの週の粒が消える
+    await btn('新しいほうだけ').click()
+    await sleep(1500) // 残るのは1週だけ。落ちた空きと、もともと無い週4が同じ空きになる
+    await btn('小さいものを落とす').click()
+    await sleep(700) // 2度押しは効かない（履歴も増えない）
+    await btn('閉じて開く').click()
+    await sleep(1600) // 点だけが消える。絵は1pxも変わらない
+    // 対照: 個数を名乗り、チップで個別に外せて、落ちた週を塗り分ける
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await btn('小さいものを落とす').click()
+    await sleep(900)
+    await btn('まとめて見る').click()
+    await sleep(900)
+    await btn('新しいほうだけ').click()
+    await sleep(1400) // カウンタが 3 になり、チップが3つ並ぶ
+    await page.locator('[data-role^="chip-remove"]').first().click()
+    await sleep(1600) // 既定には無い操作。外すと絵が戻る
+  },
+
+  'sent-back-with-their-reading': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**返ってきた盤面が上段の鏡像**であること
+       （同じ8個の値が、逆の並びで来る。どちらも規則どおりで優劣が無い）。
+       ふたつ、**受け取りが中割りなしで起きる**こと——画面の外で起きたことを移動で描かない。
+       みっつ、`閉じて開く` で**履歴の点だけが消え、並びは残る**こと
+       ——再訪した読み手には、それが最初からの並びに見える。
+       対照では 0.3s で滑って並び替わり、後半4週が色分けされ、バッジが出る。
+       そして `並びは自分のまま受け取る` は、覚えていた並びではなく初期値へ戻す。 */
+    const btn = (n) => page.getByRole('button', { name: n, exact: true })
+    await sleep(1000) // 上段=週の順（右肩上がり）。下段=空のトラック
+    await btn('送る').click()
+    await sleep(1100) // 見た目は変わらない。履歴の点が1個増えるだけ
+    await btn('返る').click()
+    await sleep(2000) // 下段に相手の並び（右肩下がり）。ここが鏡像のいちばんよく見えるところ
+    await btn('受け取る').click()
+    await sleep(1800) // 上段が瞬時に入れ替わる。高さの集合は変わらない
+    await btn('閉じて開く').click()
+    await sleep(1700) // 点が消える。並びは残る
+    // 対照: 読み方も渡し、印を付け、バッジを出し、滑らせる
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await btn('送る').click()
+    await sleep(800)
+    await btn('返る').click()
+    await sleep(1400)
+    await btn('受け取る').click()
+    await sleep(1800) // 0.3s で滑る。後半4週が色分けされ、バッジが出る
+    await btn('並びは自分のまま受け取る').click()
+    await sleep(2000) // 覚えていた並びではなく、初期値へ戻る
+  },
+
+  'rule-order-changes-it': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**既定は2本に畳まれる**こと（A→B の固定順）。
+       ふたつ、対照で `入れ替える` を押すと**同じ on/off のまま3本になる**こと
+       ——同じ台帳・同じ2つの規則で、順序が違うだけ。
+       みっつ、そのあと `閉じて開く` すると**履歴の点は0個になるのに、絵は3本のまま**
+       ——原因が消えて、結果が残る。
+       畳んだ粒は隣接2週ぶんの幅を持ち、真ん中に継ぎ目が見える。 */
+    const btn = (n) => page.getByRole('button', { name: n, exact: true })
+    await sleep(1100) // 初期。週1〜8が生の高さで並ぶ
+    await btn('小さいものを落とす').click()
+    await sleep(1300) // 週3・5・6だけが残る。中割りなし
+    await btn('まとめて見る').click()
+    await sleep(1800) // 2本に畳まれる（25 と 60）。これが A → B の絵
+    await btn('閉じて開く').click()
+    await sleep(1600) // 点だけが消える。絵は1pxも変わらない
+    // 対照: 順序を名乗り、入れ替えさせる
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await btn('小さいものを落とす').click()
+    await sleep(800)
+    await btn('まとめて見る').click()
+    await sleep(1400) // 既定と同じ2本 ＋「適用順」のラベル
+    await btn('入れ替える').click()
+    await sleep(1900) // 同じ on/off のまま3本になる（0.3s で高さが動く）
+    await btn('閉じて開く').click()
+    await sleep(2000) // 点は0個。絵は3本のまま——戻る手がかりが画面に無い
+  },
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), 'mzcap-'))

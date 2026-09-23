@@ -1,26 +1,226 @@
+/* No.184「返ってきた盤面は、相手の並びで来る」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #6e6e6e / #8c8c8c 中 / #b3b3b3 淡中 / #d3d3d0 / #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。
+   警告色 #b33a3a は対照(壊れ方1のバッジ・壊れ方2のボタン・壊れ方3の色分け)にのみ使用する。
+
+   上段(自分の盤面)の粒 `.grain` にtransitionは一切書かない(共通則6・C4・芯3)。
+   `.is-contrast`が付いたツリーの上段だけ、受け取りの瞬間に位置がleft 0.3sで滑る(壊れ方4)。
+   下段(戻り欄)は「まだ自分のものになっていない盤面」と分かるよう、粒を中間色+破線枠にし、
+   トラック自体にも薄いストライプの地色を敷いて上段と混同しないようにする(目視の項)。 */
+
 .mz-sent-back-with-their-reading {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 340px;
+  padding: 8px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-sent-back-with-their-reading.is-active {
-  animation: mz-sent-back-with-their-reading-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-sent-back-with-their-reading-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-sent-back-with-their-reading-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-sent-back-with-their-reading-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-sent-back-with-their-reading-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-sent-back-with-their-reading-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-sent-back-with-their-reading-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 上段(自分)・下段(戻り欄)の2トラック ---------- */
+.mz-sent-back-with-their-reading-rail-wrap {
+  display: grid;
+  grid-template-rows: 64px 64px;
+  row-gap: 6px;
+  align-items: end;
+  position: relative;
+}
+
+.mz-sent-back-with-their-reading-row-label {
+  grid-column: 1;
+  align-self: end;
+  padding-bottom: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #8c8c8c;
+  white-space: nowrap;
+}
+
+/* 台(定規)本体。overflow: visible厳守(はみ出た粒・週ラベルを切り落とさない)。 */
+.mz-sent-back-with-their-reading-track {
+  grid-column: 2;
+  position: relative;
+  height: 64px;
+  overflow: visible;
+  background: #eaeae8;
+  border-radius: 4px;
+}
+/* 下段(戻り欄)だけ地色を変え、上段と一目で別トラックだと分かるようにする(目視の項)。 */
+.mz-sent-back-with-their-reading-track-pending {
+  background: repeating-linear-gradient(135deg, #f0efe9 0px, #f0efe9 6px, #e6e5df 6px, #e6e5df 12px);
+}
+
+.mz-sent-back-with-their-reading-baseline {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  height: 1px;
+  background: #b3b3b3;
+  z-index: 0;
+}
+
+/* 粒(バー)。幅固定・高さだけが週の量。上段のこのクラスにtransitionは無い(芯3・C4)。 */
+.mz-sent-back-with-their-reading-grain {
+  position: absolute;
+  bottom: 4px;
+  width: 14px;
+  background: #3d3d3d;
+  border-radius: 1px;
+  box-sizing: border-box;
+  z-index: 1;
+}
+.mz-sent-back-with-their-reading-grain-label {
+  position: absolute;
+  top: -11px;
+  left: 0;
+  width: 14px;
+  text-align: center;
+  font-size: 7.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #8c8c8c;
+  pointer-events: none;
+}
+
+/* 下段(戻り欄)の粒: まだ自分のものではない盤面。中間色+破線枠で「仮置き」と読める見た目にする。
+   これは受け取った"後"の上段の粒(芯2の対象)とは別の担体なので、色を変えても芯2に触れない。 */
+.mz-sent-back-with-their-reading-grain-pending {
+  background: #b3b3b3;
+  border: 1px dashed #8c8c8c;
+}
+
+/* 対照専用(壊れ方3): 受け取った週のうち後半4週だけ色分けする。既定のツリーには絶対に現れない。 */
+.mz-sent-back-with-their-reading-grain.is-marked {
+  background: #b33a3a;
+}
+
+/* 対照専用(壊れ方4): 上段の粒だけ、受け取りの瞬間に位置(left)が0.3sで滑る(中間値が生まれる)。 */
+.is-contrast .mz-sent-back-with-their-reading-track[data-side='top'] .mz-sent-back-with-their-reading-grain {
+  transition: left 0.3s ease;
+}
+
+/* 対照専用(壊れ方1): 「相手の並びで返ってきました」バッジ。既定のツリーに一切現れない。 */
+.mz-sent-back-with-their-reading-badge {
+  position: absolute;
+  top: -4px;
+  right: 0;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #b33a3a;
+  color: #f5f5f3;
+  z-index: 3;
+}
+
+/* ---------- 履歴の列。定規の並びとは独立(共通則3)。1本だけ(他人の操作は載らない=No.98)。 ---------- */
+.mz-sent-back-with-their-reading-history-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 5px;
+  border-top: 1px solid #d3d3d0;
+}
+.mz-sent-back-with-their-reading-history-heading {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #b3b3b3;
+}
+.mz-sent-back-with-their-reading-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-sent-back-with-their-reading-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 240px;
+  height: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-sent-back-with-their-reading-history-inner {
+  position: relative;
+  height: 6px;
+}
+.mz-sent-back-with-their-reading-history-dot {
+  position: absolute;
+  top: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #3d3d3d;
+}
+
+/* ---------- 操作ボタン ---------- */
+.mz-sent-back-with-their-reading-control-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.mz-sent-back-with-their-reading-btn {
+  flex: none;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: #3d3d3d;
+  color: #f5f5f3;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  font-size: 9.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mz-sent-back-with-their-reading-btn-ghost {
+  background: #fff;
+  color: #8c8c8c;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+/* 対照専用(壊れ方2): 「並びは自分のまま受け取る」。警告色でそれ自体が怪しいことを示す。 */
+.mz-sent-back-with-their-reading-btn-warn {
+  background: #b33a3a;
+}
+.mz-sent-back-with-their-reading-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  box-shadow: none;
 }

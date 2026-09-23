@@ -1,26 +1,209 @@
+/* No.185「どちらを先に効かせたかで、絵が変わる」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #6e6e6e / #8c8c8c 中 / #b3b3b3 淡中 / #d3d3d0 / #d6d6d3 淡・レール /
+   #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。警告色 #b33a3a は対照(入れ替えボタン・
+   適用順ラベル)にのみ使う――既定側のCSSにはこの色を使うセレクタが一度も現れない。
+
+   既定の .grain にはtransition/animation宣言を一切書いていない(共通則3:
+   規則のon/offは出来事ではない。computed transition-durationは既定の0sのまま)。
+   対照の .grain だけがheightにtransitionを持つ(壊れ方4: 規則の変更を出来事として
+   演出する)。left/widthは同じ台(週の位置)の中では動かないのでtransition対象に
+   していない――対照の「並び替わる」は位置の移動ではなく高さの伸び縮みで表現する。 */
+
 .mz-rule-order-changes-it {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 336px;
+  padding: 8px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-rule-order-changes-it.is-active {
-  animation: mz-rule-order-changes-it-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-rule-order-changes-it-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-rule-order-changes-it-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-rule-order-changes-it-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-rule-order-changes-it-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-rule-order-changes-it-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-rule-order-changes-it-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-rule-order-changes-it-rail-wrap {
+  display: grid;
+  grid-template-rows: auto;
+  align-items: end;
+  position: relative;
+}
+.mz-rule-order-changes-it-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  align-self: end;
+  padding-bottom: 4px;
+}
+
+/* 台(定規): 週トラック。overflow: visible厳守(粒を切り落とさない)。
+   週の境目に淡い縦線を敷いて、粒の幅が「1週ぶん」か「2週ぶん」かを
+   目視で比べられるようにする(目視で直した点。報告書参照)。 */
+.mz-rule-order-changes-it-track {
+  grid-column: 2;
+  position: relative;
+  height: 66px;
+  overflow: visible;
+  background-image: repeating-linear-gradient(
+    to right,
+    #d6d6d3 0,
+    #d6d6d3 1px,
+    transparent 1px,
+    transparent 30px
+  );
+  background-position: 0 0;
+}
+.mz-rule-order-changes-it-baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #8c8c8c;
+  z-index: 0;
+}
+
+/* 粒(バー)。幅は単週14px/畳んだ組44pxの2値のみ。底辺から積む。 */
+.mz-rule-order-changes-it-grain {
+  position: absolute;
+  bottom: 0;
+  background: #3d3d3d;
+  border-radius: 1px;
+  box-sizing: border-box;
+  z-index: 1;
+}
+/* 畳んだ組(2週ぶん)だけ、真ん中に淡い継ぎ目を1本置く(readability)。
+   色を変えるのではなく、内側に薄い縦線を1本足すだけ――規則を名乗らない。 */
+.mz-rule-order-changes-it-grain.is-merged {
+  background-image: linear-gradient(to right, transparent calc(50% - 1px), #6e6e6e calc(50% - 1px), #6e6e6e calc(50% + 1px), transparent calc(50% + 1px));
+}
+
+/* 対照だけ、規則のon/off・順序の入れ替えを「出来事」として0.3s演出する(壊れ方4)。 */
+.mz-rule-order-changes-it[data-mode='contrast'] .mz-rule-order-changes-it-grain {
+  transition: height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-rule-order-changes-it-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-rule-order-changes-it-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 240px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.mz-rule-order-changes-it-history-inner {
+  position: relative;
+  height: 10px;
+}
+.mz-rule-order-changes-it-dot {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #3d3d3d;
+  border-radius: 0;
+  border-style: none;
+  box-sizing: border-box;
+  z-index: 1;
+}
+.mz-rule-order-changes-it-hist-dot {
+  width: 6px;
+  height: 6px;
+}
+
+/* ---------- 対照(壊れ方1): 規則と順序を名乗るラベル ---------- */
+.mz-rule-order-changes-it-order-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: #b33a3a;
+  background: #eaeae8;
+  border-radius: 8px;
+  padding: 4px 8px;
+  align-self: flex-start;
+}
+.mz-rule-order-changes-it-order-label b {
+  font-weight: 800;
+}
+.mz-rule-order-changes-it-arrow {
+  font-weight: 800;
+}
+
+/* ---------- 操作ボタン ---------- */
+.mz-rule-order-changes-it-control-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mz-rule-order-changes-it-btn {
+  flex: none;
+  padding: 6px 9px;
+  border-radius: 10px;
+  background: #d6d6d3;
+  color: #3d3d3d;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mz-rule-order-changes-it-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+/* 対照専用(壊れ方1): 「入れ替える」。既定のJSXにはこのクラスへ至る経路が無い
+   (ボタン自体が対照でしか描画されない)。 */
+.mz-rule-order-changes-it-btn-warn {
+  background: #b33a3a;
+  color: #f5f5f3;
+}
+.mz-rule-order-changes-it-btn-ghost {
+  background: #eaeae8;
+  color: #8c8c8c;
+  box-shadow: none;
 }
