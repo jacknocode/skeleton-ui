@@ -180,6 +180,9 @@ import INarrowThePermission from './specimens/i-narrow-the-permission'
 import MyChoiceBecomesDefault from './specimens/my-choice-becomes-default'
 import WhoseRuleIsThis from './specimens/whose-rule-is-this'
 import IHandOverTheReading from './specimens/i-hand-over-the-reading'
+import RulesPileUp from './specimens/rules-pile-up'
+import SentBackWithTheirReading from './specimens/sent-back-with-their-reading'
+import RuleOrderChangesIt from './specimens/rule-order-changes-it'
 import CannotDropTheRule from './specimens/cannot-drop-the-rule'
 
 export const CATEGORIES = ['入力', 'ナビゲーション', 'オーバーレイ', 'フィードバック', 'ゲーム', 'アナリティクス'] as const
@@ -2465,6 +2468,39 @@ export const specimens: Specimen[] = [
     ecology:
       'この回の3つめで、**苗床に無かった種**である（企画がこの回で起こした。180 が出どころ＝過去へ、181 が受け渡し＝横へ向かうので、残っているのは**出口**だった）。No.176 が「読み手は目盛りを選び直せる」を、No.179 が「選んだ読み方が既定になる」を決めた。**では、やめたくなったらどうするのか。** No.179 は `既定に戻す` を封じている——置いた瞬間、**画面が「元」を知っている体**になるからである。既定の答えは、**「やめる」は操作として存在しない。規則のゼロが無いからである**。実測で、週番号 8 個のどれを押しても目盛りは必ず値を持ち（**5.00 / 20.00px** の distinct 2 値、すべて **> 0**）、**「規則なし」に当たる値は 0 件**。No.150 / 151 / 152 は「出来事のゼロ」「量のゼロ」「場のゼロ」を描き分けたが、**規則のゼロは描けない**——これがその系になる。だから既定には `やめる` / `解除` / `既定に戻す` / `リセット` に当たる操作を1つも置かない（操作ロール名を `やめ|解除|リセット|既定|戻す|クリア|reset|default|clear` でフィルタした長さが既定 **0** / 対照 **1**）。読み手にできるのは選び直すことだけで、実測では週2（5px）→ 週6（20px）と押して**初期値と同じ値に戻した**あと `閉じて開く` を押すと、**一度も触っていない画面と全要素の JSON が完全一致する**（差分 **0 件**、履歴の点は **0 → 1 → 2 → 0**）。**元に戻したのか、最初からそうだったのかは区別できない**——No.164「起きたことが、起きていなかったことになる」の読み方版であり、No.179 の C3 を**読み手が意図的に戻そうとした場合**へ延長したものである。週番号ボタン 8 個の `background-color` / `border-color` / `color` / `font-weight` はそれぞれ **distinct 1 値**で、**どれが初期値かは画面から読めない**（初期値を特別扱いした瞬間、画面が「元」を知っていることになる）。粒は全工程で **0.00px**。そして最後に、この標本のいちばん苦い結論が来る——**出口が無いのは、入口も無かったからである。** 読み手が一度も触っていない画面の目盛りも、**誰かが決めている**（No.180 の問いがここへ戻る）。**入っていない場所からは、出られない。** **測り方そのものが、この回の縛りに触れた。** C1 の禁止語に `default` が入っているため、**3種すべてが共通で持つ既定/対照トグルの `data-role="mode-default"` が、素朴に走査するとヒットする**（実際にオーケストレータ側の独立検証でヒットした）。実装は No.179 と同じく「読み手が実際に触れる担体の操作ロール名」に走査対象を絞り、舞台装置であるモード切替を明示的に除外してコード中にその理由を書いた。**診断のために置いた名前が、診断の対象に入る**——No.176 / 178 / 179 に続く**4例目**である。対照は `読み方をリセット` を **1個**持ち、`カスタム` バッジを出す。判定式は企画に無かったので実装が**値ベース**（初期値と違う値のときだけ点く）を選んだ結果、**週6（初期値と同じ 20px）を押した直後はバッジが点かない**——「一度でも操作したか」ではなく「初期値と違うか」で分けるので、**対照は自分で「初期値だけを特別扱いする」を実演してしまう**。トーストは 1800ms で **0個**、リセット由来の点だけ `rgb(179,58,58)` で **distinct 2 値**（履歴が設定の変更ログになる）。**いちばん効く壊れ方は、リセット後の状態を「規則が無い」と読ませてしまうこと**である——実際には**別の規則が入っただけ**で、画面は嘘をついている。外形は既定 **340×183px** / 対照（トースト表示中）**340×212px**。',
     Component: CannotDropTheRule,
+  },
+  {
+    id: 'rules-pile-up',
+    no: 183,
+    nameJa: '効いている読み方が、いくつあるか言えない',
+    nameEn: 'Rules Pile Up',
+    category: 'アナリティクス',
+    trigger: 'TODO',
+    principles: ['TODO'],
+    ecology: 'TODO',
+    Component: RulesPileUp,
+  },
+  {
+    id: 'sent-back-with-their-reading',
+    no: 184,
+    nameJa: '返ってきた盤面は、相手の並びで来る',
+    nameEn: 'Sent Back with Their Reading',
+    category: 'ナビゲーション',
+    trigger: 'TODO',
+    principles: ['TODO'],
+    ecology: 'TODO',
+    Component: SentBackWithTheirReading,
+  },
+  {
+    id: 'rule-order-changes-it',
+    no: 185,
+    nameJa: 'どちらを先に効かせたかで、絵が変わる',
+    nameEn: 'Rule Order Changes It',
+    category: 'アナリティクス',
+    trigger: 'TODO',
+    principles: ['TODO'],
+    ecology: 'TODO',
+    Component: RuleOrderChangesIt,
   },
 ]
 /* 各標本のソースコードを ?raw で丸ごと取り込む（詳細ビューのコード表示用） */
