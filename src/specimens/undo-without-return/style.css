@@ -1,26 +1,222 @@
+/* No.188「取り消しても、絵は戻らない」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #6e6e6e / #8c8c8c 中 / #b3b3b3 淡中 / #c7c7c4 レール /
+   #d6d6d3 淡 / #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。警告色 #b33a3a は
+   対照のトースト・幽霊縁取りにのみ使う。
+
+   既定の .grain にはtransition/animation宣言を一切書いていない(芯3:
+   巻き戻しは出来事ではない)。対照の .grain だけが height に 0.3s の
+   transition を持つ(壊れ方2)――消える粒はJS側で300ms配列に残したまま
+   height:0を当てて縮め、その後に実際に取り除く(index.tsx参照)。
+
+   履歴の列には No.116 と同じ「レール」(#c7c7c4、点が0個でも列の位置が
+   読める土台)を敷く。この標本のいちばん見せたい絵(履歴の点が0個なのに
+   盤面に粒が残る)は、レールが無いと「そもそも列が空なのか、列自体が
+   無いのか」を読み手が区別できず、成立しない。 */
+
 .mz-undo-without-return {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 8px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-undo-without-return.is-active {
-  animation: mz-undo-without-return-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-undo-without-return-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-undo-without-return-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-undo-without-return-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-undo-without-return-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-undo-without-return-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-undo-without-return-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 盤面: ラベル列 + トラック列を1つのgridで共有 ---------- */
+
+.mz-undo-without-return-rail-wrap {
+  display: grid;
+  align-items: end;
+}
+.mz-undo-without-return-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  align-self: end;
+  padding-bottom: 4px;
+}
+
+/* 台(定規): 週トラック。overflow: visible厳守(粒を切り落とさない)。
+   週の境目に淡い縦線を敷き、8週の幅を目視で読めるようにする。 */
+.mz-undo-without-return-track {
+  grid-column: 2;
+  position: relative;
+  height: 70px;
+  overflow: visible;
+  background-image: repeating-linear-gradient(to right, #d6d6d3 0, #d6d6d3 1px, transparent 1px, transparent 30px);
+  background-position: 0 0;
+}
+.mz-undo-without-return-baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #8c8c8c;
+  z-index: 0;
+}
+
+/* 粒。既定は origin による分岐が無い1本のクラスだけ(芯2)。 */
+.mz-undo-without-return-grain {
+  position: absolute;
+  bottom: 0;
+  width: 14px;
+  box-sizing: border-box;
+  background: #3d3d3d;
+  border: 1px solid transparent;
+  border-radius: 1px;
+  z-index: 1;
+}
+
+/* 対照だけが持つ由来マーク(実装の決め5。企画の壊れ方1〜4には無い5つ目)。
+   自分は濃い塗り、他人は破線縁の淡い塗り――色で見分けても、戻るは
+   スナップショット全体を巻き戻すので他人の粒は消える。 */
+.mz-undo-without-return.is-contrast .mz-undo-without-return-grain.is-own {
+  background: #3d3d3d;
+  border-color: transparent;
+}
+.mz-undo-without-return.is-contrast .mz-undo-without-return-grain.is-foreign {
+  background: #d6d6d3;
+  border: 1.5px dashed #b33a3a;
+}
+
+/* 対照だけ、取り消しの縮みを0.3sで見せる(壊れ方2)。 */
+.mz-undo-without-return.is-contrast .mz-undo-without-return-grain {
+  transition: height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- 履歴行: 独立した時系列の1本。レールで空でも位置が読める ---------- */
+
+.mz-undo-without-return-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-undo-without-return-history-track {
+  grid-column: 2;
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 240px;
+  height: 14px;
+}
+.mz-undo-without-return-history-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  border-radius: 999px;
+  background: #c7c7c4;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+.mz-undo-without-return-history-inner {
+  position: relative;
+  height: 10px;
+}
+.mz-undo-without-return-history-dot {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  background: #3d3d3d;
+  border-radius: 999px;
+  z-index: 1;
+}
+
+/* ---------- 操作ボタン ---------- */
+
+.mz-undo-without-return-control-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mz-undo-without-return-btn {
+  flex: none;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #d6d6d3;
+  color: #3d3d3d;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mz-undo-without-return-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+}
+.mz-undo-without-return-back-btn {
+  background: #eaeae8;
+  color: #5c5c5c;
+}
+.mz-undo-without-return-btn-ghost {
+  background: #eaeae8;
+  color: #8c8c8c;
+  box-shadow: none;
+}
+
+.mz-undo-without-return-note {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+
+/* ---------- 対照: トースト(壊れ方3。嘘を言う) ---------- */
+
+.mz-undo-without-return-toast {
+  position: absolute;
+  top: 40px;
+  right: 8px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #b33a3a;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 800;
+  box-shadow: 0 8px 18px rgba(179, 58, 58, 0.35);
+  z-index: 2;
 }

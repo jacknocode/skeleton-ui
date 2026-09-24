@@ -1,26 +1,218 @@
+/* No.186「その粒は、読み方が作った」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #6e6e6e / #8c8c8c 中 / #b3b3b3 淡中 / #d6d6d3 淡・レール /
+   #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。警告色 #b33a3a(rgb(179,58,58)) は
+   対照(合算粒の色分け・バッジ)にのみ使う――既定側のCSSにはこの色を使う
+   セレクタが一度も現れない。
+
+   既定の .grain にはtransition/animation宣言を一切書いていない(共通則:
+   規則のon・畳みの解き・外す、は出来事ではない)。対照だけ
+   [data-mode='contrast']スコープでheightに0.3sのtransitionを持つ
+   (罠2: 個別週8枠+合算4枠を常時マウントし、heightを0との間で往復させて
+   transitionを成立させている)。 */
+
 .mz-grain-made-by-the-reading {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 336px;
+  padding: 8px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-grain-made-by-the-reading.is-active {
-  animation: mz-grain-made-by-the-reading-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-grain-made-by-the-reading-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-grain-made-by-the-reading-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-grain-made-by-the-reading-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-grain-made-by-the-reading-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-grain-made-by-the-reading-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-grain-made-by-the-reading-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 対照専用(壊れ方1・4): 個数バッジ ---------- */
+.mz-grain-made-by-the-reading-badge-row {
+  display: flex;
+  align-items: center;
+}
+.mz-grain-made-by-the-reading-badge {
+  flex: none;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgb(179, 58, 58);
+  color: #f5f5f3;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ---------- 定規: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-grain-made-by-the-reading-rail-wrap {
+  display: grid;
+  grid-template-rows: auto;
+  align-items: end;
+  position: relative;
+}
+.mz-grain-made-by-the-reading-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  align-self: end;
+  padding-bottom: 4px;
+}
+
+/* 台(定規): 週トラック。overflow: visible厳守(粒を切り落とさない)。
+   週の境目に淡い縦線を敷いて、粒の幅が「1週ぶん」か「2週ぶん」かを
+   目視で比べられるようにする(185からの継承)。 */
+.mz-grain-made-by-the-reading-track {
+  grid-column: 2;
+  position: relative;
+  height: 66px;
+  overflow: visible;
+  background-image: repeating-linear-gradient(
+    to right,
+    #d6d6d3 0,
+    #d6d6d3 1px,
+    transparent 1px,
+    transparent 30px
+  );
+  background-position: 0 0;
+}
+.mz-grain-made-by-the-reading-baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #8c8c8c;
+  z-index: 0;
+}
+
+/* 粒(バー)。幅は単週14px/合算44pxの2値のみ。底辺から積む。className・
+   background-color・border・opacityは既定側でこの1宣言だけ(C1のdistinct1値)。
+   合算の継ぎ目はJSXのinline style(backgroundImage)で足す――ここには書かない。 */
+.mz-grain-made-by-the-reading-grain {
+  position: absolute;
+  bottom: 0;
+  background: #3d3d3d;
+  border-radius: 1px;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/* 対照専用(壊れ方1): 合算粒だけ色分けする。既定のJSXは`is-merged`クラスを
+   一度も付けないので、このセレクタは対照でしか効かない。 */
+.mz-grain-made-by-the-reading[data-mode='contrast'] .mz-grain-made-by-the-reading-grain.is-merged {
+  background: rgb(179, 58, 58);
+}
+
+/* 対照だけ、規則のon/off・畳みの解き・外すを「出来事」として0.3s演出する(壊れ方3)。
+   個別週8枠+合算4枠を常時マウントしてheightを0と実値の間で往復させる(罠2)。 */
+.mz-grain-made-by-the-reading[data-mode='contrast'] .mz-grain-made-by-the-reading-grain {
+  transition: height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-grain-made-by-the-reading-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-grain-made-by-the-reading-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 240px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+/* レール(場所の提示だけ。事実は何も言わない=No.95の担体ではない)。点が0個
+   でも「ここが履歴の列だ」を言うための土台(No.116の直しの継承)。点より
+   確実に弱い見た目(細い・薄い)にしつつ、地の色(#eaeae8)に対して常に
+   視認できる濃さ(#c7c7c4)を選ぶ。z-indexで確実に点たちの下に敷く。 */
+.mz-grain-made-by-the-reading-hist-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  border-radius: 999px;
+  background: #c7c7c4;
+  transform: translateY(-50%);
+  z-index: 0;
+  pointer-events: none;
+}
+.mz-grain-made-by-the-reading-history-inner {
+  position: relative;
+  height: 6px;
+  z-index: 1;
+}
+.mz-grain-made-by-the-reading-hist-dot {
+  position: absolute;
+  top: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #3d3d3d;
+}
+
+/* ---------- 操作ボタン ---------- */
+.mz-grain-made-by-the-reading-control-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mz-grain-made-by-the-reading-btn {
+  flex: none;
+  padding: 6px 9px;
+  border-radius: 10px;
+  background: #d6d6d3;
+  color: #3d3d3d;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mz-grain-made-by-the-reading-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+.mz-grain-made-by-the-reading-btn-ghost {
+  background: #eaeae8;
+  color: #8c8c8c;
+  box-shadow: none;
 }

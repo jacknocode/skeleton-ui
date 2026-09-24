@@ -1,26 +1,236 @@
+/* No.187「二人が同時に触っている」
+   モノクロ・自己完結。色トークンは図鑑のパレット厳守
+   (#3d3d3d 濃 / #6e6e6e / #8c8c8c 中 / #b3b3b3 淡中 / #d3d3d0 / #d6d6d3 淡・レール /
+   #eaeae8 背景 / #f5f5f3 反転文字 / #fff)。警告色 #b33a3a は対照(色分け・バッジ)にのみ使う
+   ――既定側のCSSにはこの色を使うセレクタが一度も現れない(芯2)。
+
+   .grain の transition-duration は inline style で押した瞬間だけ既定側は0.18sにする
+   (JSX側の計算。芯1参照)。対照側だけ、このクラスに常時0.3sのtransitionを持たせる
+   (壊れ方2)。既定に緩急(house styleの弾むcubic-bezier)は使わない――この回は
+   既定側のほとんどの担体に緩急を付けない方針(COMMON.md)にならい、既定の伸びは
+   ease-outのみ。弾む緩急は対照(壊れ方2・壊れ方4のジャンプ後の再開)にだけ使う。 */
+
 .mz-both-hands-at-once {
-  padding: 12px 24px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-size: 13px;
-  font-weight: 800;
-  color: #5c5c5c;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 336px;
+  padding: 8px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-/* 基本のぷるん: cubic-bezier(0.34, 1.56, 0.64, 1) */
-.mz-both-hands-at-once.is-active {
-  animation: mz-both-hands-at-once-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ---------- 1行目: キャプション + 既定/対照トグル ---------- */
+
+.mz-both-hands-at-once-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-@keyframes mz-both-hands-at-once-pop {
-  30% {
-    transform: scale(1.2, 0.8);
-  }
-  60% {
-    transform: scale(0.9, 1.1);
-  }
-  100% {
-    transform: none;
-  }
+.mz-both-hands-at-once-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #b3b3b3;
+  flex: 1 1 auto;
+}
+.mz-both-hands-at-once-mode {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eaeae8;
+}
+.mz-both-hands-at-once-mode-btn {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+.mz-both-hands-at-once-mode-btn.is-active {
+  background: #3d3d3d;
+  color: #f5f5f3;
+}
+
+/* ---------- 定規: ラベル列 + トラック列を1つのgridで共有 ---------- */
+.mz-both-hands-at-once-rail-wrap {
+  display: grid;
+  grid-template-rows: auto;
+  align-items: end;
+  position: relative;
+}
+.mz-both-hands-at-once-row-label {
+  grid-column: 1;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  align-self: end;
+  padding-bottom: 4px;
+}
+
+/* 台(定規): 週トラック。overflow: visible厳守(粒を切り落とさない)。
+   週の境目に淡い縦線を敷いて場所を提示する(数字を使わない目盛り。事実を言わないので
+   担体に数えない=COMMON.md)。 */
+.mz-both-hands-at-once-track {
+  grid-column: 2;
+  position: relative;
+  height: 92px;
+  overflow: visible;
+  background-image: repeating-linear-gradient(
+    to right,
+    #d6d6d3 0,
+    #d6d6d3 1px,
+    transparent 1px,
+    transparent 30px
+  );
+  background-position: 0 0;
+}
+.mz-both-hands-at-once-baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #8c8c8c;
+  z-index: 0;
+}
+
+/* 粒(バー)。底辺から積む。既定はtransition-durationをinline styleで押下時だけ0.18sにする
+   (JS計算)。対照はここで常時0.3sを持たせる(壊れ方2)。 */
+.mz-both-hands-at-once-grain {
+  position: absolute;
+  bottom: 0;
+  width: 14px;
+  background: #3d3d3d;
+  border-radius: 1px;
+  box-sizing: border-box;
+  z-index: 1;
+  transition-property: height;
+  transition-timing-function: ease-out;
+}
+.mz-both-hands-at-once.is-contrast .mz-both-hands-at-once-grain {
+  transition-duration: 0.3s;
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* 対照(壊れ方1): 相手が触った週だけ色を変える。既定にはこのクラスへ至る経路が無い。 */
+.mz-both-hands-at-once-grain.is-partner-touched {
+  background: #b33a3a;
+}
+
+/* 対照(壊れ方1): 週番号のティック(数字)。既定はこの要素自体を描画しない。 */
+.mz-both-hands-at-once-ticks {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -13px;
+  height: 12px;
+}
+.mz-both-hands-at-once-tick {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 8px;
+  font-weight: 700;
+  color: #b3b3b3;
+}
+
+/* 対照(壊れ方1): 「Bさんが編集中」バッジ。既定のJSXにはこの要素が無い。 */
+.mz-both-hands-at-once-badge {
+  align-self: flex-start;
+  font-size: 9px;
+  font-weight: 800;
+  color: #f5f5f3;
+  background: #b33a3a;
+  border-radius: 8px;
+  padding: 3px 8px;
+  margin-top: 14px;
+}
+
+/* ---------- `履歴`行: 週の定規とは独立した時系列の1本 ---------- */
+.mz-both-hands-at-once-history-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mz-both-hands-at-once-history-heading {
+  font-size: 9px;
+  font-weight: 700;
+  color: #8c8c8c;
+}
+.mz-both-hands-at-once-history-row {
+  display: grid;
+  align-items: center;
+}
+.mz-both-hands-at-once-history-track {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 240px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+/* レール: 点が0個でも「ここが履歴の列だ」を言うための土台(No.116の担体を継承)。
+   場所の提示だけで事実は何も言わないので担体には数えない。点たちより確実に
+   弱い見た目(細い・薄い)にしつつ、地の色(#eaeae8)に対して視認できる濃さにする。 */
+.mz-both-hands-at-once-history-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  border-radius: 999px;
+  background: #c7c7c4;
+  transform: translateY(-50%);
+  z-index: 0;
+  pointer-events: none;
+}
+.mz-both-hands-at-once-history-inner {
+  position: relative;
+  height: 10px;
+  z-index: 1;
+}
+.mz-both-hands-at-once-history-dot {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  background: #3d3d3d;
+  border-radius: 0;
+  border-style: none;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/* ---------- 操作ボタン ---------- */
+.mz-both-hands-at-once-control-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mz-both-hands-at-once-btn {
+  flex: none;
+  padding: 6px 9px;
+  border-radius: 10px;
+  background: #d6d6d3;
+  color: #3d3d3d;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mz-both-hands-at-once-btn-ghost {
+  background: #eaeae8;
+  color: #8c8c8c;
+  box-shadow: none;
 }

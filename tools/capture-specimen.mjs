@@ -3599,6 +3599,81 @@ const CHOREO = {
     await sleep(2000) // 覚えていた並びではなく、初期値へ戻る
   },
 
+  'undo-without-return': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**自分の粒と他人の粒が同じ顔で同じ列に並ぶ**こと
+       （印が無いので、押してみるまでどちらが取り消せるか分からない）。
+       ふたつ、`◀ 戻る` で**自分の粒だけが消え、他人の粒は1pxも動かない**こと。
+       みっつ、**履歴の点が0個になっても盤面に粒が残る**こと——
+       取り消しは台帳から操作を取り除くのであって、盤面を過去へ戻すのではない。
+       対照はスナップショットへ巻き戻すので、`元に戻しました` と言いながら
+       他人の粒を消す。最後は盤面が空になり、初期状態と「一致してしまう」。 */
+    const btn = (n) => page.getByRole('button', { name: n, exact: true })
+    await sleep(1000) // 初期。盤面は空。履歴のレールだけが敷かれている
+    for (let i = 0; i < 3; i++) {
+      await btn('置く').click()
+      await sleep(420)
+    }
+    await sleep(700) // 自分の粒3本・履歴の点3個
+    await btn('盤面が動く').click()
+    await sleep(1600) // 他人の粒が2本、中割りなしで在る。点は3個のまま（不一致）
+    for (let i = 0; i < 3; i++) {
+      await btn('◀ 戻る').click()
+      await sleep(620)
+    }
+    await sleep(2000) // 点0個・粒2本。ここがこの標本の芯
+    // 対照: 盤面ごと巻き戻し、他人の粒を消して「元に戻しました」と言う
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    for (let i = 0; i < 3; i++) {
+      await btn('置く').click()
+      await sleep(380)
+    }
+    await btn('盤面が動く').click()
+    await sleep(1300)
+    await btn('◀ 戻る').click()
+    await sleep(1800) // トーストの裏で、他人の粒が0.3sかけて消える
+    for (let i = 0; i < 5; i++) {
+      if (await btn('◀ 戻る').isDisabled()) break
+      await btn('◀ 戻る').click()
+      await sleep(560)
+    }
+    await sleep(1800) // 盤面が空になる——初期状態と一致するが、それは「元」ではない
+  },
+
+  'grain-made-by-the-reading': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**合算の粒が単週の粒と同じ顔で並ぶ**こと
+       （濃さも枠も同じ。違うのは幅だけで、幅は「何週ぶんか」を言っている）。
+       ふたつ、**合算の粒を押しても外れない**こと——代わりに畳みが解けて、
+       台帳に在る2つの粒が出てくる（合算は操作の受け手ではなく、台帳への入口）。
+       みっつ、**同じ定規の上に、戻るものと戻らないものが混じる**こと——
+       解いてから単週を外すと、畳み直して解き直しても、その粒は戻らない。
+       対照は合算を赤く塗ってバッジで名乗り、押すと合算そのものを消す。
+       そして解くと、消したはずの2週が両方戻ってくる（台帳に届いていない）。 */
+    const btn = (n) => page.getByRole('button', { name: n, exact: true })
+    const merged = (pair) => page.locator(`[data-role="grain"][data-kind="merged"][data-pair="${pair}"]`)
+    const single = (week) => page.locator(`[data-role="grain"][data-kind="single"][data-week="${week}"]`)
+    await sleep(1100) // 初期。週1〜8が単週の粒で並ぶ（週4も在る）
+    await btn('まとめて見る').click()
+    await sleep(1500) // 4本の合算へ。中割りなし。幅がマス目2つぶんに広がる
+    await merged(0).click()
+    await sleep(1700) // 押しても外れない。その組だけ畳みが解けて2本に分かれる
+    await single(1).click()
+    await sleep(1600) // 単週は押すと外れる（台帳の行が消える）
+    await btn('閉じて開く').click()
+    await sleep(1500) // 点だけが消える。合算は台帳に無いのに同じ値で戻る
+    await merged(0).click()
+    await sleep(1900) // 解くと1本しか出ない——外した行は戻らない
+    // 対照: 合算を名乗り、押すと合算そのものを消す
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(900)
+    await btn('まとめて見る').click()
+    await sleep(1300) // 0.3s で育つ。合算だけ赤く、バッジが個数を名乗る
+    await merged(0).click()
+    await sleep(1500) // 合算そのものが消える（台帳には届いていない）
+    await btn('まとめて見る').click()
+    await sleep(2100) // 解くと、消したはずの2週が両方戻ってくる
+  },
+
   'rule-order-changes-it': async (page) => {
     /* 撮るべきは3つ。ひとつ、**既定は2本に畳まれる**こと（A→B の固定順）。
        ふたつ、対照で `入れ替える` を押すと**同じ on/off のまま3本になる**こと
