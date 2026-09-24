@@ -3599,6 +3599,40 @@ const CHOREO = {
     await sleep(2000) // 覚えていた並びではなく、初期値へ戻る
   },
 
+  'both-hands-at-once': async (page) => {
+    /* 撮るべきは3つ。ひとつ、**何も押していないのに、盤面が静かに変わる**こと
+       ——相手の手には受け取りの瞬間が無いので、動きも予告も出ない（冒頭の2秒がそれ）。
+       ふたつ、**自分の押下だけが動きになる**こと（0.18s で伸びる）。
+       みっつ、自分の伸びの途中に相手の手が同じ週へ入ると、**伸びながら向き先を変えて
+       低いほうへ着地する**こと——同じ担体の上で2つの力が働いていることが、
+       transition の retargeting だけで描かれる。
+       対照は相手の変化を 0.3s で滑らせ、色を付け、バッジで名乗り、
+       そして衝突した瞬間に自分の動きを打ち切って最新値へ飛ばす。 */
+    const btn = (n) => page.getByRole('button', { name: n, exact: true })
+    await sleep(2400) // 何も押さない。相手の最初の手が、予告なく着地する
+    await btn('上げる').click()
+    await sleep(900) // 自分の押下だけが 0.18s の動きになる
+    await btn('上げる').click()
+    await sleep(700)
+    await btn('上げる').click()
+    await sleep(2200) // 待つ。別の週が、動かずに下がる
+    await btn('上げる').click()
+    await sleep(600)
+    await btn('上げる').click()
+    await sleep(2600) // 履歴の点は5個。相殺された回も、同じ点として積まれている
+    await btn('閉じて開く').click()
+    await sleep(1800) // 点だけが消える。誰が作った高さかは、もう画面に無い
+    // 対照: 相手を名乗り、色を付け、滑らせ、衝突で自分の動きを打ち切る
+    await page.getByRole('button', { name: '対照', exact: true }).click()
+    await sleep(1200) // 週番号のティックとバッジが出る
+    await btn('上げる').click()
+    await sleep(900)
+    await btn('上げる').click()
+    await sleep(2400) // 相手の変化が 0.3s で滑り、触った週が色付く
+    await btn('上げる').click()
+    await sleep(2800) // 衝突すると、自分の動きが1フレームで打ち切られる
+  },
+
   'undo-without-return': async (page) => {
     /* 撮るべきは3つ。ひとつ、**自分の粒と他人の粒が同じ顔で同じ列に並ぶ**こと
        （印が無いので、押してみるまでどちらが取り消せるか分からない）。
