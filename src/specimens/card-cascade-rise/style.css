@@ -17,7 +17,7 @@
   padding: 0;
 }
 
-/* 紙の束なので、標準よりわずかに重いバネ（200/22/0.9 換算） */
+/* 紙の束の重さを出すため、ぷるんをわずかに弱めて（1.4）どっしり止める */
 .mz-casc-card {
   position: absolute;
   width: 48px;
@@ -26,7 +26,7 @@
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.15);
-  transition: transform 0.5s cubic-bezier(0.34, 1.25, 0.64, 1);
+  transition: transform 0.55s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 .mz-casc-card::after {
   content: '';
@@ -36,38 +36,91 @@
   border: 2px dashed rgba(0, 0, 0, 0.1);
 }
 
-.mz-casc-c0 { z-index: 3; }
-.mz-casc-c1 { z-index: 4; }
-.mz-casc-c2 { z-index: 5; }
-.mz-casc-c3 { z-index: 4; }
-.mz-casc-c4 { z-index: 3; }
+/* --i は下から数えた段。待機中も2pxずつズラして「束」であることを予告しておく */
+.mz-casc-c0 { z-index: 3; --i: 0; transform: translateY(-4px); }
+.mz-casc-c1 { z-index: 4; --i: 1; transform: translateY(-2px); }
+.mz-casc-c2 { z-index: 5; --i: 2; }
+.mz-casc-c3 { z-index: 4; --i: 3; transform: translateY(2px); }
+.mz-casc-c4 { z-index: 3; --i: 4; transform: translateY(4px); }
 
-/* 待機中も2pxずつズラして「束」であることを予告しておく */
-.mz-casc-c0 { transform: translateY(-4px); }
-.mz-casc-c1 { transform: translateY(-2px); }
-.mz-casc-c3 { transform: translateY(2px); }
-.mz-casc-c4 { transform: translateY(4px); }
+/* 待機中：束が下から上へ波のように呼吸している */
+.mz-casc-stack:not(.is-open) .mz-casc-card {
+  animation: mz-casc-breathe 2.4s ease-in-out calc(var(--i) * 0.12s) infinite;
+}
+@keyframes mz-casc-breathe {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -1.5px;
+  }
+}
 
-/* 1枚ごとに y-20px・x10px・6°ずつ積んで階段にする */
-.mz-casc-stack:hover .mz-casc-c0,
+/* 予備動作：まず束ごとぐっとかがんで力をためる */
+.mz-casc-stack.is-open {
+  animation: mz-casc-crouch 0.5s ease-out;
+}
+@keyframes mz-casc-crouch {
+  0%,
+  100% {
+    scale: 1;
+  }
+  25% {
+    scale: 1.05 0.9;
+  }
+  55% {
+    scale: 0.97 1.04;
+  }
+}
+
+/* かがみ終わり(0.12s)から、下の段から50msずつ「よいしょ」と持ち上がる */
+.mz-casc-stack.is-open .mz-casc-card {
+  transition-delay: calc(0.12s + var(--i) * 50ms);
+  animation: mz-casc-land 0.45s ease-out calc(0.4s + var(--i) * 50ms) both;
+}
 .mz-casc-stack.is-open .mz-casc-c0 {
   transform: translate(-20px, 30px) rotate(-12deg) scale(0.98);
 }
-.mz-casc-stack:hover .mz-casc-c1,
 .mz-casc-stack.is-open .mz-casc-c1 {
   transform: translate(-10px, 10px) rotate(-6deg) scale(0.98);
 }
-.mz-casc-stack:hover .mz-casc-c2,
 .mz-casc-stack.is-open .mz-casc-c2 {
   transform: translate(0, -10px) scale(1.05);
 }
-.mz-casc-stack:hover .mz-casc-c3,
 .mz-casc-stack.is-open .mz-casc-c3 {
   transform: translate(10px, -30px) rotate(6deg) scale(0.98);
 }
-.mz-casc-stack:hover .mz-casc-c4,
+/* いちばん上は勢い余って大きく行き過ぎる */
 .mz-casc-stack.is-open .mz-casc-c4 {
   transform: translate(20px, -50px) rotate(12deg) scale(0.98);
+  transition-timing-function: cubic-bezier(0.34, 1.8, 0.64, 1);
+}
+/* 段に乗った瞬間、重みで一瞬つぶれる */
+@keyframes mz-casc-land {
+  0%,
+  100% {
+    scale: 1;
+  }
+  40% {
+    scale: 1.04 0.95;
+  }
+}
+
+/* 戻す：上の段から順に降りてきて、最後に束がどすんと沈む */
+.mz-casc-stack.is-anim:not(.is-open) .mz-casc-card {
+  transition-delay: calc((4 - var(--i)) * 40ms);
+}
+.mz-casc-stack.is-anim:not(.is-open) {
+  animation: mz-casc-thud 0.4s ease-out 0.35s;
+}
+@keyframes mz-casc-thud {
+  35% {
+    scale: 1.05 0.93;
+  }
+  70% {
+    scale: 0.99 1.02;
+  }
 }
 
 .mz-casc-hint {

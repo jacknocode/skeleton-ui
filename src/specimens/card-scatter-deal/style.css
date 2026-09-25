@@ -17,6 +17,7 @@
   padding: 0;
 }
 
+/* 位置は transform、宙を舞う高さと着地のつぶれは translate / scale の keyframes */
 .mz-deal-card {
   position: absolute;
   width: 48px;
@@ -25,7 +26,7 @@
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: transform 0.55s cubic-bezier(0.34, 1.3, 0.64, 1);
+  transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mz-deal-card::after {
   content: '';
@@ -35,33 +36,104 @@
   border: 2px dashed rgba(0, 0, 0, 0.1);
 }
 
-.mz-deal-c0 { z-index: 3; }
-.mz-deal-c1 { z-index: 4; }
-.mz-deal-c2 { z-index: 5; }
-.mz-deal-c3 { z-index: 4; }
-.mz-deal-c4 { z-index: 3; }
+/* --i は配る順番（左から1枚ずつ）。置き場所は均等でなく1枚ずつ手置きで崩す */
+.mz-deal-c0 { z-index: 3; --i: 0; }
+.mz-deal-c1 { z-index: 4; --i: 1; }
+.mz-deal-c2 { z-index: 5; --i: 2; }
+.mz-deal-c3 { z-index: 4; --i: 3; }
+.mz-deal-c4 { z-index: 3; --i: 4; }
 
-/* 均等計算ではなく1枚ずつ手置きのオフセット。
-   中央の+2°のような「わずかな崩し」が、人が並べた感を出す */
-.mz-deal-stack:hover .mz-deal-c0,
+/* 待機中：いちばん上の1枚が「早く配って」とそわそわ身じろぎする */
+.mz-deal-stack:not(.is-open) .mz-deal-c2 {
+  animation: mz-deal-fidget 2.8s ease-in-out 0.8s infinite;
+}
+@keyframes mz-deal-fidget {
+  0%,
+  80%,
+  100% {
+    rotate: 0deg;
+  }
+  85% {
+    rotate: -4deg;
+  }
+  90% {
+    rotate: 3deg;
+  }
+  95% {
+    rotate: -1deg;
+  }
+}
+
+/* 配る：70msずつ遅れて1枚ずつ宙を舞う */
+.mz-deal-stack.is-open .mz-deal-card {
+  transition-delay: calc(var(--i) * 70ms);
+  animation: mz-deal-toss 0.55s ease-out calc(var(--i) * 70ms) both;
+}
 .mz-deal-stack.is-open .mz-deal-c0 {
   transform: translate(-56px, 11px) rotate(-14deg) scale(0.98);
 }
-.mz-deal-stack:hover .mz-deal-c1,
 .mz-deal-stack.is-open .mz-deal-c1 {
   transform: translate(-26px, -11px) rotate(-6deg) scale(0.98);
 }
-.mz-deal-stack:hover .mz-deal-c2,
 .mz-deal-stack.is-open .mz-deal-c2 {
   transform: translate(0, -22px) rotate(2deg) scale(1.05);
 }
-.mz-deal-stack:hover .mz-deal-c3,
 .mz-deal-stack.is-open .mz-deal-c3 {
   transform: translate(26px, -8px) rotate(8deg) scale(0.98);
 }
-.mz-deal-stack:hover .mz-deal-c4,
 .mz-deal-stack.is-open .mz-deal-c4 {
   transform: translate(56px, 15px) rotate(15deg) scale(0.98);
+}
+/* ふわっと浮いて影が離れ、ぺたっと着地して一瞬つぶれる */
+@keyframes mz-deal-toss {
+  0% {
+    translate: 0 0;
+    scale: 1;
+  }
+  45% {
+    translate: 0 -14px;
+    scale: 1.06;
+    box-shadow: 0 14px 22px rgba(0, 0, 0, 0.18);
+  }
+  72% {
+    translate: 0 0;
+    scale: 1.06 0.93;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+/* まとめる：右から順に戻り、束をトントンと2回揃える */
+.mz-deal-stack.is-anim:not(.is-open) .mz-deal-card {
+  transition-delay: calc((4 - var(--i)) * 40ms);
+}
+.mz-deal-stack.is-anim:not(.is-open) {
+  animation: mz-deal-tap 0.5s ease-in-out 0.4s;
+}
+@keyframes mz-deal-tap {
+  0%,
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+  20% {
+    translate: 0 -5px;
+  }
+  38% {
+    translate: 0 0;
+    scale: 1.04 0.95;
+  }
+  58% {
+    translate: 0 -3px;
+    scale: 1;
+  }
+  76% {
+    translate: 0 0;
+    scale: 1.02 0.98;
+  }
 }
 
 .mz-deal-hint {

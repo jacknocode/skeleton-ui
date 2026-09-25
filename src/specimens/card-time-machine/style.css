@@ -19,8 +19,7 @@
   transform-style: preserve-3d;
 }
 
-/* 追従が主目的なので速く硬いバネ（250/25/0.8 換算）。
-   過去のカードは手前へ1.25倍に飛び抜けながら溶けて消える */
+/* 奥から迫り出すときは、ぷるんを少し弱めて（1.4）ぐいっと止まる */
 .mz-tmac-card {
   position: absolute;
   width: 104px;
@@ -34,8 +33,49 @@
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
   pointer-events: none;
   transition:
-    transform 0.4s cubic-bezier(0.32, 1, 0.6, 1),
-    opacity 0.4s cubic-bezier(0.32, 1, 0.6, 1);
+    transform 0.45s cubic-bezier(0.34, 1.4, 0.64, 1),
+    opacity 0.4s ease-out;
+}
+
+/* 先頭に来た1枚は、到着でぺたっとつぶれてから静かに呼吸する */
+.mz-tmac-card.is-current {
+  animation:
+    mz-tmac-arrive 0.45s ease-out 0.1s both,
+    mz-tmac-breathe 3s ease-in-out 0.8s infinite;
+}
+@keyframes mz-tmac-arrive {
+  0%,
+  100% {
+    scale: 1;
+  }
+  40% {
+    scale: 1.05 0.92;
+  }
+  70% {
+    scale: 0.98 1.03;
+  }
+}
+@keyframes mz-tmac-breathe {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -2px;
+  }
+}
+
+/* 追い越されたカードは、ひらりと身をひねりながら手前へ飛び去る */
+.mz-tmac-card.is-past {
+  animation: mz-tmac-flyby 0.45s ease-in both;
+}
+@keyframes mz-tmac-flyby {
+  from {
+    rotate: 0deg;
+  }
+  to {
+    rotate: -9deg;
+  }
 }
 
 .mz-tmac-scrub {
@@ -58,7 +98,7 @@
   cursor: pointer;
 }
 
-/* 目盛りはscaleXだけで応える。極小要素なので硬く速いバネ（400/25 換算） */
+/* 目盛りは撫でられると、にゅっと伸びて応える */
 .mz-tmac-bar {
   width: 22px;
   height: 3px;
@@ -66,7 +106,7 @@
   background: rgba(255, 255, 255, 0.45);
   transform-origin: 100% 50%;
   transition:
-    transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1),
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
     background 0.25s;
 }
 .mz-tmac-tick:hover .mz-tmac-bar {

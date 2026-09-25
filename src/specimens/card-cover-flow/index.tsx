@@ -3,7 +3,7 @@ import './style.css'
 
 const CARDS = ['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ']
 
-/** 選んだ1枚が正面を向き、左右は±38°で奥へ畳まれるカバーフロー */
+/** 選ばれた1枚がくるっと振り向いてぴょんと前へ出る、首を振るカードの列 */
 export default function CardCoverFlow() {
   const [active, setActive] = useState(2)
 
@@ -29,6 +29,8 @@ export default function CardCoverFlow() {
                 ].join(' '),
                 opacity: abs > 2 ? 0 : 1 - abs * 0.25,
                 zIndex: 10 - abs,
+                // 新しい主役に近いカードから順に振り向く（重なりの時間差）
+                transitionDelay: `${abs * 35}ms`,
               }}
             >
               {label}

@@ -103,7 +103,7 @@
   cursor: grabbing;
 }
 
-/* ノブ。ドラッグ中は指に即追従、離すとばねで中央へ戻る */
+/* ノブ。つままれるとぷにっと沈んで指に即追従、離すとばねで中央へ跳ね戻りながらふくらむ */
 .mz-joystick-knob {
   width: 34px;
   height: 34px;
@@ -111,9 +111,14 @@
   background: #fff;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
   pointer-events: none;
+  scale: 0.88;
+  transition: scale 0.12s ease-out;
 }
 .mz-joystick-knob.is-home {
-  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  scale: 1;
+  transition:
+    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+    scale 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .mz-joystick-hint {
