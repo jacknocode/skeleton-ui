@@ -9,7 +9,7 @@ const HISTORY = [
   { date: '1年前', tone: '#7d7d7a' },
 ]
 
-/** 目盛りを撫でると過去のカードが奥からせり出し、通過した1枚は手前へ飛び抜けて消える */
+/** 目盛りを撫でると奥のカードが時間差でぐいっと迫り出し、追い越した1枚は手を振るようにひゅんと飛び去る */
 export default function CardTimeMachine() {
   const [active, setActive] = useState(0)
   const [hovered, setHovered] = useState<number | null>(null)
@@ -23,7 +23,7 @@ export default function CardTimeMachine() {
           return (
             <div
               key={i}
-              className="mz-tmac-card"
+              className={`mz-tmac-card${o === 0 ? ' is-current' : ''}${isPast ? ' is-past' : ''}`}
               style={{
                 transform: isPast
                   ? 'translateZ(140px) translateY(150px) rotateX(-18deg) scale(1.25)'
@@ -31,6 +31,8 @@ export default function CardTimeMachine() {
                 opacity: isPast ? 0 : 1 - o * 0.18,
                 zIndex: HISTORY.length - i,
                 background: item.tone,
+                // 奥のカードほど一拍遅れてついてくる（重なりの時間差）
+                transitionDelay: isPast ? '0ms' : `${o * 40}ms`,
               }}
             >
               {item.date}

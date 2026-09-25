@@ -105,6 +105,38 @@
   border-radius: 50%;
   background: #6e6e6e;
 }
+
+/* いちばん上のモンスターだけ、足元を支点にもぞもぞ呼吸してときどきまばたきする */
+.mz-flick-card.is-top .mz-flick-mon {
+  transform-origin: 50% 100%;
+  animation: mz-flick-mon-bob 2.2s ease-in-out infinite;
+}
+@keyframes mz-flick-mon-bob {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.05 0.94;
+  }
+}
+.mz-flick-card.is-top .mz-flick-mon i {
+  animation: mz-flick-blink 3.4s ease-in-out infinite;
+}
+@keyframes mz-flick-blink {
+  0%,
+  92%,
+  100% {
+    scale: 1;
+  }
+  96% {
+    scale: 1 0.15;
+  }
+}
+/* 仕分けられて飛んでいく子は、ぎゅっと目をつむる */
+.mz-flick-card.is-leaving .mz-flick-mon i {
+  scale: 1.2 0.2;
+}
 .mz-flick-mon.is-blob {
   border-radius: 48% 48% 44% 44% / 60% 60% 38% 38%;
 }
